@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jouer</title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="kicker">Session {{ session_code }}</p>
+        <h1>Question en cours</h1>
+      </header>
+      <section class="panel">
+        <div id="player-status" class="status">Connexion...</div>
+        <div id="player-question"></div>
+      </section>
+    </main>
+    <script>
+      window.__SESSION_CODE__ = "{{ session_code }}";
+      window.__PLAYER_ID__ = {{ player_id }};
+    </script>
+    <script src="/static/js/player.js"></script>
+  </body>
+</html>

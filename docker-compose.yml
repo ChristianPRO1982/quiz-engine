@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: quiz_engine
+      MYSQL_USER: quiz
+      MYSQL_PASSWORD: quiz
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - quiz_db:/var/lib/mysql
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: mysql+pymysql://quiz:quiz@db:3306/quiz_engine
+      BASE_URL: http://localhost:8000
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  quiz_db:

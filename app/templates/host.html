@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Host</title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <p class="kicker">Session {{ session_code }}</p>
+        <h1>Console d'animation</h1>
+        <p id="players-count" class="lede">0 joueurs</p>
+      </header>
+
+      <section class="panel">
+        <div id="host-status" class="status">En attente...</div>
+        <div id="question-area"></div>
+        <div class="actions">
+          <button id="next-btn" class="btn-primary">Question suivante</button>
+          <button id="reveal-btn" class="btn-secondary">Reveler</button>
+          <button id="end-btn" class="btn-outline">Terminer</button>
+        </div>
+      </section>
+    </main>
+    <script>
+      window.__SESSION_CODE__ = "{{ session_code }}";
+      window.__HOST_TOKEN__ = "{{ token }}";
+    </script>
+    <script src="/static/js/host.js"></script>
+  </body>
+</html>
