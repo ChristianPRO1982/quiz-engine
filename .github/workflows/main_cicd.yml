@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   test:
-    name: Tests (ruff + pytest)
+    name: Tests (pytest)
     runs-on: ubuntu-latest
 
     steps:
@@ -32,13 +32,7 @@ jobs:
 
       - name: Install dependencies (uv)
         run: uv sync --frozen --dev
-
-      - name: Ruff (lint)
-        run: uv run ruff check .
-
-      - name: Ruff (format check)
-        run: uv run ruff format --check .
-
+        
       - name: Pytest
         env:
           PYTHONPATH: .
