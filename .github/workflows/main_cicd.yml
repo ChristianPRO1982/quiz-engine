@@ -1,25 +1,19 @@
-name: main-ci-cd
+name: CI - Test and Release (main)
 
 on:
-  pull_request:
+  push:
     branches: ["main"]
-    types: [opened, synchronize, reopened, ready_for_review, closed]
 
 permissions:
   contents: write
 
 concurrency:
-  group: main-cicd-${{ github.event.pull_request.number || github.ref }}
+  group: main-ci-release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  test_pr:
-    name: Pytest (PR dev -> main)
-    if: >
-      github.event_name == 'pull_request' &&
-      github.event.action != 'closed' &&
-      github.base_ref == 'main' &&
-      github.head_ref == 'dev'
+  test:
+    name: Tests (ruff + pytest)
     runs-on: ubuntu-latest
 
     steps:
@@ -39,28 +33,27 @@ jobs:
       - name: Install dependencies (uv)
         run: uv sync --frozen --dev
 
+      - name: Ruff (lint)
+        run: uv run ruff check .
+
+      - name: Ruff (format check)
+        run: uv run ruff format --check .
+
       - name: Pytest
         env:
           PYTHONPATH: .
         run: uv run pytest -q
 
   release:
-    name: Release (merge dev -> main)
-    if: >
-      github.event_name == 'pull_request' &&
-      github.event.action == 'closed' &&
-      github.event.pull_request.merged == true &&
-      github.base_ref == 'main' &&
-      github.head_ref == 'dev' &&
-      github.event.pull_request.head.repo.full_name == github.repository
+    name: Semantic release
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout merge commit
+      - name: Checkout (full history for tags)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -73,15 +66,12 @@ jobs:
       - name: Install dependencies (uv)
         run: uv sync --frozen --dev
 
-      - name: Pytest (safety)
+      - name: Semantic release (version + tag)
         env:
-          PYTHONPATH: .
-        run: uv run pytest -q
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: uv run semantic-release version
 
-      - name: Read version from pyproject.toml
-        id: version
-        shell: bash
-        run: |
-          VERSION="$(python -c "import tomllib; from pathlib import Path; data=tomllib.loads(Path('pyproject.toml').read_text(encoding='utf-8')); v=(data.get('project') or {}).get('version'); assert v, 'Missing [project].version in pyproject.toml'; print(v)")"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Semantic release (publish GitHub Release)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: uv run semantic-release publish

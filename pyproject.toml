@@ -16,6 +16,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "python-semantic-release>=10.5.3",
     "ruff>=0.14.13",
 ]
 
@@ -29,3 +30,14 @@ ignore = []
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+tag_format = "v{version}"
+branch = "main"
+commit_message = "chore(release): v{version}"
+commit_author = "github-actions <github-actions@github.com>"
+
+[tool.semantic_release.changelog]
+mode = "update"
+
