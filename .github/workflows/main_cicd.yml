@@ -8,9 +8,13 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: main-cicd-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
-    name: Run tests (PR dev -> main)
+  test_pr:
+    name: Pytest (PR dev -> main)
     if: >
       github.event_name == 'pull_request' &&
       github.event.action != 'closed' &&
@@ -35,12 +39,13 @@ jobs:
       - name: Install dependencies (uv)
         run: uv sync --frozen --dev
 
-      - name: Run pytest
+      - name: Pytest
+        env:
+          PYTHONPATH: .
         run: uv run pytest -q
 
   release:
-    name: Release (when PR dev -> main is merged)
-    needs: test
+    name: Release (merge dev -> main)
     if: >
       github.event_name == 'pull_request' &&
       github.event.action == 'closed' &&
@@ -68,7 +73,9 @@ jobs:
       - name: Install dependencies (uv)
         run: uv sync --frozen --dev
 
-      - name: Run pytest (safety)
+      - name: Pytest (safety)
+        env:
+          PYTHONPATH: .
         run: uv run pytest -q
 
       - name: Read version from pyproject.toml
@@ -77,40 +84,10 @@ jobs:
         run: |
           python - << 'PY'
           import sys
-          try:
-              import tomllib  # py3.11+
-          except ModuleNotFoundError:
-              import tomli as tomllib  # fallback
           from pathlib import Path
+          import tomllib
 
           data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
           version = (data.get("project", {}) or {}).get("version")
           if not version:
-              print("Missing project.version in pyproject.toml", file=sys.stderr)
-              sys.exit(1)
-          print(f"version={version}")
-          PY
-          VERSION_LINE="$(python - << 'PY'
-          import sys
-          try:
-              import tomllib
-          except ModuleNotFoundError:
-              import tomli as tomllib
-          from pathlib import Path
-          data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
-          v = (data.get("project", {}) or {}).get("version")
-          if not v:
-              sys.exit(1)
-          print(v)
-          PY
-          )"
-          echo "version=$VERSION_LINE" >> "$GITHUB_OUTPUT"
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              print("Missing [project].vers
