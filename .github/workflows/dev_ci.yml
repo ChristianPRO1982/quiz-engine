@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   quality:
-    name: Lint + Format + Tests
+    name: Ruff + Pytest (Python 3.12)
     runs-on: ubuntu-latest
 
     steps:
@@ -40,6 +40,9 @@ jobs:
 
       - name: Ruff (format check)
         run: uv run ruff format --check .
+
+      - name: Python compile check
+        run: uv run python -m compileall app
 
       - name: Pytest
         env:
