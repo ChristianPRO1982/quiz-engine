@@ -82,12 +82,6 @@ jobs:
         id: version
         shell: bash
         run: |
-          python - << 'PY'
-          import sys
-          from pathlib import Path
-          import tomllib
-
-          data = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))
-          version = (data.get("project", {}) or {}).get("version")
-          if not version:
-              print("Missing [project].vers
+          VERSION="$(python -c "import tomllib; from pathlib import Path; data=tomllib.loads(Path('pyproject.toml').read_text(encoding='utf-8')); v=(data.get('project') or {}).get('version'); assert v, 'Missing [project].version in pyproject.toml'; print(v)")"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
