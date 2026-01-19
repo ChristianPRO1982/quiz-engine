@@ -1,4 +1,4 @@
-name: CI - Test and Release (main)
+name: CI/CD - Deployment to Production
 
 on:
   push:
@@ -32,7 +32,7 @@ jobs:
 
       - name: Install dependencies (uv)
         run: uv sync --frozen --dev
-        
+
       - name: Pytest
         env:
           PYTHONPATH: .
