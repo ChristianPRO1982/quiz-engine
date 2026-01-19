@@ -1,0 +1,19 @@
+{
+  "schema_version": "1",
+  "plugin_id": "dummy_slide",
+  "plugin_version": "0.1.0",
+  "engine_version_compatibility": ">=0.1.0",
+
+  "display_name": "Dummy Slide",
+  "description": "Minimal plugin used for engine and contract validation.",
+
+  "capabilities": {
+    "requires_timer": false,
+    "supports_scoring": false,
+    "supports_reveal": false,
+    "supports_multiple_answers": false
+  },
+
+  "supported_scoring_rules": [],
+  "supported_reveal_styles": []
+}
