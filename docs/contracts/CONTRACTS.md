@@ -107,6 +107,18 @@ The engine stores results but must not interpret them.
 
 ---
 
+### 6. HTTP API Contract
+
+- **File**: `http_api_v1.md`
+- **Status**: DRAFT
+- **Scope**:
+  - REST session creation
+  - Host and Player pages
+  - QR code endpoint
+  - WebSocket endpoint transport details
+
+---
+
 ## Versioning Rules
 
 - All contracts are versioned

@@ -80,3 +80,14 @@ def test_question_result_minimal_has_minimal_required_fields():
         assert field in data, f"question_result missing field '{field}'"
 
     assert isinstance(data["player_results"], list)
+
+
+def test_http_create_session_response_has_minimal_required_fields():
+    data = load_json(FIXTURES_DIR / "http_create_session_response.json")
+
+    for field in (
+        "schema_version",
+        "session_code",
+        "join_url",
+    ):
+        assert field in data, f"http_create_session_response missing '{field}'"
