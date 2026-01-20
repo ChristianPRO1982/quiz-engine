@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Join Quiz Session</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}" />
+  </head>
+  <body class="page">
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Player</p>
+          <h1>Join Session</h1>
+          <p class="lead">Enter a nickname and join the lobby.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <label class="field">
+          <span class="label">Session code</span>
+          <input id="session-code" type="text" value="{{ session_code }}" readonly />
+        </label>
+        <label class="field">
+          <span class="label">Nickname</span>
+          <input id="nickname" type="text" placeholder="Your name" maxlength="32" />
+        </label>
+        <div class="controls">
+          <button id="join-session" class="btn primary">Join</button>
+          <button id="leave-session" class="btn">Leave</button>
+        </div>
+        <p id="status" class="status">Waiting to join.</p>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', path='player.js') }}"></script>
+  </body>
+</html>

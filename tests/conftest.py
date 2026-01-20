@@ -1,0 +1,17 @@
+"""Test fixtures for quiz-engine."""
+
+import pytest
+from fastapi.testclient import TestClient
+
+from quiz_engine.app import create_app
+
+
+@pytest.fixture
+def app():
+    return create_app()
+
+
+@pytest.fixture
+def client(app):
+    with TestClient(app) as test_client:
+        yield test_client
