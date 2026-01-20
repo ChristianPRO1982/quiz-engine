@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import qrcode
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -12,9 +12,9 @@ from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from .protocol import (
-    EventEnvelope,
     ROLE_HOST,
     ROLE_PLAYER,
+    EventEnvelope,
     ProtocolError,
     build_event,
     parse_event,
@@ -26,8 +26,8 @@ from .sessions import Session, SessionState, SessionStore
 class ConnectionContext:
     websocket: WebSocket
     role: str
-    session_code: Optional[str] = None
-    player_id: Optional[str] = None
+    session_code: str | None = None
+    player_id: str | None = None
 
 
 def create_app() -> FastAPI:
@@ -396,7 +396,7 @@ def _error_payload(
     session_code: str,
     code: str,
     message: str,
-    details: Optional[dict[str, Any]] = None,
+    details: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {"code": code, "message": message}
     if details:
@@ -404,7 +404,9 @@ def _error_payload(
     return build_event(session_code, "error", payload)
 
 
-def _error_event(error: ProtocolError, fallback_session_code: Optional[str]) -> dict[str, Any]:
+def _error_event(
+    error: ProtocolError, fallback_session_code: str | None
+) -> dict[str, Any]:
     session_code = error.session_code or fallback_session_code or ""
     return _error_payload(session_code, error.code, error.message, error.details)
 

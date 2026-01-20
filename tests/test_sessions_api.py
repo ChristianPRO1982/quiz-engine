@@ -1,5 +1,6 @@
 """Tests for the session creation API."""
 
+
 def test_create_session_returns_join_url(client, app):
     response = client.post("/api/sessions")
     assert response.status_code == 200

@@ -1,7 +1,7 @@
 """WebSocket protocol helpers and validation."""
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 PROTOCOL_VERSION = "1"
 
@@ -31,7 +31,7 @@ class ProtocolError(Exception):
         code: str,
         message: str,
         session_code: str = "",
-        details: Optional[dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(message)
         self.code = code
@@ -104,7 +104,9 @@ def parse_event(data: Any) -> EventEnvelope:
     )
 
 
-def _validate_payload(event_type: str, payload: dict[str, Any], session_code: str) -> None:
+def _validate_payload(
+    event_type: str, payload: dict[str, Any], session_code: str
+) -> None:
     if event_type == "join_session":
         nickname = payload.get("nickname")
         if not isinstance(nickname, str):

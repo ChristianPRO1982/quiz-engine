@@ -1,10 +1,9 @@
 """In-memory session storage and state."""
 
-from dataclasses import dataclass, field
-from enum import Enum
 import secrets
 import string
-from typing import Optional
+from dataclasses import dataclass, field
+from enum import Enum
 from uuid import uuid4
 
 from starlette.websockets import WebSocket
@@ -41,7 +40,7 @@ class SessionStore:
         self._sessions[session_code] = session
         return session
 
-    def get_session(self, session_code: str) -> Optional[Session]:
+    def get_session(self, session_code: str) -> Session | None:
         return self._sessions.get(session_code)
 
     def remove_player(self, session: Session, player_id: str) -> None:
