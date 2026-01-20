@@ -9,7 +9,7 @@ dependencies = [
   "jinja2>=3.1",
   "pillow>=10.4",
   "qrcode>=7.4",
-  "uvicorn>=0.30",
+  "uvicorn[standard]>=0.30",
 ]
 
 [dependency-groups]
@@ -24,6 +24,7 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 88
