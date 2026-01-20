@@ -1,0 +1,14 @@
+http:
+  routers:
+    quizengine:
+      rule: "Host(`quiz-engine.localhost`)"
+      entryPoints:
+        - websecure
+      tls: {}
+      service: quizengine
+
+  services:
+    quizengine:
+      loadBalancer:
+        servers:
+          - url: "http://quiz-engine:8000"

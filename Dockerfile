@@ -2,7 +2,8 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-ENV UV_SYSTEM_PYTHON=1
+ENV UV_PROJECT_ENVIRONMENT=/app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
 
 RUN pip install --no-cache-dir uv
 
@@ -13,4 +14,4 @@ COPY . /app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "quiz_engine.app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+CMD ["/app/.venv/bin/uvicorn", "quiz_engine.app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
