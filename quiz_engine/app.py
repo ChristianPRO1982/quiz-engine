@@ -41,12 +41,14 @@ def create_app() -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def host_page(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse("host.html", {"request": request})
+        return templates.TemplateResponse(request, "host.html")
 
     @app.get("/join/{session_code}", response_class=HTMLResponse, name="join_page")
     async def join_page(request: Request, session_code: str) -> HTMLResponse:
         return templates.TemplateResponse(
-            "player.html", {"request": request, "session_code": session_code}
+            request,
+            "player.html",
+            {"session_code": session_code},
         )
 
     @app.post("/api/sessions")
