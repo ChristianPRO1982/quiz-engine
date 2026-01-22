@@ -9,6 +9,7 @@ const startButton = document.getElementById("start-session");
 const endButton = document.getElementById("end-session");
 const statusEl = document.getElementById("status");
 const sessionStateEl = document.getElementById("session-state");
+const t = window.qeI18n.t;
 
 let socket = null;
 let currentSessionCode = null;
@@ -18,11 +19,13 @@ const setStatus = (text) => {
   statusEl.textContent = text;
 };
 
+const formatState = (state) => t(`state.${state}`);
+
 const updatePlayers = (players) => {
   playerList.innerHTML = "";
   if (!players.length) {
     const empty = document.createElement("li");
-    empty.textContent = "No players yet.";
+    empty.textContent = t("host.js.no_players");
     playerList.appendChild(empty);
     return;
   }
@@ -35,7 +38,7 @@ const updatePlayers = (players) => {
     actions.classList.add("item-actions");
     const kickButton = document.createElement("button");
     kickButton.className = "btn small danger";
-    kickButton.textContent = "Kick";
+    kickButton.textContent = t("host.js.kick");
     kickButton.addEventListener("click", () => {
       sendEvent("host_kick", { player_id: player.player_id });
     });
@@ -50,7 +53,7 @@ const updatePending = () => {
   pendingList.innerHTML = "";
   if (pendingRequests.size === 0) {
     const empty = document.createElement("li");
-    empty.textContent = "No pending requests.";
+    empty.textContent = t("host.js.no_pending");
     pendingList.appendChild(empty);
     return;
   }
@@ -64,7 +67,7 @@ const updatePending = () => {
 
     const approveButton = document.createElement("button");
     approveButton.className = "btn small";
-    approveButton.textContent = "Approve";
+    approveButton.textContent = t("host.js.approve");
     approveButton.addEventListener("click", () => {
       sendEvent("host_approve_join", { request_id: requestId });
       pendingRequests.delete(requestId);
@@ -73,7 +76,7 @@ const updatePending = () => {
 
     const rejectButton = document.createElement("button");
     rejectButton.className = "btn small danger";
-    rejectButton.textContent = "Reject";
+    rejectButton.textContent = t("host.js.reject");
     rejectButton.addEventListener("click", () => {
       sendEvent("host_reject_join", { request_id: requestId });
       pendingRequests.delete(requestId);
@@ -90,7 +93,7 @@ const updatePending = () => {
 
 const sendEvent = (type, payload = {}) => {
   if (!socket || socket.readyState !== WebSocket.OPEN) {
-    setStatus("WebSocket not connected.");
+    setStatus(t("host.js.ws_not_connected"));
     return;
   }
   socket.send(
@@ -112,7 +115,7 @@ const connectHostSocket = (sessionCode) => {
   socket = new WebSocket(wsUrl);
 
   socket.addEventListener("open", () => {
-    setStatus("Connected as host.");
+    setStatus(t("host.js.connected"));
   });
 
   socket.addEventListener("message", (event) => {
@@ -132,7 +135,7 @@ const connectHostSocket = (sessionCode) => {
         sessionCodeEl.textContent = currentSessionCode;
         break;
       case "session_status":
-        sessionStateEl.textContent = message.payload.current_state;
+        sessionStateEl.textContent = formatState(message.payload.current_state);
         break;
       case "lobby_snapshot":
         updatePlayers(message.payload.players || []);
@@ -142,20 +145,30 @@ const connectHostSocket = (sessionCode) => {
           nickname: message.payload.nickname,
         });
         updatePending();
-        setStatus(`Join request from ${message.payload.nickname}.`);
+        setStatus(
+          t("host.js.join_request_from", {
+            nickname: message.payload.nickname,
+          })
+        );
         break;
       case "player_joined":
-        setStatus(`${message.payload.nickname} joined.`);
+        setStatus(
+          t("host.js.player_joined", { nickname: message.payload.nickname })
+        );
         break;
       case "player_left":
-        setStatus("Player left.");
+        setStatus(t("host.js.player_left"));
         break;
       case "session_state_changed":
-        sessionStateEl.textContent = message.payload.current_state;
-        setStatus(`Session state: ${message.payload.current_state}.`);
+        sessionStateEl.textContent = formatState(message.payload.current_state);
+        setStatus(
+          t("host.js.session_state", {
+            state: formatState(message.payload.current_state),
+          })
+        );
         break;
       case "error":
-        setStatus(`Error: ${message.payload.message}`);
+        setStatus(t("host.js.error", { message: message.payload.message }));
         break;
       default:
         break;
@@ -163,15 +176,15 @@ const connectHostSocket = (sessionCode) => {
   });
 
   socket.addEventListener("close", () => {
-    setStatus("WebSocket disconnected.");
+    setStatus(t("host.js.ws_disconnected"));
   });
 };
 
 createButton.addEventListener("click", async () => {
-  setStatus("Creating session...");
+  setStatus(t("host.js.creating_session"));
   const response = await fetch("/api/sessions", { method: "POST" });
   if (!response.ok) {
-    setStatus("Failed to create session.");
+    setStatus(t("host.js.create_failed"));
     return;
   }
   const data = await response.json();
@@ -179,12 +192,12 @@ createButton.addEventListener("click", async () => {
   sessionCodeEl.textContent = data.session_code;
   joinUrlEl.textContent = data.join_url;
   qrImage.src = `/qr/${data.session_code}.png`;
-  sessionStateEl.textContent = "LOBBY";
+  sessionStateEl.textContent = t("state.LOBBY");
   sessionPanel.classList.remove("hidden");
   pendingRequests.clear();
   updatePending();
   connectHostSocket(data.session_code);
-  setStatus("Session ready.");
+  setStatus(t("host.js.session_ready"));
 });
 
 startButton.addEventListener("click", () => {

@@ -1,0 +1,217 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: fr\n"
+
+msgid "host.page.title"
+msgstr "Hôte Quiz Engine"
+
+msgid "host.page.eyebrow"
+msgstr "Sprint 0"
+
+msgid "host.page.heading"
+msgstr "Hôte Quiz Engine"
+
+msgid "host.page.lead"
+msgstr "Créez un lobby, partagez le QR code et démarrez la session."
+
+msgid "host.button.create_session"
+msgstr "Créer une session"
+
+msgid "host.label.session_code"
+msgstr "Code de session"
+
+msgid "host.label.state"
+msgstr "État"
+
+msgid "host.label.join_url"
+msgstr "URL de participation"
+
+msgid "host.alt.qr"
+msgstr "QR code de participation"
+
+msgid "host.label.players"
+msgstr "Joueurs"
+
+msgid "host.label.join_requests"
+msgstr "Demandes d'accès"
+
+msgid "host.button.start"
+msgstr "Démarrer"
+
+msgid "host.button.end"
+msgstr "Terminer"
+
+msgid "host.status.idle"
+msgstr "Inactif."
+
+msgid "state.LOBBY"
+msgstr "Lobby"
+
+msgid "state.RUNNING"
+msgstr "En cours"
+
+msgid "state.ENDED"
+msgstr "Terminée"
+
+msgid "player.page.title"
+msgstr "Rejoindre une session"
+
+msgid "player.page.eyebrow"
+msgstr "Joueur"
+
+msgid "player.page.heading"
+msgstr "Rejoindre la session"
+
+msgid "player.page.lead"
+msgstr "Entrez un pseudo et rejoignez le lobby."
+
+msgid "player.label.session_code"
+msgstr "Code de session"
+
+msgid "player.label.nickname"
+msgstr "Pseudo"
+
+msgid "player.placeholder.nickname"
+msgstr "Votre nom"
+
+msgid "player.button.join"
+msgstr "Rejoindre"
+
+msgid "player.button.leave"
+msgstr "Quitter"
+
+msgid "player.status.waiting"
+msgstr "En attente de rejoindre."
+
+msgid "host.js.no_players"
+msgstr "Aucun joueur pour le moment."
+
+msgid "host.js.no_pending"
+msgstr "Aucune demande en attente."
+
+msgid "host.js.kick"
+msgstr "Exclure"
+
+msgid "host.js.approve"
+msgstr "Approuver"
+
+msgid "host.js.reject"
+msgstr "Refuser"
+
+msgid "host.js.ws_not_connected"
+msgstr "WebSocket non connecté."
+
+msgid "host.js.connected"
+msgstr "Connecté en tant qu'hôte."
+
+msgid "host.js.join_request_from"
+msgstr "Demande de participation de {nickname}."
+
+msgid "host.js.player_joined"
+msgstr "{nickname} a rejoint."
+
+msgid "host.js.player_left"
+msgstr "Le joueur est parti."
+
+msgid "host.js.session_state"
+msgstr "État de session : {state}."
+
+msgid "host.js.error"
+msgstr "Erreur : {message}"
+
+msgid "host.js.ws_disconnected"
+msgstr "WebSocket déconnecté."
+
+msgid "host.js.creating_session"
+msgstr "Création de la session..."
+
+msgid "host.js.create_failed"
+msgstr "Échec de la création de session."
+
+msgid "host.js.session_ready"
+msgstr "Session prête."
+
+msgid "player.js.ws_not_connected"
+msgstr "WebSocket non connecté."
+
+msgid "player.js.connected"
+msgstr "Connecté."
+
+msgid "player.js.join_request_sent"
+msgstr "Demande envoyée."
+
+msgid "player.js.waiting_approval"
+msgstr "En attente de validation de l'hôte."
+
+msgid "player.js.session_is"
+msgstr "La session est {state}."
+
+msgid "player.js.joined_lobby"
+msgstr "Lobby rejoint."
+
+msgid "player.js.join_rejected"
+msgstr "Demande refusée : {reason}"
+
+msgid "player.js.in_lobby"
+msgstr "Dans le lobby."
+
+msgid "player.js.left_lobby"
+msgstr "Lobby quitté."
+
+msgid "player.js.player_kicked"
+msgstr "Vous avez été retiré par l'hôte."
+
+msgid "player.js.error"
+msgstr "Erreur : {message}"
+
+msgid "player.js.disconnected"
+msgstr "Déconnecté."
+
+msgid "player.js.enter_nickname"
+msgstr "Veuillez entrer un pseudo."
+
+msgid "error.invalid_session"
+msgstr "Session introuvable."
+
+msgid "error.invalid_role"
+msgstr "Rôle invalide pour cette action."
+
+msgid "error.invalid_session_state"
+msgstr "État de session invalide."
+
+msgid "error.already_joined"
+msgstr "Joueur déjà présent."
+
+msgid "error.join_pending"
+msgstr "La demande est déjà en attente."
+
+msgid "error.invalid_request"
+msgstr "Demande introuvable."
+
+msgid "error.invalid_player"
+msgstr "Joueur introuvable."
+
+msgid "error.invalid_envelope"
+msgstr "Enveloppe de message invalide."
+
+msgid "error.invalid_version"
+msgstr "Version de protocole non supportée."
+
+msgid "error.unknown_event"
+msgstr "Type d'événement inconnu."
+
+msgid "error.invalid_payload"
+msgstr "Charge utile invalide."
+
+msgid "join_rejected.host_rejected"
+msgstr "L'hôte a refusé la demande."
+
+msgid "consent.pseudo.v1.body"
+msgstr "Nous stockons votre nom d'affichage pour ce service."
+
+msgid "consent.history.v1.body"
+msgstr "Nous conservons votre historique et vos scores pour les sessions futures."
+
+msgid "consent.email.v1.body"
+msgstr "Nous pouvons vous envoyer par email les résultats et les liens de session."

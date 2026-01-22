@@ -1,38 +1,49 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ locale }}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Join Quiz Session</title>
+    <title>{{ _("player.page.title") }}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}" />
   </head>
   <body class="page">
     <main class="shell">
       <section class="hero">
         <div>
-          <p class="eyebrow">Player</p>
-          <h1>Join Session</h1>
-          <p class="lead">Enter a nickname and join the lobby.</p>
+          <p class="eyebrow">{{ _("player.page.eyebrow") }}</p>
+          <h1>{{ _("player.page.heading") }}</h1>
+          <p class="lead">{{ _("player.page.lead") }}</p>
         </div>
       </section>
 
       <section class="panel">
         <label class="field">
-          <span class="label">Session code</span>
+          <span class="label">{{ _("player.label.session_code") }}</span>
           <input id="session-code" type="text" value="{{ session_code }}" readonly />
         </label>
         <label class="field">
-          <span class="label">Nickname</span>
-          <input id="nickname" type="text" placeholder="Your name" maxlength="32" />
+          <span class="label">{{ _("player.label.nickname") }}</span>
+          <input
+            id="nickname"
+            type="text"
+            placeholder="{{ _('player.placeholder.nickname') }}"
+            maxlength="32"
+          />
         </label>
         <div class="controls">
-          <button id="join-session" class="btn primary">Join</button>
-          <button id="leave-session" class="btn">Leave</button>
+          <button id="join-session" class="btn primary">
+            {{ _("player.button.join") }}
+          </button>
+          <button id="leave-session" class="btn">{{ _("player.button.leave") }}</button>
         </div>
-        <p id="status" class="status">Waiting to join.</p>
+        <p id="status" class="status">{{ _("player.status.waiting") }}</p>
       </section>
     </main>
 
+    <script>
+      window.QE_TRANSLATIONS = {{ translations | tojson }};
+    </script>
+    <script src="{{ url_for('static', path='i18n.js') }}"></script>
     <script src="{{ url_for('static', path='player.js') }}"></script>
   </body>
 </html>

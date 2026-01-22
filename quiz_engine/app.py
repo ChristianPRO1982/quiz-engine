@@ -1,6 +1,7 @@
 """FastAPI application for Sprint 0 realtime lobby."""
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
+from .i18n import get_translator, select_locale
 from .protocol import (
     ROLE_HOST,
     ROLE_PLAYER,
@@ -21,6 +23,45 @@ from .protocol import (
 )
 from .sessions import Session, SessionState, SessionStore
 
+STATE_KEYS = ["state.LOBBY", "state.RUNNING", "state.ENDED"]
+
+HOST_JS_KEYS = [
+    "host.js.no_players",
+    "host.js.no_pending",
+    "host.js.kick",
+    "host.js.approve",
+    "host.js.reject",
+    "host.js.ws_not_connected",
+    "host.js.connected",
+    "host.js.join_request_from",
+    "host.js.player_joined",
+    "host.js.player_left",
+    "host.js.session_state",
+    "host.js.error",
+    "host.js.ws_disconnected",
+    "host.js.creating_session",
+    "host.js.create_failed",
+    "host.js.session_ready",
+    *STATE_KEYS,
+]
+
+PLAYER_JS_KEYS = [
+    "player.js.ws_not_connected",
+    "player.js.connected",
+    "player.js.join_request_sent",
+    "player.js.waiting_approval",
+    "player.js.session_is",
+    "player.js.joined_lobby",
+    "player.js.join_rejected",
+    "player.js.in_lobby",
+    "player.js.left_lobby",
+    "player.js.player_kicked",
+    "player.js.error",
+    "player.js.disconnected",
+    "player.js.enter_nickname",
+    *STATE_KEYS,
+]
+
 
 @dataclass
 class ConnectionContext:
@@ -28,6 +69,35 @@ class ConnectionContext:
     role: str
     session_code: str | None = None
     player_id: str | None = None
+    translator: Callable[[str], str] = field(default=lambda text: text)
+
+
+def _select_translator(
+    accept_language: str | None, preferred: str | None = None
+) -> Callable[[str], str]:
+    locale = select_locale(accept_language, preferred)
+    return get_translator(locale).gettext
+
+
+def _template_context(
+    request: Request, keys: list[str] | None = None
+) -> dict[str, Any]:
+    accept_language = request.headers.get("accept-language")
+    preferred = request.query_params.get("lang")
+    locale = select_locale(accept_language, preferred)
+    translator = get_translator(locale).gettext
+    context: dict[str, Any] = {"_": translator}
+    if keys:
+        context["translations"] = {key: translator(key) for key in keys}
+    context["locale"] = locale
+    return context
+
+
+def _translator_for_websocket(websocket: WebSocket) -> Callable[[str], str]:
+    return _select_translator(
+        websocket.headers.get("accept-language"),
+        websocket.query_params.get("lang"),
+    )
 
 
 def create_app() -> FastAPI:
@@ -41,15 +111,14 @@ def create_app() -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def host_page(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse(request, "host.html")
+        context = _template_context(request, HOST_JS_KEYS)
+        return templates.TemplateResponse(request, "host.html", context)
 
     @app.get("/join/{session_code}", response_class=HTMLResponse, name="join_page")
     async def join_page(request: Request, session_code: str) -> HTMLResponse:
-        return templates.TemplateResponse(
-            request,
-            "player.html",
-            {"session_code": session_code},
-        )
+        context = _template_context(request, PLAYER_JS_KEYS)
+        context["session_code"] = session_code
+        return templates.TemplateResponse(request, "player.html", context)
 
     @app.post("/api/sessions")
     async def create_session(request: Request) -> dict[str, Any]:
@@ -79,7 +148,15 @@ def create_app() -> FastAPI:
         if role not in {ROLE_HOST, ROLE_PLAYER}:
             role = ROLE_PLAYER
 
-        context = ConnectionContext(websocket=websocket, role=role)
+        translator = _select_translator(
+            websocket.headers.get("accept-language"),
+            websocket.query_params.get("lang"),
+        )
+        context = ConnectionContext(
+            websocket=websocket,
+            role=role,
+            translator=translator,
+        )
         await _register_connection(store, context, websocket)
 
         try:
@@ -88,7 +165,9 @@ def create_app() -> FastAPI:
                 try:
                     event = parse_event(raw)
                 except ProtocolError as exc:
-                    await websocket.send_json(_error_event(exc, context.session_code))
+                    await websocket.send_json(
+                        _error_event(exc, context.session_code, context.translator)
+                    )
                     continue
 
                 await _handle_event(store, context, event)
@@ -108,7 +187,7 @@ async def _register_connection(
     session = store.get_session(session_code)
     if not session:
         await websocket.send_json(
-            _error_payload(session_code, "invalid_session", "Session not found.")
+            _error_payload(session_code, "invalid_session", context.translator)
         )
         return
 
@@ -161,7 +240,7 @@ async def _handle_host_event(
             _error_payload(
                 event.session_code,
                 "invalid_role",
-                "Host connection cannot send this event.",
+                context.translator,
             )
         )
         return
@@ -172,7 +251,7 @@ async def _handle_host_event(
             _error_payload(
                 event.session_code,
                 "invalid_session",
-                "Session not found.",
+                context.translator,
             )
         )
         return
@@ -186,6 +265,7 @@ async def _handle_host_event(
             context.websocket,
             from_state=SessionState.LOBBY,
             to_state=SessionState.RUNNING,
+            translate=context.translator,
         )
         return
 
@@ -195,18 +275,25 @@ async def _handle_host_event(
             context.websocket,
             from_state=SessionState.RUNNING,
             to_state=SessionState.ENDED,
+            translate=context.translator,
         )
         return
 
     if event.type == "host_approve_join":
-        await _approve_join(store, session, context.websocket, event)
+        await _approve_join(
+            store,
+            session,
+            context.websocket,
+            event,
+            context.translator,
+        )
         return
 
     if event.type == "host_reject_join":
-        await _reject_join(store, session, context.websocket, event)
+        await _reject_join(store, session, context.websocket, event, context.translator)
         return
 
-    await _kick_player(store, session, context.websocket, event)
+    await _kick_player(store, session, context.websocket, event, context.translator)
 
 
 async def _handle_player_event(
@@ -217,7 +304,7 @@ async def _handle_player_event(
             _error_payload(
                 event.session_code,
                 "invalid_role",
-                "Player connection cannot send this event.",
+                context.translator,
             )
         )
         return
@@ -238,7 +325,7 @@ async def _join_session(
             _error_payload(
                 event.session_code,
                 "invalid_session",
-                "Session not found.",
+                context.translator,
             )
         )
         return
@@ -255,7 +342,7 @@ async def _join_session(
             _error_payload(
                 event.session_code,
                 "already_joined",
-                "Player already joined.",
+                context.translator,
             )
         )
         return
@@ -265,7 +352,7 @@ async def _join_session(
             _error_payload(
                 event.session_code,
                 "join_pending",
-                "Join request is already pending.",
+                context.translator,
             )
         )
         return
@@ -306,7 +393,7 @@ async def _join_session(
         _error_payload(
             event.session_code,
             "invalid_session_state",
-            "Session is not accepting joins.",
+            context.translator,
         )
     )
 
@@ -320,7 +407,7 @@ async def _leave_session(
             _error_payload(
                 event.session_code,
                 "invalid_session",
-                "Session not found.",
+                context.translator,
             )
         )
         return
@@ -330,7 +417,7 @@ async def _leave_session(
             _error_payload(
                 event.session_code,
                 "invalid_session_state",
-                "Session is not accepting leaves.",
+                context.translator,
             )
         )
         return
@@ -358,13 +445,14 @@ async def _transition_state(
     websocket: WebSocket,
     from_state: SessionState,
     to_state: SessionState,
+    translate: Callable[[str], str],
 ) -> None:
     if session.state != from_state:
         await websocket.send_json(
             _error_payload(
                 session.session_code,
                 "invalid_session_state",
-                "Invalid session state transition.",
+                translate,
                 details={
                     "current_state": session.state.value,
                     "expected_state": from_state.value,
@@ -395,13 +483,14 @@ async def _approve_join(
     session: Session,
     websocket: WebSocket,
     event: EventEnvelope,
+    translate: Callable[[str], str],
 ) -> None:
     if session.state != SessionState.RUNNING:
         await websocket.send_json(
             _error_payload(
                 session.session_code,
                 "invalid_session_state",
-                "Session is not accepting approvals.",
+                translate,
                 details={"current_state": session.state.value},
             )
         )
@@ -414,7 +503,7 @@ async def _approve_join(
             _error_payload(
                 session.session_code,
                 "invalid_request",
-                "Join request not found.",
+                translate,
             )
         )
         return
@@ -449,13 +538,14 @@ async def _reject_join(
     session: Session,
     websocket: WebSocket,
     event: EventEnvelope,
+    translate: Callable[[str], str],
 ) -> None:
     if session.state != SessionState.RUNNING:
         await websocket.send_json(
             _error_payload(
                 session.session_code,
                 "invalid_session_state",
-                "Session is not accepting approvals.",
+                translate,
                 details={"current_state": session.state.value},
             )
         )
@@ -468,18 +558,19 @@ async def _reject_join(
             _error_payload(
                 session.session_code,
                 "invalid_request",
-                "Join request not found.",
+                translate,
             )
         )
         return
 
+    pending_translator = _translator_for_websocket(pending.websocket)
     await pending.websocket.send_json(
         build_event(
             session.session_code,
             "join_rejected",
             {
                 "request_id": request_id,
-                "reason": "Host rejected the request.",
+                "reason": pending_translator("join_rejected.host_rejected"),
             },
         )
     )
@@ -490,13 +581,14 @@ async def _kick_player(
     session: Session,
     websocket: WebSocket,
     event: EventEnvelope,
+    translate: Callable[[str], str],
 ) -> None:
     if session.state not in {SessionState.LOBBY, SessionState.RUNNING}:
         await websocket.send_json(
             _error_payload(
                 session.session_code,
                 "invalid_session_state",
-                "Session does not allow kicking.",
+                translate,
                 details={"current_state": session.state.value},
             )
         )
@@ -508,7 +600,7 @@ async def _kick_player(
             _error_payload(
                 session.session_code,
                 "invalid_player",
-                "Player not found.",
+                translate,
             )
         )
         return
@@ -624,20 +716,25 @@ def _find_player_socket(session: Session, player_id: str) -> WebSocket | None:
 def _error_payload(
     session_code: str,
     code: str,
-    message: str,
+    translate: Callable[[str], str],
     details: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    payload: dict[str, Any] = {"code": code, "message": message}
+    payload: dict[str, Any] = {
+        "code": code,
+        "message": translate(f"error.{code}"),
+    }
     if details:
         payload["details"] = details
     return build_event(session_code, "error", payload)
 
 
 def _error_event(
-    error: ProtocolError, fallback_session_code: str | None
+    error: ProtocolError,
+    fallback_session_code: str | None,
+    translate: Callable[[str], str],
 ) -> dict[str, Any]:
     session_code = error.session_code or fallback_session_code or ""
-    return _error_payload(session_code, error.code, error.message, error.details)
+    return _error_payload(session_code, error.code, translate, error.details)
 
 
 app = create_app()

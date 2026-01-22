@@ -3,6 +3,7 @@ const nicknameInput = document.getElementById("nickname");
 const joinButton = document.getElementById("join-session");
 const leaveButton = document.getElementById("leave-session");
 const statusEl = document.getElementById("status");
+const t = window.qeI18n.t;
 
 let socket = null;
 let pendingJoin = false;
@@ -13,9 +14,11 @@ const setStatus = (text) => {
   statusEl.textContent = text;
 };
 
+const formatState = (state) => t(`state.${state}`);
+
 const sendEvent = (type, payload = {}) => {
   if (!socket || socket.readyState !== WebSocket.OPEN) {
-    setStatus("WebSocket not connected.");
+    setStatus(t("player.js.ws_not_connected"));
     return;
   }
   socket.send(
@@ -38,11 +41,11 @@ const connectSocket = () => {
   socket = new WebSocket(wsUrl);
 
   socket.addEventListener("open", () => {
-    setStatus("Connected.");
+    setStatus(t("player.js.connected"));
     if (pendingJoin) {
       pendingJoin = false;
       waitingApproval = true;
-      setStatus("Join request sent.");
+      setStatus(t("player.js.join_request_sent"));
       sendEvent("join_session", { nickname: nicknameInput.value.trim() });
     }
   });
@@ -61,46 +64,56 @@ const connectSocket = () => {
     switch (message.type) {
       case "session_status":
         if (waitingApproval && message.payload.current_state === "RUNNING") {
-          setStatus("Waiting for host approval.");
+          setStatus(t("player.js.waiting_approval"));
         } else if (!joined) {
-          setStatus(`Session is ${message.payload.current_state}.`);
+          setStatus(
+            t("player.js.session_is", {
+              state: formatState(message.payload.current_state),
+            })
+          );
         }
         break;
       case "join_approved":
         joined = true;
         pendingJoin = false;
         waitingApproval = false;
-        setStatus("Joined lobby.");
+        setStatus(t("player.js.joined_lobby"));
         break;
       case "join_rejected":
         joined = false;
         pendingJoin = false;
         waitingApproval = false;
-        setStatus(`Join rejected: ${message.payload.reason}`);
+        setStatus(
+          t("player.js.join_rejected", { reason: message.payload.reason })
+        );
         break;
       case "lobby_snapshot":
         if (waitingApproval) {
           waitingApproval = false;
         }
-        setStatus("In lobby.");
+        setStatus(t("player.js.in_lobby"));
         break;
       case "player_joined":
         if (message.payload.player_id) {
-          setStatus("Joined lobby.");
+          setStatus(t("player.js.joined_lobby"));
         }
         break;
       case "player_left":
-        setStatus("Left lobby.");
+        setStatus(t("player.js.left_lobby"));
         break;
       case "player_kicked":
         joined = false;
-        setStatus("You were removed by the host.");
+        setStatus(t("player.js.player_kicked"));
         break;
       case "session_state_changed":
-        setStatus(`Session is ${message.payload.current_state}.`);
+        setStatus(
+          t("player.js.session_is", {
+            state: formatState(message.payload.current_state),
+          })
+        );
         break;
       case "error":
-        setStatus(`Error: ${message.payload.message}`);
+        setStatus(t("player.js.error", { message: message.payload.message }));
         break;
       default:
         break;
@@ -108,14 +121,14 @@ const connectSocket = () => {
   });
 
   socket.addEventListener("close", () => {
-    setStatus("Disconnected.");
+    setStatus(t("player.js.disconnected"));
   });
 };
 
 joinButton.addEventListener("click", () => {
   const nickname = nicknameInput.value.trim();
   if (!nickname) {
-    setStatus("Please enter a nickname.");
+    setStatus(t("player.js.enter_nickname"));
     return;
   }
   joined = false;
@@ -124,7 +137,7 @@ joinButton.addEventListener("click", () => {
   if (socket && socket.readyState === WebSocket.OPEN) {
     pendingJoin = false;
     waitingApproval = true;
-    setStatus("Join request sent.");
+    setStatus(t("player.js.join_request_sent"));
     sendEvent("join_session", { nickname });
   }
 });

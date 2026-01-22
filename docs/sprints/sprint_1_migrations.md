@@ -8,6 +8,7 @@ sans jamais toucher les tables communes (Django auth + autres services).
 Le mécanisme Alembic/autogenerate doit être configuré pour :
 - inclure uniquement les tables dont le nom commence par `qe_`
 - ignorer tout le reste (tables communes et autres services)
+- utiliser une table de version Alembic préfixée (`qe_alembic_version`)
 
 Conséquence attendue :
 - `alembic revision --autogenerate` ne doit JAMAIS proposer de modifications hors `qe_*`.

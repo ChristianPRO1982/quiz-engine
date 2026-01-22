@@ -35,15 +35,10 @@
 - `qe_question_result`
   - Résultats agrégés par question (opaque, plugin-owned).
 
-### Historique (connectés uniquement)
-- `qe_player_history` (optionnel selon stratégie)
-  - Vue matérialisée/agrégée pour accès rapide (scores, rang, sessions).
-  - Données supprimées lors du retrait `history=false` (purge différée).
-
-### Email (cadre, pas l’implémentation)
-- `qe_email_log`
-  - Trace des emails émis par le service (résultats / liens / modération).
-  - Permet de prouver “qui a envoyé quoi et pourquoi”.
+### Historique & email
+- Pas de tables dédiées en Sprint 1.
+- Les besoins `history`/`email` sont cadrés côté consentements, mais la
+  persistance dédiée est reportée à un sprint ultérieur.
 
 ## Règles de consentements (service-level)
 Scopes :

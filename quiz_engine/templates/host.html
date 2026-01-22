@@ -1,58 +1,66 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ locale }}">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quiz Engine Host</title>
+    <title>{{ _("host.page.title") }}</title>
     <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}" />
   </head>
   <body class="page">
     <main class="shell">
       <section class="hero">
         <div>
-          <p class="eyebrow">Sprint 0</p>
-          <h1>Quiz Engine Host</h1>
-          <p class="lead">Create a lobby, share the QR code, and start the session.</p>
+          <p class="eyebrow">{{ _("host.page.eyebrow") }}</p>
+          <h1>{{ _("host.page.heading") }}</h1>
+          <p class="lead">{{ _("host.page.lead") }}</p>
         </div>
-        <button id="create-session" class="btn primary">Create session</button>
+        <button id="create-session" class="btn primary">
+          {{ _("host.button.create_session") }}
+        </button>
       </section>
 
       <section id="session-panel" class="panel hidden">
         <div class="panel-header">
           <div>
-            <p class="label">Session code</p>
+            <p class="label">{{ _("host.label.session_code") }}</p>
             <p id="session-code" class="session-code">—</p>
           </div>
           <div class="state">
-            <span class="label">State</span>
-            <span id="session-state" class="state-value">LOBBY</span>
+            <span class="label">{{ _("host.label.state") }}</span>
+            <span id="session-state" class="state-value">
+              {{ _("state.LOBBY") }}
+            </span>
           </div>
         </div>
 
         <div class="grid">
           <div class="card">
-            <p class="label">Join URL</p>
+            <p class="label">{{ _("host.label.join_url") }}</p>
             <p id="join-url" class="mono">—</p>
-            <img id="qr-image" class="qr" alt="Join QR code" />
+            <img id="qr-image" class="qr" alt="{{ _("host.alt.qr") }}" />
           </div>
           <div class="card">
-            <p class="label">Players</p>
+            <p class="label">{{ _("host.label.players") }}</p>
             <ul id="player-list" class="players"></ul>
           </div>
           <div class="card">
-            <p class="label">Join requests</p>
+            <p class="label">{{ _("host.label.join_requests") }}</p>
             <ul id="pending-list" class="players"></ul>
           </div>
         </div>
 
         <div class="controls">
-          <button id="start-session" class="btn">Start</button>
-          <button id="end-session" class="btn danger">End</button>
+          <button id="start-session" class="btn">{{ _("host.button.start") }}</button>
+          <button id="end-session" class="btn danger">{{ _("host.button.end") }}</button>
         </div>
-        <p id="status" class="status">Idle.</p>
+        <p id="status" class="status">{{ _("host.status.idle") }}</p>
       </section>
     </main>
 
+    <script>
+      window.QE_TRANSLATIONS = {{ translations | tojson }};
+    </script>
+    <script src="{{ url_for('static', path='i18n.js') }}"></script>
     <script src="{{ url_for('static', path='host.js') }}"></script>
   </body>
 </html>
