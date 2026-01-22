@@ -3,11 +3,20 @@
 
 def _join_payload(session_code, nickname):
     return {
-        "v": "1",
+        "v": "2",
         "type": "join_session",
         "session_code": session_code,
         "payload": {"nickname": nickname},
     }
+
+
+def _collect_events(websocket, expected_types):
+    seen = {}
+    while expected_types - seen.keys():
+        event = websocket.receive_json()
+        if event["type"] in expected_types:
+            seen[event["type"]] = event
+    return seen
 
 
 def test_player_join_leave_broadcast(client):
@@ -17,25 +26,25 @@ def test_player_join_leave_broadcast(client):
     with client.websocket_connect(
         f"/ws?role=host&session_code={session_code}"
     ) as host_ws:
-        snapshot = host_ws.receive_json()
+        snapshot = _collect_events(host_ws, {"lobby_snapshot"})["lobby_snapshot"]
         assert snapshot["type"] == "lobby_snapshot"
         assert snapshot["payload"]["players"] == []
 
-        with client.websocket_connect("/ws?role=player") as player_ws:
+        with client.websocket_connect(
+            f"/ws?role=player&session_code={session_code}"
+        ) as player_ws:
             player_ws.send_json(_join_payload(session_code, "Alice"))
 
-            event_one = host_ws.receive_json()
-            event_two = host_ws.receive_json()
+            events = _collect_events(host_ws, {"player_joined", "lobby_snapshot"})
 
-            assert event_one["type"] == "player_joined"
-            assert event_two["type"] == "lobby_snapshot"
+            assert events["player_joined"]["type"] == "player_joined"
+            assert events["lobby_snapshot"]["type"] == "lobby_snapshot"
 
-            player_id = event_one["payload"]["player_id"]
-            players = event_two["payload"]["players"]
+            player_id = events["player_joined"]["payload"]["player_id"]
+            players = events["lobby_snapshot"]["payload"]["players"]
             assert any(entry["player_id"] == player_id for entry in players)
 
-        event_three = host_ws.receive_json()
-        event_four = host_ws.receive_json()
+        events = _collect_events(host_ws, {"player_left", "lobby_snapshot"})
 
-        assert event_three["type"] == "player_left"
-        assert event_four["type"] == "lobby_snapshot"
+        assert events["player_left"]["type"] == "player_left"
+        assert events["lobby_snapshot"]["type"] == "lobby_snapshot"

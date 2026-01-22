@@ -1,0 +1,8 @@
+{
+  "v": "2",
+  "type": "join_session",
+  "session_code": "ABC123",
+  "payload": {
+    "nickname": "PJ"
+  }
+}

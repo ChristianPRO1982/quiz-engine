@@ -49,6 +49,14 @@ Each contract has a status:
 
 This contract is the backbone of all real-time interactions.
 
+- **File**: `ws_protocol_v2.md`
+- **Status**: DRAFT
+- **Scope**:
+  - WebSocket envelope
+  - Event structure
+  - Join approval flow during RUNNING
+  - Error format
+
 ---
 
 ### 2. Session Lifecycle
@@ -62,6 +70,14 @@ This contract is the backbone of all real-time interactions.
   - Invalid transitions behavior
 
 The engine must strictly enforce this lifecycle.
+
+- **File**: `session_lifecycle_v2.md`
+- **Status**: DRAFT
+- **Scope**:
+  - Session states
+  - Valid transitions
+  - Join approval during RUNNING
+  - Host kick rules
 
 ---
 

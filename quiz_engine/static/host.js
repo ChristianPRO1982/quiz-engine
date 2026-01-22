@@ -4,6 +4,7 @@ const sessionCodeEl = document.getElementById("session-code");
 const joinUrlEl = document.getElementById("join-url");
 const qrImage = document.getElementById("qr-image");
 const playerList = document.getElementById("player-list");
+const pendingList = document.getElementById("pending-list");
 const startButton = document.getElementById("start-session");
 const endButton = document.getElementById("end-session");
 const statusEl = document.getElementById("status");
@@ -11,6 +12,7 @@ const sessionStateEl = document.getElementById("session-state");
 
 let socket = null;
 let currentSessionCode = null;
+const pendingRequests = new Map();
 
 const setStatus = (text) => {
   statusEl.textContent = text;
@@ -26,8 +28,63 @@ const updatePlayers = (players) => {
   }
   players.forEach((player) => {
     const item = document.createElement("li");
-    item.textContent = `${player.nickname} (${player.player_id})`;
+    item.classList.add("player-item");
+    const label = document.createElement("span");
+    label.textContent = `${player.nickname} (${player.player_id})`;
+    const actions = document.createElement("div");
+    actions.classList.add("item-actions");
+    const kickButton = document.createElement("button");
+    kickButton.className = "btn small danger";
+    kickButton.textContent = "Kick";
+    kickButton.addEventListener("click", () => {
+      sendEvent("host_kick", { player_id: player.player_id });
+    });
+    actions.appendChild(kickButton);
+    item.appendChild(label);
+    item.appendChild(actions);
     playerList.appendChild(item);
+  });
+};
+
+const updatePending = () => {
+  pendingList.innerHTML = "";
+  if (pendingRequests.size === 0) {
+    const empty = document.createElement("li");
+    empty.textContent = "No pending requests.";
+    pendingList.appendChild(empty);
+    return;
+  }
+  pendingRequests.forEach((request, requestId) => {
+    const item = document.createElement("li");
+    item.classList.add("player-item");
+    const label = document.createElement("span");
+    label.textContent = request.nickname;
+    const actions = document.createElement("div");
+    actions.classList.add("item-actions");
+
+    const approveButton = document.createElement("button");
+    approveButton.className = "btn small";
+    approveButton.textContent = "Approve";
+    approveButton.addEventListener("click", () => {
+      sendEvent("host_approve_join", { request_id: requestId });
+      pendingRequests.delete(requestId);
+      updatePending();
+    });
+
+    const rejectButton = document.createElement("button");
+    rejectButton.className = "btn small danger";
+    rejectButton.textContent = "Reject";
+    rejectButton.addEventListener("click", () => {
+      sendEvent("host_reject_join", { request_id: requestId });
+      pendingRequests.delete(requestId);
+      updatePending();
+    });
+
+    actions.appendChild(approveButton);
+    actions.appendChild(rejectButton);
+    item.appendChild(label);
+    item.appendChild(actions);
+    pendingList.appendChild(item);
   });
 };
 
@@ -38,7 +95,7 @@ const sendEvent = (type, payload = {}) => {
   }
   socket.send(
     JSON.stringify({
-      v: "1",
+      v: "2",
       type,
       session_code: currentSessionCode,
       payload,
@@ -65,7 +122,7 @@ const connectHostSocket = (sessionCode) => {
     } catch (error) {
       return;
     }
-    if (!message || message.v !== "1") {
+    if (!message || message.v !== "2") {
       return;
     }
 
@@ -74,8 +131,18 @@ const connectHostSocket = (sessionCode) => {
         currentSessionCode = message.payload.session_code;
         sessionCodeEl.textContent = currentSessionCode;
         break;
+      case "session_status":
+        sessionStateEl.textContent = message.payload.current_state;
+        break;
       case "lobby_snapshot":
         updatePlayers(message.payload.players || []);
+        break;
+      case "join_requested":
+        pendingRequests.set(message.payload.request_id, {
+          nickname: message.payload.nickname,
+        });
+        updatePending();
+        setStatus(`Join request from ${message.payload.nickname}.`);
         break;
       case "player_joined":
         setStatus(`${message.payload.nickname} joined.`);
@@ -114,6 +181,8 @@ createButton.addEventListener("click", async () => {
   qrImage.src = `/qr/${data.session_code}.png`;
   sessionStateEl.textContent = "LOBBY";
   sessionPanel.classList.remove("hidden");
+  pendingRequests.clear();
+  updatePending();
   connectHostSocket(data.session_code);
   setStatus("Session ready.");
 });

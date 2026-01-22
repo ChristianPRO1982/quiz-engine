@@ -27,7 +27,9 @@ def test_all_contract_fixtures_are_valid_json():
 def test_ws_fixtures_have_mandatory_envelope_fields():
     ws_files = (
         "ws_client_join.json",
+        "ws_client_join_v2.json",
         "ws_server_lobby_snapshot.json",
+        "ws_server_session_status.json",
     )
 
     for filename in ws_files:

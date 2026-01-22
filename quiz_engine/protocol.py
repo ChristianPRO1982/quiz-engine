@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-PROTOCOL_VERSION = "1"
+PROTOCOL_VERSION = "2"
 
 CLIENT_EVENTS = {
     "create_session",
@@ -11,6 +11,9 @@ CLIENT_EVENTS = {
     "leave_session",
     "host_start",
     "host_end",
+    "host_approve_join",
+    "host_reject_join",
+    "host_kick",
 }
 
 ROLE_HOST = "host"
@@ -119,6 +122,26 @@ def _validate_payload(
             raise ProtocolError(
                 "invalid_payload",
                 "nickname must not be empty.",
+                session_code=session_code,
+            )
+        return
+
+    if event_type in {"host_approve_join", "host_reject_join"}:
+        request_id = payload.get("request_id")
+        if not isinstance(request_id, str) or request_id.strip() == "":
+            raise ProtocolError(
+                "invalid_payload",
+                "request_id must be a non-empty string.",
+                session_code=session_code,
+            )
+        return
+
+    if event_type == "host_kick":
+        player_id = payload.get("player_id")
+        if not isinstance(player_id, str) or player_id.strip() == "":
+            raise ProtocolError(
+                "invalid_payload",
+                "player_id must be a non-empty string.",
                 session_code=session_code,
             )
         return

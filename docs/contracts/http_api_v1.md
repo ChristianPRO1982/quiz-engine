@@ -97,6 +97,6 @@ Query params:
 - `session_code` (optional; required for host connections to existing sessions)
 
 Notes:
-- The WebSocket message envelope is defined by `ws_protocol_v1.md`.
+- The WebSocket message envelope is defined by `ws_protocol_v2.md`.
 - Host connections without a `session_code` must create a session via
   the `create_session` WebSocket event before sending host commands.

@@ -78,7 +78,7 @@ def create_app() -> FastAPI:
             role = ROLE_PLAYER
 
         context = ConnectionContext(websocket=websocket, role=role)
-        await _register_host_connection(store, context, websocket)
+        await _register_connection(store, context, websocket)
 
         try:
             while True:
@@ -96,12 +96,9 @@ def create_app() -> FastAPI:
     return app
 
 
-async def _register_host_connection(
+async def _register_connection(
     store: SessionStore, context: ConnectionContext, websocket: WebSocket
 ) -> None:
-    if context.role != ROLE_HOST:
-        return
-
     session_code = websocket.query_params.get("session_code")
     if not session_code:
         return
@@ -109,17 +106,18 @@ async def _register_host_connection(
     session = store.get_session(session_code)
     if not session:
         await websocket.send_json(
-            _error_payload(
-                session_code,
-                "invalid_session",
-                "Session not found.",
-            )
+            _error_payload(session_code, "invalid_session", "Session not found.")
         )
         return
 
     context.session_code = session_code
-    session.host_connections.add(websocket)
-    await websocket.send_json(_lobby_snapshot_event(session))
+    if context.role == ROLE_HOST:
+        session.host_connections.add(websocket)
+        await websocket.send_json(_session_status_event(session))
+        await websocket.send_json(_lobby_snapshot_event(session))
+        return
+
+    await websocket.send_json(_session_status_event(session))
 
 
 async def _handle_event(
@@ -146,10 +144,17 @@ async def _handle_host_event(
                 {"session_code": session.session_code},
             )
         )
+        await context.websocket.send_json(_session_status_event(session))
         await context.websocket.send_json(_lobby_snapshot_event(session))
         return
 
-    if event.type not in {"host_start", "host_end"}:
+    if event.type not in {
+        "host_start",
+        "host_end",
+        "host_approve_join",
+        "host_reject_join",
+        "host_kick",
+    }:
         await context.websocket.send_json(
             _error_payload(
                 event.session_code,
@@ -182,12 +187,24 @@ async def _handle_host_event(
         )
         return
 
-    await _transition_state(
-        session,
-        context.websocket,
-        from_state=SessionState.RUNNING,
-        to_state=SessionState.ENDED,
-    )
+    if event.type == "host_end":
+        await _transition_state(
+            session,
+            context.websocket,
+            from_state=SessionState.RUNNING,
+            to_state=SessionState.ENDED,
+        )
+        return
+
+    if event.type == "host_approve_join":
+        await _approve_join(store, session, context.websocket, event)
+        return
+
+    if event.type == "host_reject_join":
+        await _reject_join(store, session, context.websocket, event)
+        return
+
+    await _kick_player(store, session, context.websocket, event)
 
 
 async def _handle_player_event(
@@ -224,17 +241,14 @@ async def _join_session(
         )
         return
 
-    if session.state != SessionState.LOBBY:
-        await context.websocket.send_json(
-            _error_payload(
-                event.session_code,
-                "invalid_session_state",
-                "Session is not accepting joins.",
-            )
-        )
-        return
+    if context.player_id and context.player_id not in session.players:
+        context.player_id = None
+    if context.websocket in session.player_connections:
+        stored_id = session.player_connections.get(context.websocket)
+        if stored_id not in session.players:
+            session.player_connections.pop(context.websocket, None)
 
-    if context.player_id:
+    if context.player_id or context.websocket in session.player_connections:
         await context.websocket.send_json(
             _error_payload(
                 event.session_code,
@@ -244,21 +258,55 @@ async def _join_session(
         )
         return
 
-    nickname = event.payload["nickname"].strip()
-    player = store.register_player(session, nickname)
-    session.player_connections[context.websocket] = player.player_id
-    context.session_code = session.session_code
-    context.player_id = player.player_id
+    if context.websocket in session.pending_connections:
+        await context.websocket.send_json(
+            _error_payload(
+                event.session_code,
+                "join_pending",
+                "Join request is already pending.",
+            )
+        )
+        return
 
-    await _broadcast(
-        session,
-        build_event(
-            session.session_code,
-            "player_joined",
-            {"player_id": player.player_id, "nickname": player.nickname},
-        ),
+    nickname = event.payload["nickname"].strip()
+    context.session_code = session.session_code
+
+    if session.state == SessionState.LOBBY:
+        player = store.register_player(session, nickname)
+        session.player_connections[context.websocket] = player.player_id
+        context.player_id = player.player_id
+        await context.websocket.send_json(_session_status_event(session))
+        await _broadcast(
+            session,
+            build_event(
+                session.session_code,
+                "player_joined",
+                {"player_id": player.player_id, "nickname": player.nickname},
+            ),
+        )
+        await _broadcast(session, _lobby_snapshot_event(session))
+        return
+
+    if session.state == SessionState.RUNNING:
+        pending = store.register_pending(session, context.websocket, nickname)
+        await context.websocket.send_json(_session_status_event(session))
+        await _broadcast_to_hosts(
+            session,
+            build_event(
+                session.session_code,
+                "join_requested",
+                {"request_id": pending.request_id, "nickname": pending.nickname},
+            ),
+        )
+        return
+
+    await context.websocket.send_json(
+        _error_payload(
+            event.session_code,
+            "invalid_session_state",
+            "Session is not accepting joins.",
+        )
     )
-    await _broadcast(session, _lobby_snapshot_event(session))
 
 
 async def _leave_session(
@@ -285,10 +333,10 @@ async def _leave_session(
         )
         return
 
-    if not context.player_id:
+    player_id = context.player_id or session.player_connections.get(context.websocket)
+    if not player_id or player_id not in session.players:
         return
 
-    player_id = context.player_id
     store.remove_player(session, player_id)
     context.player_id = None
 
@@ -340,6 +388,152 @@ async def _transition_state(
     await _broadcast(session, _lobby_snapshot_event(session))
 
 
+async def _approve_join(
+    store: SessionStore,
+    session: Session,
+    websocket: WebSocket,
+    event: EventEnvelope,
+) -> None:
+    if session.state != SessionState.RUNNING:
+        await websocket.send_json(
+            _error_payload(
+                session.session_code,
+                "invalid_session_state",
+                "Session is not accepting approvals.",
+                details={"current_state": session.state.value},
+            )
+        )
+        return
+
+    request_id = event.payload["request_id"]
+    pending = store.pop_pending(session, request_id)
+    if not pending:
+        await websocket.send_json(
+            _error_payload(
+                session.session_code,
+                "invalid_request",
+                "Join request not found.",
+            )
+        )
+        return
+
+    player = store.register_player(session, pending.nickname)
+    session.player_connections[pending.websocket] = player.player_id
+
+    await pending.websocket.send_json(
+        build_event(
+            session.session_code,
+            "join_approved",
+            {
+                "request_id": request_id,
+                "player_id": player.player_id,
+                "nickname": player.nickname,
+            },
+        )
+    )
+    await _broadcast(
+        session,
+        build_event(
+            session.session_code,
+            "player_joined",
+            {"player_id": player.player_id, "nickname": player.nickname},
+        ),
+    )
+    await _broadcast(session, _lobby_snapshot_event(session))
+
+
+async def _reject_join(
+    store: SessionStore,
+    session: Session,
+    websocket: WebSocket,
+    event: EventEnvelope,
+) -> None:
+    if session.state != SessionState.RUNNING:
+        await websocket.send_json(
+            _error_payload(
+                session.session_code,
+                "invalid_session_state",
+                "Session is not accepting approvals.",
+                details={"current_state": session.state.value},
+            )
+        )
+        return
+
+    request_id = event.payload["request_id"]
+    pending = store.pop_pending(session, request_id)
+    if not pending:
+        await websocket.send_json(
+            _error_payload(
+                session.session_code,
+                "invalid_request",
+                "Join request not found.",
+            )
+        )
+        return
+
+    await pending.websocket.send_json(
+        build_event(
+            session.session_code,
+            "join_rejected",
+            {
+                "request_id": request_id,
+                "reason": "Host rejected the request.",
+            },
+        )
+    )
+
+
+async def _kick_player(
+    store: SessionStore,
+    session: Session,
+    websocket: WebSocket,
+    event: EventEnvelope,
+) -> None:
+    if session.state not in {SessionState.LOBBY, SessionState.RUNNING}:
+        await websocket.send_json(
+            _error_payload(
+                session.session_code,
+                "invalid_session_state",
+                "Session does not allow kicking.",
+                details={"current_state": session.state.value},
+            )
+        )
+        return
+
+    player_id = event.payload["player_id"]
+    if player_id not in session.players:
+        await websocket.send_json(
+            _error_payload(
+                session.session_code,
+                "invalid_player",
+                "Player not found.",
+            )
+        )
+        return
+
+    player_socket = _find_player_socket(session, player_id)
+    store.remove_player(session, player_id)
+
+    if player_socket:
+        await player_socket.send_json(
+            build_event(
+                session.session_code,
+                "player_kicked",
+                {"player_id": player_id},
+            )
+        )
+
+    await _broadcast(
+        session,
+        build_event(
+            session.session_code,
+            "player_left",
+            {"player_id": player_id},
+        ),
+    )
+    await _broadcast(session, _lobby_snapshot_event(session))
+
+
 async def _handle_disconnect(store: SessionStore, context: ConnectionContext) -> None:
     if context.role == ROLE_HOST and context.session_code:
         session = store.get_session(context.session_code)
@@ -350,18 +544,28 @@ async def _handle_disconnect(store: SessionStore, context: ConnectionContext) ->
     if context.role != ROLE_PLAYER:
         return
 
-    if not (context.session_code and context.player_id):
+    if not context.session_code:
         return
 
     session = store.get_session(context.session_code)
     if not session:
         return
 
+    pending = store.pop_pending_by_socket(session, context.websocket)
+    if pending:
+        return
+
+    player_id = context.player_id or session.player_connections.get(context.websocket)
+    if not player_id:
+        return
+    if player_id not in session.players:
+        session.player_connections.pop(context.websocket, None)
+        return
+
     if session.state != SessionState.LOBBY:
         session.player_connections.pop(context.websocket, None)
         return
 
-    player_id = context.player_id
     store.remove_player(session, player_id)
 
     await _broadcast(
@@ -384,12 +588,35 @@ async def _broadcast(session: Session, event: dict[str, Any]) -> None:
             continue
 
 
+async def _broadcast_to_hosts(session: Session, event: dict[str, Any]) -> None:
+    for connection in set(session.host_connections):
+        try:
+            await connection.send_json(event)
+        except RuntimeError:
+            continue
+
+
 def _lobby_snapshot_event(session: Session) -> dict[str, Any]:
     players = [
         {"player_id": player.player_id, "nickname": player.nickname}
         for player in sorted(session.players.values(), key=lambda p: p.player_id)
     ]
     return build_event(session.session_code, "lobby_snapshot", {"players": players})
+
+
+def _session_status_event(session: Session) -> dict[str, Any]:
+    return build_event(
+        session.session_code,
+        "session_status",
+        {"current_state": session.state.value},
+    )
+
+
+def _find_player_socket(session: Session, player_id: str) -> WebSocket | None:
+    for websocket, stored_id in session.player_connections.items():
+        if stored_id == player_id:
+            return websocket
+    return None
 
 
 def _error_payload(

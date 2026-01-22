@@ -154,6 +154,18 @@ h1 {
   border-radius: 12px;
 }
 
+.player-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.item-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -197,6 +209,11 @@ input {
 
 .btn.danger {
   background: var(--accent-dark);
+}
+
+.btn.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
 }
 
 .status {

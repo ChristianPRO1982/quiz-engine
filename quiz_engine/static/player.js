@@ -6,6 +6,8 @@ const statusEl = document.getElementById("status");
 
 let socket = null;
 let pendingJoin = false;
+let joined = false;
+let waitingApproval = false;
 
 const setStatus = (text) => {
   statusEl.textContent = text;
@@ -18,7 +20,7 @@ const sendEvent = (type, payload = {}) => {
   }
   socket.send(
     JSON.stringify({
-      v: "1",
+      v: "2",
       type,
       session_code: sessionCodeInput.value,
       payload,
@@ -31,13 +33,16 @@ const connectSocket = () => {
     return;
   }
   const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-  const wsUrl = `${wsScheme}://${window.location.host}/ws?role=player`;
+  const sessionCode = encodeURIComponent(sessionCodeInput.value);
+  const wsUrl = `${wsScheme}://${window.location.host}/ws?role=player&session_code=${sessionCode}`;
   socket = new WebSocket(wsUrl);
 
   socket.addEventListener("open", () => {
-    setStatus("Connected. Ready to join.");
+    setStatus("Connected.");
     if (pendingJoin) {
       pendingJoin = false;
+      waitingApproval = true;
+      setStatus("Join request sent.");
       sendEvent("join_session", { nickname: nicknameInput.value.trim() });
     }
   });
@@ -49,12 +54,34 @@ const connectSocket = () => {
     } catch (error) {
       return;
     }
-    if (!message || message.v !== "1") {
+    if (!message || message.v !== "2") {
       return;
     }
 
     switch (message.type) {
+      case "session_status":
+        if (waitingApproval && message.payload.current_state === "RUNNING") {
+          setStatus("Waiting for host approval.");
+        } else if (!joined) {
+          setStatus(`Session is ${message.payload.current_state}.`);
+        }
+        break;
+      case "join_approved":
+        joined = true;
+        pendingJoin = false;
+        waitingApproval = false;
+        setStatus("Joined lobby.");
+        break;
+      case "join_rejected":
+        joined = false;
+        pendingJoin = false;
+        waitingApproval = false;
+        setStatus(`Join rejected: ${message.payload.reason}`);
+        break;
       case "lobby_snapshot":
+        if (waitingApproval) {
+          waitingApproval = false;
+        }
         setStatus("In lobby.");
         break;
       case "player_joined":
@@ -64,6 +91,10 @@ const connectSocket = () => {
         break;
       case "player_left":
         setStatus("Left lobby.");
+        break;
+      case "player_kicked":
+        joined = false;
+        setStatus("You were removed by the host.");
         break;
       case "session_state_changed":
         setStatus(`Session is ${message.payload.current_state}.`);
@@ -87,10 +118,13 @@ joinButton.addEventListener("click", () => {
     setStatus("Please enter a nickname.");
     return;
   }
+  joined = false;
   pendingJoin = true;
   connectSocket();
   if (socket && socket.readyState === WebSocket.OPEN) {
     pendingJoin = false;
+    waitingApproval = true;
+    setStatus("Join request sent.");
     sendEvent("join_session", { nickname });
   }
 });
@@ -98,3 +132,5 @@ joinButton.addEventListener("click", () => {
 leaveButton.addEventListener("click", () => {
   sendEvent("leave_session");
 });
+
+connectSocket();
