@@ -18,6 +18,27 @@ jobs:
     name: Ruff + Pytest (Python 3.12)
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: quiz_engine
+          MYSQL_USER: quiz
+          MYSQL_PASSWORD: quiz
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    env:
+      PYTHONPATH: .
+      PYTHONFAULTHANDLER: "1"
+      DATABASE_URL: mysql+pymysql://quiz:quiz@127.0.0.1:3306/quiz_engine
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,6 +56,11 @@ jobs:
       - name: Install dependencies (uv)
         run: uv sync --frozen --dev
 
+      - name: Install MySQL client tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client
+
       - name: Ruff (lint)
         run: uv run ruff check .
 
@@ -44,7 +70,17 @@ jobs:
       - name: Python compile check
         run: uv run python -m compileall app
 
+      - name: Wait for MySQL
+        run: |
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 -uroot -proot && exit 0
+            sleep 2
+          done
+          echo "MySQL did not become ready in time"
+          exit 1
+
+      - name: Pytest collect-only
+        run: uv run pytest --collect-only -q
+
       - name: Pytest
-        env:
-          PYTHONPATH: .
-        run: uv run pytest -q
+        run: uv run pytest -vv -s --durations=25 --maxfail=1
