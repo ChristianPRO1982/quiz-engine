@@ -17,6 +17,8 @@ services:
 
   quiz-engine:
     build: .
+    env_file:
+      - .env
     labels:
       - traefik.enable=true
       - traefik.http.routers.quizengine.rule=Host(`quiz-engine.localhost`)
