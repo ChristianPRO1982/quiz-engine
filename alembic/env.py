@@ -3,14 +3,25 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from quiz_engine import models  # noqa: F401
-from quiz_engine.db.base import Base
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.append(str(PROJECT_ROOT))
 
 config = context.config
+
+
+def _target_metadata():
+    import quiz_engine.models  # noqa: F401
+    from quiz_engine.db.base import Base
+
+    return Base.metadata
 
 
 def _database_url() -> str:
@@ -33,7 +44,7 @@ def run_migrations_offline() -> None:
     url = _database_url()
     context.configure(
         url=url,
-        target_metadata=Base.metadata,
+        target_metadata=_target_metadata(),
         literal_binds=True,
         compare_type=True,
         include_object=_include_object,
@@ -55,7 +66,7 @@ def run_migrations_online() -> None:
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
-            target_metadata=Base.metadata,
+            target_metadata=_target_metadata(),
             compare_type=True,
             include_object=_include_object,
             version_table="qe_alembic_version",
