@@ -1,7 +1,7 @@
 # Engine ↔ Plugin Interfaces V0 (quiz-engine only)
 
 ## Goal
-Define stable Python interfaces in quiz-engine so plugins can be developed against runtime contracts.
+Define stable Python interfaces in quiz-engine so plugins can be developed against runtime schemas.
 quiz-engine remains dumb: it never interprets payloads or rules.
 
 Plugins are loaded at startup. During a session, the active plugin handles a stage:
@@ -13,13 +13,32 @@ Plugins are loaded at startup. During a session, the active plugin handles a sta
 ---
 
 ## Mandatory Responsibilities in quiz-engine
-1) Plugin registry: load manifests and provide plugin lookup by plugin_id.
-2) Stage lifecycle: open stage, route player events, close stage, advance to next stage.
-3) Trace store: persist StageTrace + outcomes for replay.
-4) Score aggregation: sum ScoreDelta per player; store GradeDelta but do not compute meaning.
-5) WS protocol:
-   - receive PlayerEvent from clients
-   - broadcast PluginFrame to clients (audience filtering)
+
+1) Plugin registry  
+   - load manifests  
+   - provide plugin lookup by plugin_id
+
+2) Stage lifecycle  
+   - open stage  
+   - route player events  
+   - close stage  
+   - advance to next stage
+
+3) Trace store  
+   - persist StageTrace and StageOutcome for replay
+
+4) Score aggregation  
+   - sum ScoreDelta per player  
+   - store GradeDelta without interpreting its meaning
+
+5) Consent handling  
+   - collect and validate player consent before session entry  
+   - enforce participation rules based on consent  
+   - expose consent flags to plugins via PlayerIdentity
+
+6) WS protocol  
+   - receive PlayerEvent from clients  
+   - broadcast PluginFrame to clients (audience filtering)  
    - broadcast stage lifecycle events (opened/closed)
 
 ---
@@ -52,6 +71,8 @@ Rules:
 - quiz-engine calls is_finished to decide when to close automatically (time limit or plugin driven).
 - plugin may also request close by emitting a PluginFrame or setting an internal flag; engine decides.
 - build_outcome must be side-effect free and deterministic from (context + trace + plugin_state_in).
+- Plugins must never override or bypass consent flags.
+- Plugins must treat consent flags as authoritative.
 
 ---
 

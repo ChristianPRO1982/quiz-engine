@@ -25,14 +25,14 @@
 
 ### Quiz & sessions
 - `qe_quiz`
-  - Stockage du quiz JSON opaque + version de contrat / schema.
+  - Stockage du quiz JSON opaque + version de `schema_version`.
 - `qe_session`
   - Une partie (référence quiz + host + état lifecycle).
 - `qe_player`
   - Un participant à une session (guest ou connecté).
-- `qe_answer`
+- `qe_stage_event`
   - Réponses brutes (opaque).
-- `qe_question_result`
+- `qe_stage_outcome`
   - Résultats agrégés par question (opaque, plugin-owned).
 
 ### Historique & email

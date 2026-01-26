@@ -1,6 +1,6 @@
-# Runtime Contracts — Source of Truth
+# Runtime schemas — Source of Truth
 
-This directory contains the **authoritative runtime contracts** of the `quiz-engine` project.
+This directory contains the **authoritative runtime schemas** of the `quiz-engine` project.
 
 These documents define **all data structures, lifecycles, and interactions**
 used at runtime between:
@@ -22,15 +22,15 @@ without being explicitly documented in this folder.
 
 ---
 
-## Contract Status
+## schema Status
 
-Each contract document MUST declare its status at the top:
+Each schema document MUST declare its status at the top:
 
 - **DRAFT**  
-  The contract may evolve and is not yet guaranteed stable.
+  The schema may evolve and is not yet guaranteed stable.
 
 - **STABLE**  
-  The contract is frozen.
+  The schema is frozen.
   Any modification is a **breaking change** and requires:
   - a new `schema_version`
   - updated documentation
@@ -43,7 +43,7 @@ Silent changes are strictly forbidden.
 
 ## Versioning Rules
 
-- All runtime contracts are explicitly versioned using:
+- All runtime schemas are explicitly versioned using:
 ```
 schema_version: vX
 
@@ -54,13 +54,13 @@ schema_version: vX
 - outcomes and traces
 
 Engine and plugin **code versions** follow Semantic Versioning and are separate
-from contract versions.
+from schema versions.
 
 ---
 
-## Scope of These Contracts
+## Scope of These schemas
 
-The contracts in this folder define:
+The schemas in this folder define:
 
 - Runtime data models (Stage, Context, Events, Frames, Outcomes)
 - Engine ↔ Plugin interfaces
@@ -83,7 +83,7 @@ The engine core:
 - transports events and frames
 - aggregates numeric score deltas
 - stores traces and outcomes for replay
-- enforces contract validation
+- enforces schema validation
 
 The engine core MUST NEVER:
 - interpret answers
@@ -101,7 +101,7 @@ Plugins:
 - may emit live render frames
 - must be deterministic when using randomness
 
-Plugins interact with the engine **only via these contracts**.
+Plugins interact with the engine **only via these schemas**.
 
 ---
 
@@ -121,7 +121,7 @@ No Python-only objects may cross system boundaries.
 If a new requirement appears:
 
 1. **STOP coding**
-2. Propose a contract update (documentation only)
+2. Propose a schema update (documentation only)
 3. Decide whether it is:
  - backward-compatible → same `schema_version`
  - breaking → new `schema_version`
@@ -135,16 +135,16 @@ If a new requirement appears:
 
 ## Enforcement
 
-- Tests and fixtures are part of the contract.
+- Tests and fixtures are part of the schema.
 - CI must fail if:
 - undocumented fields appear
-- a STABLE contract is modified without version bump
+- a STABLE schema is modified without version bump
 - Codex and any AI assistant MUST follow these documents strictly.
 
 ---
 
 ## Final Reminder
 
-> A strict engine with explicit contracts is easier to evolve
+> A strict engine with explicit schemas is easier to evolve
 > than a clever engine with hidden assumptions.
 ```

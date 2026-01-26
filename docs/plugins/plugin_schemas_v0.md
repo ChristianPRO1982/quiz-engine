@@ -1,4 +1,4 @@
-# Plugin Contracts V0 (plugin-side)
+# Plugin schemas V0 (plugin-side)
 
 ## Purpose
 A plugin is standalone and owns all business logic:
@@ -99,3 +99,22 @@ Plugin rules:
 - Do NOT assume all stages are MCQ or have 4 choices.
 - Do NOT rely on client clock for fairness.
 - Do NOT require DB access to engine tables; plugin must be self-contained.
+
+---
+
+## Consent and Privacy Rules
+
+Plugins receive player consent information via PlayerIdentity.
+
+Available consent flags:
+- gameplay_identity: allows display and processing of the player's pseudo
+  within the scope of gameplay (leaderboards, scoring, statistics).
+- email_results: allows sending session results by email (authenticated users only).
+
+Rules for plugins:
+- If gameplay_identity is false:
+  - the player must not participate in the stage
+- If email_results is false:
+  - the plugin must not request or expect email delivery
+- Plugins must never attempt to infer identity or link guest players
+  to authenticated accounts.

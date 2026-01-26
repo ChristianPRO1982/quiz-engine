@@ -44,3 +44,22 @@ Objectif : aucun texte “façade” hardcodé, EN/FR minimum.
 ### Règles de dev
 - Toute nouvelle phrase visible utilisateur doit passer par gettext
 - Toute modification de wording de consentement => bump de version (`v2`) + relecture PJ
+
+## Consent Management (Sprint 1)
+
+Quiz-engine manages its own consent scope, independent from the central auth hub.
+
+Two consent categories are handled:
+1) Gameplay identity consent (required)
+   - allows processing and displaying the player's pseudo during gameplay
+2) Email results consent (optional, authenticated users only)
+   - allows sending session results by email
+
+Authenticated users may choose to participate:
+- in LOGGED mode (persistent consent)
+- or in GUEST mode (session-only consent)
+
+Guest participation:
+- requires gameplay identity consent for the session
+- never allows email usage
+- does not link session data to the authenticated account

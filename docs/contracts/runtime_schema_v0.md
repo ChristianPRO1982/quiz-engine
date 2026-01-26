@@ -1,4 +1,4 @@
-# Runtime Contracts V0 (quiz-engine only)
+# Runtime schemas V0 (quiz-engine only)
 
 ## Goal
 quiz-engine is "dumb": it orchestrates stages and transports state, but it never interprets answers nor computes rules.
@@ -59,9 +59,31 @@ Invariants:
 ---
 
 ### PlayerIdentity
+
+Represents a player participating in a session.
+A player may be authenticated via a central auth hub, but can still participate
+in quiz-engine either as a logged player or as a guest.
+
 Fields:
-- required: player_id:str, display_name:str
-- optional: metadata:dict
+- required:
+  - player_id: str
+  - display_name: str
+- optional:
+  - is_authenticated: bool
+  - participation_mode: "LOGGED" | "GUEST"
+  - consents: dict
+      - gameplay_identity: bool
+      - email_results: bool
+  - metadata: dict
+
+Invariants:
+- gameplay_identity consent is required to participate in a session.
+- If is_authenticated is false:
+  - participation_mode MUST be "GUEST"
+  - email_results MUST be false or absent
+- If participation_mode is "GUEST":
+  - email_results MUST be false or absent
+- email_results is meaningful only when is_authenticated is true.
 
 ---
 
@@ -83,6 +105,11 @@ Fields:
 
 Invariants:
 - server_now comes from server clock
+
+Notes:
+- PlayerIdentity.consents MUST be passed to plugins as-is.
+- The engine does not interpret consent values, but plugins must respect them
+  (e.g. exclude from scoring, anonymize display, disable email features).
 
 ---
 

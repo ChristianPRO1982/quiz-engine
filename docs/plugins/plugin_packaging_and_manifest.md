@@ -8,7 +8,7 @@ PluginManifest:
 - plugin_id (stable unique)
 - plugin_version
 - display_name
-- contract_version == "v0"
+- schema_version == "v0"
 
 Optional:
 - capabilities: dict
@@ -21,7 +21,7 @@ Optional:
 
 ## Conventions
 - plugin_id: lowercase, snake-like or kebab-like, e.g. "mcq", "slider", "wordcloud"
-- contract_version: "v0" must match engine contracts
+- schema_version: "v0" must match engine schemas
 
 ## Loading expectations (engine-side)
 Engine may load plugins by:

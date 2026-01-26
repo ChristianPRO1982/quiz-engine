@@ -74,13 +74,30 @@ No fine-grained permission system in V1.
 ---
 
 ## 8. Data & Privacy Principles
+
 - Data minimization by default
-- No persistent identity for players
+- No persistent identity for players by default
 - Session data:
   - Stored in memory during runtime
   - Checkpointed only at safe moments (end of stage)
 - No long-term storage without explicit consent
 - Retention duration is configurable by admin
+
+### Consent Management
+
+- Quiz-engine is responsible for managing player consent within its own scope.
+- Consent is required for:
+  - processing and displaying a player's pseudo during gameplay
+- Additional consent is required for:
+  - sending session results by email (authenticated users only)
+
+Authenticated users may participate in quiz-engine:
+- as **logged players**, with consent stored and reused across sessions
+- or as **guest players**, with session-only consent and no persistence
+
+Session-only players:
+- must provide consent at each session
+- never have their email processed or stored
 
 ---
 
