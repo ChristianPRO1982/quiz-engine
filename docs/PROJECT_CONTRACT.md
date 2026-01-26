@@ -78,7 +78,7 @@ No fine-grained permission system in V1.
 - No persistent identity for players
 - Session data:
   - Stored in memory during runtime
-  - Checkpointed only at safe moments (end of question)
+  - Checkpointed only at safe moments (end of stage)
 - No long-term storage without explicit consent
 - Retention duration is configurable by admin
 
