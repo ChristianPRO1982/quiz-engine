@@ -1,8 +1,0 @@
-{
-  "v": "2",
-  "type": "session_status",
-  "session_code": "ABC123",
-  "payload": {
-    "current_state": "LOBBY"
-  }
-}

@@ -1,0 +1,18 @@
+{
+  "type": "PLAYER_EVENT",
+  "payload": {
+    "event_id": "event-1",
+    "session_id": "session-1",
+    "stage_id": "stage-1",
+    "stage_index": 0,
+    "player_id": "player-1",
+    "type": "SUBMIT",
+    "server_received_at": "2024-01-01T12:00:00Z",
+    "payload": {
+      "answer": "A"
+    },
+    "client_sent_at": "2024-01-01T11:59:59Z",
+    "seq": 1,
+    "correlation_id": "corr-1"
+  }
+}

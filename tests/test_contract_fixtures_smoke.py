@@ -26,16 +26,14 @@ def test_all_contract_fixtures_are_valid_json():
 
 def test_ws_fixtures_have_mandatory_envelope_fields():
     ws_files = (
-        "ws_client_join.json",
-        "ws_client_join_v2.json",
-        "ws_server_lobby_snapshot.json",
-        "ws_server_session_status.json",
+        "ws_player_event.json",
+        "ws_plugin_frame.json",
     )
 
     for filename in ws_files:
         data = load_json(FIXTURES_DIR / filename)
 
-        for field in ("v", "type", "session_code", "payload"):
+        for field in ("type", "payload"):
             assert field in data, f"{filename} missing field '{field}'"
 
 
@@ -46,50 +44,34 @@ def test_plugin_manifest_has_minimal_required_fields():
         "schema_version",
         "plugin_id",
         "plugin_version",
-        "engine_version_compatibility",
-        "capabilities",
+        "display_name",
     ):
         assert field in data, f"plugin_manifest missing field '{field}'"
 
 
-def test_quiz_minimal_has_minimal_required_fields():
-    data = load_json(FIXTURES_DIR / "quiz_minimal.json")
+def test_stage_outcome_minimal_has_required_fields():
+    data = load_json(FIXTURES_DIR / "stage_outcome_minimal.json")
 
     for field in (
-        "schema_version",
-        "engine_version",
-        "quiz_id",
-        "nodes",
-        "edges",
-    ):
-        assert field in data, f"quiz_minimal missing field '{field}'"
-
-    assert isinstance(data["nodes"], list)
-    assert len(data["nodes"]) >= 1
-
-
-def test_question_result_minimal_has_minimal_required_fields():
-    data = load_json(FIXTURES_DIR / "question_result_minimal.json")
-
-    for field in (
-        "schema_version",
-        "question_id",
+        "session_id",
+        "stage_id",
+        "stage_index",
         "plugin_id",
-        "plugin_version",
-        "timestamp",
-        "player_results",
+        "completed_at",
     ):
-        assert field in data, f"question_result missing field '{field}'"
-
-    assert isinstance(data["player_results"], list)
+        assert field in data, f"stage_outcome missing field '{field}'"
 
 
-def test_http_create_session_response_has_minimal_required_fields():
-    data = load_json(FIXTURES_DIR / "http_create_session_response.json")
+def test_stage_trace_minimal_has_required_fields():
+    data = load_json(FIXTURES_DIR / "stage_trace_minimal.json")
 
     for field in (
-        "schema_version",
-        "session_code",
-        "join_url",
+        "session_id",
+        "stage_id",
+        "stage_index",
+        "started_at",
+        "events",
     ):
-        assert field in data, f"http_create_session_response missing '{field}'"
+        assert field in data, f"stage_trace missing field '{field}'"
+
+    assert isinstance(data["events"], list)

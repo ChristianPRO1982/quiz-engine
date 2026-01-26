@@ -65,6 +65,7 @@ The schemas in this folder define:
 - Runtime data models (Stage, Context, Events, Frames, Outcomes)
 - Engine ↔ Plugin interfaces
 - WebSocket message structures
+- HTTP endpoints used by the engine runtime
 - Invariants and validation rules
 - Serialization requirements (JSON-only, UTC timestamps)
 

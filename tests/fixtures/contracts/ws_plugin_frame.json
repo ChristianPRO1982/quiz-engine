@@ -1,0 +1,16 @@
+{
+  "type": "PLUGIN_FRAME",
+  "payload": {
+    "session_id": "session-1",
+    "stage_id": "stage-1",
+    "stage_index": 0,
+    "plugin_id": "plugin.quiz",
+    "audience": "ALL",
+    "frame_type": "VIEW_MODEL",
+    "payload": {
+      "text": "Hello"
+    },
+    "sent_at": "2024-01-01T12:00:00Z",
+    "seq": 1
+  }
+}
