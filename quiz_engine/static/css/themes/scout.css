@@ -1,0 +1,37 @@
+/* scout.css
+   Theme seeds for "scout" (light + dark via prefers-color-scheme). */
+
+html[data-theme="scout"] {
+  --ds-bg: #bde7db;
+  --ds-surface: #e6f0ed;
+  --ds-fg: #1c4e4a;
+  --ds-muted: rgba(28, 78, 74, 0.70);
+  --ds-border: #54e7db;
+
+  --ds-primary: #1c4e4a;
+  --ds-success: #18bb67;
+  --ds-danger: #dd0000;
+
+  --ds-link: #1c4e4a;
+  --ds-link-hover: #b3780b;
+
+  --ds-radius-card: 0.5rem;
+  --ds-radius-action: 1.5rem 0.5rem 1.5rem 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="scout"] {
+    --ds-bg: #0b1f26;
+    --ds-surface: #02141d;
+    --ds-fg: #68947d;
+    --ds-muted: rgba(104, 148, 125, 0.78);
+    --ds-border: rgba(104, 148, 125, 0.18);
+
+    --ds-primary: #143835;
+    --ds-success: #18bb67;
+    --ds-danger: #ff2222;
+
+    --ds-link: #2f7c76;
+    --ds-link-hover: #fd9153;
+  }
+}

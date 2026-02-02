@@ -1,0 +1,211 @@
+/* quiz.css
+   Quiz UI components (no hardcoded colors). */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--qe-font-sans);
+  color: var(--qe-fg);
+  background: var(--qe-bg);
+}
+
+a {
+  color: var(--qe-link);
+  text-decoration: underline dotted;
+}
+
+a:hover {
+  color: var(--qe-link-hover);
+  text-decoration: underline;
+}
+
+.qe-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--qe-space-6) var(--qe-space-4);
+}
+
+.qe-shell {
+  width: min(980px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--qe-space-5);
+}
+
+.qe-card {
+  background: var(--qe-surface);
+  border: 1px solid var(--qe-border);
+  border-radius: var(--qe-radius-card);
+  box-shadow: var(--qe-shadow-1);
+  padding: var(--qe-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--qe-space-4);
+}
+
+.qe-card--compact {
+  padding: var(--qe-space-4);
+}
+
+.qe-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--qe-space-3);
+  color: var(--qe-muted);
+  font-size: 0.9rem;
+}
+
+.qe-title {
+  margin: 0;
+  font-size: clamp(1.4rem, 3.2vw, 2rem);
+  line-height: 1.1;
+}
+
+.qe-hint {
+  margin: 0;
+  color: var(--qe-muted);
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.qe-interaction {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qe-space-3);
+  padding: var(--qe-space-4);
+  border: 1px solid var(--qe-border);
+  border-radius: calc(var(--qe-radius-card) - 0.25rem);
+  background: var(--qe-surface-2);
+}
+
+.qe-choices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qe-space-3);
+}
+
+.qe-choice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--qe-space-3);
+
+  padding: 0.9rem 1rem;
+  border-radius: var(--qe-radius-action);
+
+  background: var(--qe-choice-bg);
+  color: var(--qe-choice-fg);
+  border: 1px solid var(--qe-choice-border);
+
+  cursor: pointer;
+  user-select: none;
+
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+.qe-choice:hover {
+  background: var(--qe-choice-hover-bg);
+  transform: translateY(-1px);
+}
+
+.qe-choice:focus-visible {
+  outline: var(--qe-focus-width) solid var(--qe-focus);
+  outline-offset: 3px;
+}
+
+.qe-choice.is-disabled,
+.qe-choice.is-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
+.qe-choice.is-selected {
+  background: var(--qe-choice-selected-bg);
+  border-color: var(--qe-choice-selected-border);
+}
+
+.qe-choice.is-correct {
+  background: var(--qe-correct-bg);
+  border-color: var(--qe-success);
+}
+
+.qe-choice.is-wrong {
+  background: var(--qe-wrong-bg);
+  border-color: var(--qe-danger);
+}
+
+.qe-actions {
+  display: flex;
+  gap: var(--qe-space-3);
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.qe-btn {
+  border: 1px solid var(--qe-border);
+  background: var(--qe-surface);
+  color: var(--qe-fg);
+  border-radius: var(--qe-radius-action);
+  padding: 0.75rem 1.1rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.qe-btn:hover {
+  transform: translateY(-1px);
+  background: var(--qe-surface-2);
+}
+
+.qe-btn:focus-visible {
+  outline: var(--qe-focus-width) solid var(--qe-focus);
+  outline-offset: 3px;
+}
+
+.qe-btn--primary {
+  border-color: var(--qe-primary);
+}
+
+.qe-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--qe-space-3);
+}
+
+.qe-result-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--qe-space-3);
+  align-items: center;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--qe-border);
+  border-radius: calc(var(--qe-radius-card) - 0.25rem);
+  background: var(--qe-surface-2);
+}
+
+.qe-result-row strong {
+  font-weight: 650;
+}
+
+@media (max-width: 720px) {
+  .qe-page {
+    padding: var(--qe-space-5) var(--qe-space-3);
+  }
+
+  .qe-card {
+    padding: var(--qe-space-4);
+  }
+
+  .qe-interaction {
+    padding: var(--qe-space-3);
+  }
+}

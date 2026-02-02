@@ -1,0 +1,34 @@
+/* normal.css
+   Theme seeds for "normal" (light + dark via prefers-color-scheme). */
+
+html[data-theme="normal"] {
+  --ds-bg: #ffddbb;
+  --ds-surface: #fff4f0;
+  --ds-fg: #5a2b1f;
+  --ds-muted: rgba(90, 43, 31, 0.70);
+  --ds-border: #8b1e1e;
+
+  --ds-primary: #b7410e;
+  --ds-success: #18bb67;
+  --ds-danger: #dd0000;
+
+  --ds-link: #5a2b1f;
+  --ds-link-hover: #b3780b;
+}
+
+@media (prefers-color-scheme: dark) {
+  html[data-theme="normal"] {
+    --ds-bg: #1c0f0a;
+    --ds-surface: #2d1b1b;
+    --ds-fg: #b17054;
+    --ds-muted: rgba(177, 112, 84, 0.78);
+    --ds-border: rgba(177, 112, 84, 0.22);
+
+    --ds-primary: #5c1210;
+    --ds-success: #18bb67;
+    --ds-danger: #ff2222;
+
+    --ds-link: #b17054;
+    --ds-link-hover: #fd9153;
+  }
+}

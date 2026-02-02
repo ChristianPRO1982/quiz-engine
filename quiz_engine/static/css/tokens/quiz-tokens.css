@@ -1,0 +1,74 @@
+/* quiz-tokens.css
+   Quiz semantic tokens derived from theme seeds (ds-*). */
+
+:root {
+  color-scheme: light dark;
+
+  --qe-font-sans: "Space Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --qe-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+
+  --qe-radius-card: var(--ds-radius-card, 0.75rem);
+  --qe-radius-action: var(--ds-radius-action, 9999px);
+
+  --qe-shadow-1: 0 10px 24px rgba(0, 0, 0, 0.14);
+  --qe-shadow-2: 0 16px 38px rgba(0, 0, 0, 0.18);
+
+  --qe-focus: var(--ds-primary);
+  --qe-focus-width: 3px;
+
+  --qe-space-1: 0.25rem;
+  --qe-space-2: 0.5rem;
+  --qe-space-3: 0.75rem;
+  --qe-space-4: 1rem;
+  --qe-space-5: 1.5rem;
+  --qe-space-6: 2rem;
+}
+
+html[data-theme] {
+  --qe-bg: var(--ds-bg);
+  --qe-surface: var(--ds-surface);
+  --qe-fg: var(--ds-fg);
+  --qe-muted: var(--ds-muted);
+  --qe-border: var(--ds-border);
+
+  --qe-primary: var(--ds-primary);
+  --qe-success: var(--ds-success);
+  --qe-danger: var(--ds-danger);
+
+  --qe-link: var(--ds-link, var(--ds-fg));
+  --qe-link-hover: var(--ds-link-hover, var(--ds-primary));
+}
+
+/* Fallbacks (no color-mix) */
+html[data-theme] {
+  --qe-surface-2: var(--qe-surface);
+
+  --qe-choice-bg: var(--qe-surface);
+  --qe-choice-border: var(--qe-border);
+  --qe-choice-fg: var(--qe-fg);
+
+  --qe-choice-hover-bg: var(--qe-surface);
+  --qe-choice-selected-bg: var(--qe-surface);
+  --qe-choice-selected-border: var(--qe-primary);
+
+  --qe-correct-bg: var(--qe-surface);
+  --qe-wrong-bg: var(--qe-surface);
+}
+
+@supports (color: color-mix(in oklab, white, black)) {
+  html[data-theme] {
+    --qe-surface-2: color-mix(in oklab, var(--qe-surface) 86%, var(--qe-fg));
+
+    --qe-choice-bg: var(--qe-surface-2);
+    --qe-choice-border: color-mix(in oklab, var(--qe-border) 70%, var(--qe-fg));
+    --qe-choice-fg: var(--qe-fg);
+
+    --qe-choice-hover-bg: color-mix(in oklab, var(--qe-choice-bg) 86%, var(--qe-primary));
+    --qe-choice-selected-bg: color-mix(in oklab, var(--qe-choice-bg) 82%, var(--qe-primary));
+    --qe-choice-selected-border: var(--qe-primary);
+
+    --qe-correct-bg: color-mix(in oklab, var(--qe-choice-bg) 80%, var(--qe-success));
+    --qe-wrong-bg: color-mix(in oklab, var(--qe-choice-bg) 82%, var(--qe-danger));
+  }
+}
