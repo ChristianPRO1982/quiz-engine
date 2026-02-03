@@ -32,7 +32,7 @@ def test_parse_po_string_handles_literal_and_fallback() -> None:
 def test_load_po_catalog_parses_entries(tmp_path: Path) -> None:
     po_path = tmp_path / "messages.po"
     po_path.write_text(
-        '\n'.join(
+        "\n".join(
             [
                 "# comment",
                 'msgid "home.title"',
@@ -66,7 +66,7 @@ def test_normalize_and_select_locale() -> None:
 def test_translation_uses_po_catalog(tmp_path: Path, monkeypatch) -> None:
     po_path = _configure_locales(tmp_path, monkeypatch)
     po_path.write_text(
-        '\n'.join(
+        "\n".join(
             [
                 'msgid "home.badge.dev"',
                 'msgstr "Dev"',
