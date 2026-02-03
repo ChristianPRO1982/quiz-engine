@@ -206,3 +206,169 @@ def test_maybe_close_uses_time_limit() -> None:
     outcome = runner.maybe_close()
 
     assert outcome is not None
+
+
+def test_open_stage_rejects_double_open() -> None:
+    runtime = DummyRuntime()
+    runner = StageRunner(runtime)
+    now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    context = _context(_stage_definition(), now)
+
+    runner.open_stage(context)
+
+    with pytest.raises(ValueError):
+        runner.open_stage(context)
+
+
+def test_handle_player_event_requires_stage_open() -> None:
+    runner = StageRunner(DummyRuntime())
+
+    with pytest.raises(ValueError):
+        runner.handle_player_event({"event_id": "event-1"})
+
+
+def test_handle_player_event_rejects_non_dict_payload() -> None:
+    runtime = DummyRuntime()
+    runner = StageRunner(runtime)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+
+    with pytest.raises(ValueError):
+        runner.handle_player_event(["bad payload"])
+
+
+class NullHostRuntime(DummyRuntime):
+    def on_host_action(
+        self, action: dict, trace: StageTrace
+    ) -> list[PluginFrame] | None:
+        return None
+
+
+class BadFrameRuntime(DummyRuntime):
+    def on_host_action(
+        self, action: dict, trace: StageTrace
+    ) -> list[PluginFrame] | None:
+        return ["invalid"]
+
+
+def test_handle_host_action_requires_stage_open() -> None:
+    runner = StageRunner(DummyRuntime())
+
+    with pytest.raises(ValueError):
+        runner.handle_host_action({})
+
+
+def test_handle_host_action_rejects_invalid_action_payload() -> None:
+    runtime = DummyRuntime()
+    runner = StageRunner(runtime)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+
+    with pytest.raises(ValueError):
+        runner.handle_host_action(["bad action"])
+
+
+def test_handle_host_action_allows_none_frames() -> None:
+    runtime = NullHostRuntime()
+    runner = StageRunner(runtime)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+
+    frames = runner.handle_host_action({"type": "pause"})
+
+    assert frames == []
+
+
+def test_handle_host_action_rejects_invalid_frames() -> None:
+    runtime = BadFrameRuntime()
+    runner = StageRunner(runtime)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+
+    with pytest.raises(ValueError):
+        runner.handle_host_action({"type": "pause"})
+
+
+def test_maybe_close_returns_existing_outcome() -> None:
+    runtime = DummyRuntime()
+    runtime.finish_after_events = 0
+    runner = StageRunner(runtime)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+
+    outcome = runner.maybe_close()
+    assert outcome is not None
+
+    second_outcome = runner.maybe_close()
+
+    assert second_outcome is outcome
+
+
+def test_maybe_close_returns_none_when_not_finished() -> None:
+    runtime = DummyRuntime()
+    runtime.finish_after_events = 10
+    runner = StageRunner(runtime)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+
+    outcome = runner.maybe_close()
+
+    assert outcome is None
+
+
+@pytest.mark.parametrize(
+    ("outcome_kwargs", "error_message"),
+    [
+        ({"session_id": "other"}, "Outcome session_id does not match trace."),
+        ({"stage_id": "other"}, "Outcome stage_id does not match trace."),
+        ({"stage_index": 99}, "Outcome stage_index does not match trace."),
+    ],
+)
+def test_validate_outcome_rejects_mismatch(outcome_kwargs, error_message) -> None:
+    trace = StageTrace(
+        session_id="session-1",
+        stage_id="stage-1",
+        stage_index=0,
+        started_at=datetime(2024, 1, 1, tzinfo=UTC),
+    )
+    outcome = StageOutcome(
+        session_id=outcome_kwargs.get("session_id", "session-1"),
+        stage_id=outcome_kwargs.get("stage_id", "stage-1"),
+        stage_index=outcome_kwargs.get("stage_index", 0),
+        plugin_id="dummy.plugin",
+        completed_at=datetime(2024, 1, 1, 0, 1, tzinfo=UTC),
+    )
+
+    with pytest.raises(ValueError, match=error_message):
+        StageRunner._validate_outcome(outcome, trace)
+
+
+def test_parse_datetime_accepts_types() -> None:
+    now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+
+    from quiz_engine.runtime import stage_runner as module
+
+    assert module._parse_datetime(None) is None
+    assert module._parse_datetime(now) == now
+    assert module._parse_datetime("2024-01-01T12:00:00+00:00") == now
+
+    with pytest.raises(ValueError):
+        module._parse_datetime(123)
