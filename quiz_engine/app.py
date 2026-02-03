@@ -9,6 +9,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
+from auth.settings import AuthSettings
+from quiz_engine.i18n import get_translator, select_locale
+
 
 def create_app() -> FastAPI:
     app = FastAPI()
@@ -20,7 +23,14 @@ def create_app() -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def home(request: Request) -> HTMLResponse:
-        return templates.TemplateResponse(request, "home.html")
+        settings = AuthSettings.from_env()
+        locale = select_locale(request.headers.get("accept-language"))
+        translator = get_translator(locale)
+        return templates.TemplateResponse(
+            request,
+            "home.html",
+            {"is_dev": settings.mode == "dev", "_": translator.gettext},
+        )
 
     @app.get("/health")
     async def health() -> dict[str, str]:

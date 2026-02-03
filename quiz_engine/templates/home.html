@@ -12,7 +12,12 @@
   <body class="qe-page">
     <main class="qe-shell">
       <section class="qe-card">
-        <p class="qe-meta">Quiz Engine</p>
+        <p class="qe-meta">
+          <span>Quiz Engine</span>
+          {% if is_dev %}
+            <span class="qe-pill qe-pill--dev">{{ _("home.badge.dev") }}</span>
+          {% endif %}
+        </p>
         <h1 class="qe-title">Bienvenue</h1>
         <p class="qe-hint">Lance une session ou rejoins avec un code.</p>
       </section>

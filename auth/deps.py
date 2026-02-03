@@ -5,7 +5,6 @@ from fastapi import Request
 from .models import AuthUser
 from .settings import AuthSettings
 
-
 DEV_USER = AuthUser(
     sub="dev-user-001",
     email="dev@local.test",

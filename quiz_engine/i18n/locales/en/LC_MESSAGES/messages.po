@@ -18,6 +18,9 @@ msgstr "Create a lobby, share the QR code, and start the session."
 msgid "host.button.create_session"
 msgstr "Create session"
 
+msgid "home.badge.dev"
+msgstr "Dev"
+
 msgid "host.label.session_code"
 msgstr "Session code"
 

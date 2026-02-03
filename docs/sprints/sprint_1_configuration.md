@@ -23,6 +23,11 @@ Variables typiques (à ajuster selon ton provider OIDC/OAuth) :
 - `AUTH_JWKS_URL` (si validation JWT via JWKS)
 - `AUTH_AUDIENCE` (si utilisé)
 
+Développement local (émulation) :
+- si `AUTH_MODE` n'est pas défini, la présence d'un fichier `local.conf` à la racine
+  force le mode `dev` (utilisateur fictif).
+- `AUTH_DEV_FILE` permet de changer le nom/emplacement du fichier déclencheur.
+
 ## Consentements (service-level)
 - `CONSENT_REVIEW_MONTHS` (obligatoire, admin-configurable via DB)
   - nombre de mois avant revalidation des consentements des users connectés
