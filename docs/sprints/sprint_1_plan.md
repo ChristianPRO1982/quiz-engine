@@ -1,7 +1,7 @@
 # Sprint 1 — DB, migrations, conventions, consentements & i18n
 
 ## Objectif
-Mettre en place la persistance MySQL pour quiz-engine en base partagée, avec :
+Mettre en place la persistance PostgreSQL pour quiz-engine en base partagée, avec :
 - tables strictement préfixées `qe_`
 - migrations Alembic sûres (autogenerate autorisé mais filtré)
 - isolation totale vis-à-vis des tables communes / autres services

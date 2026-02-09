@@ -19,7 +19,7 @@
 
 🇫🇷 FR: Moteur de quiz temps réel basé sur FastAPI, utilisant des API REST et WebSockets pour des sessions live sur smartphones.
 
-## General architecture for quiz-engine (FastAPI + REST + WebSocket + MySQL)
+## General architecture for quiz-engine (FastAPI + REST + WebSocket + PostgreSQL)
 
 ```mermaid
 flowchart TB
@@ -39,7 +39,7 @@ flowchart TB
   end
 
   subgraph Data[Persistence]
-    DB[MySQL quizzes, sessions, players, answers]
+    DB[PostgreSQL quizzes, sessions, players, answers]
     MIG[Alembic migrations]
   end
 
@@ -64,7 +64,7 @@ flowchart TB
 
 ## Database migrations (Alembic)
 
-- `DATABASE_URL` is required and must point to the shared MySQL database.
+- `DATABASE_URL` is required and must point to the shared PostgreSQL database.
 - Only `qe_*` tables (plus `qe_alembic_version`) are managed by this service.
 
 Create a migration:

@@ -3,7 +3,7 @@
 ## DB
 ### Variables
 - `DATABASE_URL` (obligatoire)
-  - ex : `mysql+mysqldb://user:pass@host:3306/shared_db`
+  - ex : `postgresql+psycopg://user:pass@host:5432/shared_db`
 - `DATABASE_URL_TEST` (optionnel, tests DB)
 - `DB_ECHO` (optionnel)
 - `ENV` (optionnel)

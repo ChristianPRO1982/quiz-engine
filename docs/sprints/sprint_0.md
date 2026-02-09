@@ -52,7 +52,7 @@ This sprint validates the full technical chain without any quiz logic.
 - Plugins
 - Scoring
 - Timers
-- Persistence (MySQL, Redis, files)
+- Persistence (PostgreSQL, Redis, files)
 - Authentication (Google / email)
 - RGPD consent management (placeholder only)
 
