@@ -40,7 +40,7 @@ flowchart TB
 
   subgraph Data[Persistence]
     DB[PostgreSQL quizzes, sessions, players, answers]
-    MIG[Alembic migrations]
+    MIG[SQL migrations files]
   end
 
   H -->|HTTP| TPL
@@ -62,28 +62,13 @@ flowchart TB
 
 ```
 
-## Database migrations (Alembic)
+## Database migrations (SQL files, manual execution)
 
 - `DATABASE_URL` is required and must point to the shared PostgreSQL database.
-- Only `qe_*` tables (plus `qe_alembic_version`) are managed by this service.
-
-Create a migration:
-
-```bash
-uv run alembic revision --autogenerate -m "create qe_* core tables"
-```
-
-Apply migrations:
-
-```bash
-uv run alembic upgrade head
-```
-
-Rollback one migration:
-
-```bash
-uv run alembic downgrade -1
-```
+- Only `qe_*` tables (plus `qe_schema_migration`) are managed by this service.
+- SQL migration files are in `db/migrations/sql/`.
+- They are executed manually by a DB admin.
+- See `docs/runbooks/runbook.md` for the full procedure.
 
 ## i18n (gettext)
 

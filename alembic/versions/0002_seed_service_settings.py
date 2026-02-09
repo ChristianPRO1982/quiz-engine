@@ -13,14 +13,14 @@ depends_on = None
 def upgrade() -> None:
     op.execute(
         sa.text(
-            "INSERT INTO qe_service_setting (`key`, `value`)"
-            " VALUES ('CONSENT_REVIEW_MONTHS', '6')"
-            " ON DUPLICATE KEY UPDATE value = value"
+            "INSERT INTO qe_service_setting (key, value) "
+            "VALUES ('CONSENT_REVIEW_MONTHS', '6') "
+            "ON CONFLICT (key) DO NOTHING"
         )
     )
 
 
 def downgrade() -> None:
     op.execute(
-        sa.text("DELETE FROM qe_service_setting WHERE `key` = 'CONSENT_REVIEW_MONTHS'")
+        sa.text("DELETE FROM qe_service_setting WHERE key = 'CONSENT_REVIEW_MONTHS'")
     )

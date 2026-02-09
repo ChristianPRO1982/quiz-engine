@@ -1,6 +1,7 @@
 """create qe core tables"""
 
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 from alembic import op
 
@@ -11,6 +12,34 @@ depends_on = None
 
 
 def upgrade() -> None:
+    user_role_enum = postgresql.ENUM("admin", "moderator", name="qe_user_role_enum")
+    user_role_enum.create(op.get_bind(), checkfirst=True)
+    user_role_enum.create_type = False
+
+    consent_scope_enum = postgresql.ENUM(
+        "pseudo", "history", "email", name="qe_consent_scope"
+    )
+    consent_scope_enum.create(op.get_bind(), checkfirst=True)
+    consent_scope_enum.create_type = False
+
+    consent_status_enum = postgresql.ENUM(
+        "granted", "revoked", name="qe_consent_status"
+    )
+    consent_status_enum.create(op.get_bind(), checkfirst=True)
+    consent_status_enum.create_type = False
+
+    consent_action_enum = postgresql.ENUM(
+        "granted", "revoked", "expired", "revalidated", name="qe_consent_action"
+    )
+    consent_action_enum.create(op.get_bind(), checkfirst=True)
+    consent_action_enum.create_type = False
+
+    session_state_enum = postgresql.ENUM(
+        "LOBBY", "RUNNING", "ENDED", name="qe_session_state"
+    )
+    session_state_enum.create(op.get_bind(), checkfirst=True)
+    session_state_enum.create_type = False
+
     op.create_table(
         "qe_user",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -81,7 +110,7 @@ def upgrade() -> None:
         sa.Column("host_user_id", sa.Integer(), nullable=True),
         sa.Column(
             "state",
-            sa.Enum("LOBBY", "RUNNING", "ENDED", name="qe_session_state"),
+            session_state_enum,
             server_default="LOBBY",
             nullable=False,
         ),
@@ -119,7 +148,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column(
             "role",
-            sa.Enum("admin", "moderator", name="qe_user_role"),
+            user_role_enum,
             nullable=False,
         ),
         sa.Column(
@@ -144,12 +173,12 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column(
             "scope",
-            sa.Enum("pseudo", "history", "email", name="qe_consent_scope"),
+            consent_scope_enum,
             nullable=False,
         ),
         sa.Column(
             "status",
-            sa.Enum("granted", "revoked", name="qe_consent_status"),
+            consent_status_enum,
             nullable=False,
         ),
         sa.Column("policy_version", sa.String(length=32), nullable=False),
@@ -184,18 +213,12 @@ def upgrade() -> None:
         sa.Column("user_id", sa.Integer(), nullable=False),
         sa.Column(
             "scope",
-            sa.Enum("pseudo", "history", "email", name="qe_consent_scope"),
+            consent_scope_enum,
             nullable=False,
         ),
         sa.Column(
             "action",
-            sa.Enum(
-                "granted",
-                "revoked",
-                "expired",
-                "revalidated",
-                name="qe_consent_action",
-            ),
+            consent_action_enum,
             nullable=False,
         ),
         sa.Column("policy_version", sa.String(length=32), nullable=False),
@@ -224,7 +247,7 @@ def upgrade() -> None:
         sa.Column(
             "is_guest",
             sa.Boolean(),
-            server_default=sa.text("1"),
+            server_default=sa.text("true"),
             nullable=False,
         ),
         sa.Column(
@@ -325,3 +348,19 @@ def downgrade() -> None:
     op.drop_table("qe_quiz")
     op.drop_table("qe_service_setting")
     op.drop_table("qe_user")
+
+    postgresql.ENUM("LOBBY", "RUNNING", "ENDED", name="qe_session_state").drop(
+        op.get_bind(), checkfirst=True
+    )
+    postgresql.ENUM(
+        "granted", "revoked", "expired", "revalidated", name="qe_consent_action"
+    ).drop(op.get_bind(), checkfirst=True)
+    postgresql.ENUM("granted", "revoked", name="qe_consent_status").drop(
+        op.get_bind(), checkfirst=True
+    )
+    postgresql.ENUM("pseudo", "history", "email", name="qe_consent_scope").drop(
+        op.get_bind(), checkfirst=True
+    )
+    postgresql.ENUM("admin", "moderator", name="qe_user_role_enum").drop(
+        op.get_bind(), checkfirst=True
+    )
