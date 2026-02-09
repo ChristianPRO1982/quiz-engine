@@ -4,11 +4,16 @@ services:
     build: .
     restart: unless-stopped
 
+    # for DEV
     ports:
       - "8000:8000"
 
     env_file:
       - .env
+
+    # Required on Linux so DB_HOST=host.docker.internal resolves from container.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
     command:
       - /bin/sh
