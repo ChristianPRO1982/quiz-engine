@@ -1,0 +1,3 @@
+secrets:
+  qe_password:
+    file: /opt/stacks/_shared/secrets/pg-carthographie/qe_password.txt

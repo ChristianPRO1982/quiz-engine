@@ -4,8 +4,22 @@ services:
     build: .
     restart: unless-stopped
 
+    ports:
+      - "8000:8000"
+
     env_file:
       - .env
+
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        export DATABASE_URL="${DB_SCHEME}://${DB_USER}:$(cat /run/secrets/qe_password.txt)@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+        exec /app/.venv/bin/uvicorn quiz_engine.app:app --host 0.0.0.0 --port 8000 --proxy-headers
+
+    secrets:
+      - source: qe_password
+        target: qe_password.txt
 
     networks:
       - proxy
@@ -27,3 +41,7 @@ networks:
     external: true
   backend:
     external: true
+
+secrets:
+  qe_password:
+    file: ${DB_PASSWORD_FILE_HOST}
