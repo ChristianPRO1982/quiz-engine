@@ -4,7 +4,9 @@
   <section class="qe-card">
     <p class="qe-meta">
       <span>Quiz Builder</span>
-      <a class="qe-btn qe-btn--primary" href="/admin/quizzes/new/step-1">Create new quiz</a>
+      <form method="post" action="/admin/quizzes">
+        <button class="qe-btn qe-btn--primary" type="submit">New quiz</button>
+      </form>
     </p>
     <h1 class="qe-title">My quizzes</h1>
     {% if quizzes %}
@@ -20,7 +22,9 @@
     {% else %}
       <div class="qe-empty-state">
         <p class="qe-hint">No quiz yet. Start by creating your first one.</p>
-        <a class="qe-btn qe-btn--primary" href="/admin/quizzes/new/step-1">Create new quiz</a>
+        <form method="post" action="/admin/quizzes">
+          <button class="qe-btn qe-btn--primary" type="submit">Create new quiz</button>
+        </form>
       </div>
     {% endif %}
   </section>

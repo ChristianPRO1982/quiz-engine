@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -38,4 +38,4 @@ class QuizSummaryResponse(BaseModel):
 
 
 class QuizDetailResponse(QuizSummaryResponse):
-    questions: list[QuizQuestionIn]
+    questions: list[dict[str, Any]]

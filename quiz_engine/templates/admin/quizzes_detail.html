@@ -1,41 +1,59 @@
 {% extends "base.html" %}
-{% block title %}Quiz Detail{% endblock %}
+{% block title %}Quiz Editor{% endblock %}
 {% block content %}
-  <section class="qe-card">
+  <section class="qe-card qe-editor" data-quiz-id="{{ quiz.id }}">
     <p class="qe-meta">
       <span>Quiz #{{ quiz.id }}</span>
       <a href="/admin/quizzes">Back to list</a>
     </p>
-    <h1 class="qe-title">{{ quiz_payload.title }}</h1>
-    <p class="qe-hint">{{ quiz_payload.description or "No description" }}</p>
-    <p class="qe-muted-text">Schema: {{ quiz.schema_version }}</p>
+    <h1 class="qe-title">Quiz editor</h1>
+    <p class="qe-hint">Edit questions, reorder with drag handle, then save manually.</p>
+    <p class="qe-muted-text">Schema: {{ editor_payload.schema_version }}</p>
 
-    <section class="qe-results">
-      <h2>Questions</h2>
-      {% if questions %}
-        {% for question in questions %}
-          <article class="qe-result-row">
-            <div>
-              <strong>{{ question.text }}</strong>
-              <ul class="qe-list">
-                {% for choice in question.choices %}
-                  <li>{{ choice }}</li>
-                {% endfor %}
-              </ul>
-            </div>
-            <span class="qe-muted-text">{{ question.type }}</span>
-          </article>
-        {% endfor %}
-      {% else %}
-        <p class="qe-hint">No questions in this quiz.</p>
-      {% endif %}
+    <section class="qe-editor-toolbar" aria-label="Editor save toolbar">
+      <span id="qe-editor-status" class="qe-pill">Saved</span>
+      <button id="qe-editor-save" class="qe-btn qe-btn--primary" type="button" disabled>Save</button>
     </section>
 
-    <div class="qe-actions qe-actions--start">
-      <form method="post" action="/admin/quizzes/{{ quiz.id }}/duplicate">
-        <button class="qe-btn" type="submit">Duplicate</button>
-      </form>
-      <a class="qe-btn qe-btn--primary" href="/admin/quizzes/new/step-1">New quiz</a>
-    </div>
+    <p id="qe-editor-error" class="qe-error" role="alert" hidden></p>
+
+    <section class="qe-editor-meta">
+      <label for="qe-editor-title">Quiz title</label>
+      <input id="qe-editor-title" name="title" type="text" value="{{ editor_payload.title }}" />
+
+      <label for="qe-editor-description">Description</label>
+      <textarea id="qe-editor-description" name="description" rows="3">{{ editor_payload.description or "" }}</textarea>
+    </section>
+
+    <section class="qe-editor-questions">
+      <div class="qe-editor-questions__head">
+        <h2>Questions</h2>
+        <button id="qe-editor-add-question" class="qe-btn" type="button" aria-haspopup="dialog">
+          + Add question
+        </button>
+      </div>
+      <div id="qe-editor-question-list" class="qe-editor-list" aria-live="polite"></div>
+      {% if not editor_payload.questions %}
+        <p id="qe-editor-empty-server" class="qe-hint">No questions in this quiz.</p>
+      {% endif %}
+    </section>
   </section>
+
+  {% include "partials/question_type_picker_modal.html" %}
+
+  <dialog id="qe-editor-delete-modal" class="qe-modal">
+    <form method="dialog" class="qe-modal__panel qe-modal__panel--confirm">
+      <h2>Delete question?</h2>
+      <p>This action cannot be undone.</p>
+      <menu class="qe-actions">
+        <button class="qe-btn" id="qe-editor-delete-cancel" type="button">Cancel</button>
+        <button class="qe-btn qe-btn--primary" id="qe-editor-delete-confirm" type="button">Delete</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script id="qe-editor-bootstrap" type="application/json">
+    {{ {"quiz": editor_payload, "question_types": question_types} | tojson }}
+  </script>
+  <script src="/static/js/quiz_editor.js"></script>
 {% endblock %}

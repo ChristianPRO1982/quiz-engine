@@ -10,14 +10,19 @@ from pydantic import ValidationError
 
 from auth.deps import get_current_user
 from quiz_engine.db.session import get_session
+from quiz_engine.schemas.quiz_editor_schemas import normalize_editor_payload
 from quiz_engine.schemas.quiz_schemas import QuizCreateRequest
 from quiz_engine.services.auth_service import ensure_user_record
+from quiz_engine.services.plugin_registry_service import PluginRegistryService
 from quiz_engine.services.quiz_draft_service import QuizDraftService
+from quiz_engine.services.quiz_editor_service import QuizEditorService
 from quiz_engine.services.quiz_service import QuizService
 
 router = APIRouter()
 quiz_service = QuizService()
 draft_service = QuizDraftService()
+quiz_editor_service = QuizEditorService()
+plugin_registry_service = PluginRegistryService()
 
 
 def _templates(request: Request):
@@ -68,6 +73,19 @@ async def quizzes_list_page(request: Request) -> HTMLResponse:
             "quizzes": quizzes,
         },
     )
+
+
+@router.post("/admin/quizzes", response_model=None)
+async def quizzes_create_and_edit(request: Request) -> Response:
+    auth_user, redirect = _require_html_user(request)
+    if redirect is not None:
+        return redirect
+
+    with get_session() as session:
+        db_user = ensure_user_record(session, auth_user)
+        quiz = quiz_editor_service.create_quiz(session, user_id=db_user.id)
+
+    return RedirectResponse(url=f"/admin/quizzes/{quiz.id}", status_code=303)
 
 
 @router.get("/admin/quizzes/new", response_class=HTMLResponse)
@@ -354,19 +372,21 @@ async def quizzes_detail_page(request: Request, quiz_id: int) -> HTMLResponse:
                 raise HTTPException(status_code=404, detail="Quiz not found") from exc
             raise
 
-    payload = quiz.payload or {}
-    questions = payload.get("questions") if isinstance(payload, dict) else []
-    if not isinstance(questions, list):
-        questions = []
+    editor_payload = normalize_editor_payload(
+        quiz_id=quiz.id,
+        schema_version=quiz.schema_version,
+        payload=quiz.payload,
+    )
+    question_types = plugin_registry_service.list_question_types(request)
 
     return _templates(request).TemplateResponse(
         request,
-        "admin/quizzes_detail.html",
+        "admin/quizzes_editor.html",
         {
             "current_user": auth_user,
             "quiz": quiz,
-            "quiz_payload": payload,
-            "questions": questions,
+            "editor_payload": editor_payload.model_dump(),
+            "question_types": [option.model_dump() for option in question_types],
         },
     )
 

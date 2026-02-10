@@ -68,8 +68,17 @@ class QuizDraftService:
             for raw_question in raw_questions:
                 if not isinstance(raw_question, dict):
                     continue
-                text = str(raw_question.get("text") or "").strip()
+                text = str(
+                    raw_question.get("text") or raw_question.get("title") or ""
+                ).strip()
                 raw_choices = raw_question.get("choices")
+                if not isinstance(raw_choices, list):
+                    raw_spec = raw_question.get("spec")
+                    if isinstance(raw_spec, dict):
+                        text = str(raw_spec.get("text") or text).strip()
+                        spec_choices = raw_spec.get("choices")
+                        if isinstance(spec_choices, list):
+                            raw_choices = spec_choices
                 if not isinstance(raw_choices, list):
                     continue
                 choices = [

@@ -42,3 +42,18 @@ class QuizRepository:
             Quiz.id == quiz_id, Quiz.created_by_user_id == user_id
         )
         return session.execute(stmt).scalar_one_or_none()
+
+    def update_payload(
+        self,
+        session: Session,
+        *,
+        quiz: Quiz,
+        schema_version: str,
+        payload: dict,
+    ) -> Quiz:
+        quiz.schema_version = schema_version
+        quiz.payload = payload
+        session.add(quiz)
+        session.commit()
+        session.refresh(quiz)
+        return quiz
