@@ -19,17 +19,16 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mysql:
-        image: mysql:8.0
+      postgres:
+        image: postgres:16
         env:
-          MYSQL_DATABASE: quiz_engine
-          MYSQL_USER: quiz
-          MYSQL_PASSWORD: quiz
-          MYSQL_ROOT_PASSWORD: root
+          POSTGRES_DB: quiz_engine
+          POSTGRES_USER: quiz
+          POSTGRES_PASSWORD: quiz
         ports:
-          - 3306:3306
+          - 5432:5432
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-cmd="pg_isready -U quiz -d quiz_engine"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=12
@@ -37,7 +36,8 @@ jobs:
     env:
       PYTHONPATH: .
       PYTHONFAULTHANDLER: "1"
-      DATABASE_URL: mysql+pymysql://quiz:quiz@127.0.0.1:3306/quiz_engine
+      DATABASE_URL: postgresql+psycopg://quiz:quiz@127.0.0.1:5432/quiz_engine
+      PGPASSWORD: quiz
 
     steps:
       - name: Checkout
@@ -56,10 +56,10 @@ jobs:
       - name: Install dependencies (uv)
         run: uv sync --frozen --dev
 
-      - name: Install MySQL client tools
+      - name: Install PostgreSQL client tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y mysql-client
+          sudo apt-get install -y postgresql-client
 
       - name: Ruff (lint)
         run: uv run ruff check .
@@ -68,16 +68,26 @@ jobs:
         run: uv run ruff format --check .
 
       - name: Python compile check
-        run: uv run python -m compileall app
+        run: uv run python -m compileall quiz_engine
 
-      - name: Wait for MySQL
+      - name: Wait for PostgreSQL
         run: |
           for i in {1..30}; do
-            mysqladmin ping -h 127.0.0.1 -uroot -proot && exit 0
+            pg_isready -h 127.0.0.1 -p 5432 -U quiz -d quiz_engine && exit 0
             sleep 2
           done
-          echo "MySQL did not become ready in time"
+          echo "PostgreSQL did not become ready in time"
           exit 1
+
+      - name: Apply SQL migrations
+        run: |
+          psql -h 127.0.0.1 -p 5432 -U quiz -d quiz_engine -v ON_ERROR_STOP=1 -f db/migrations/sql/0001_create_qe_core_tables.sql
+          psql -h 127.0.0.1 -p 5432 -U quiz -d quiz_engine -v ON_ERROR_STOP=1 -f db/migrations/sql/0002_seed_service_settings.sql
+          psql -h 127.0.0.1 -p 5432 -U quiz -d quiz_engine -v ON_ERROR_STOP=1 -f db/migrations/sql/0003_replace_answer_result_with_stage_event_outcome.sql
+
+      - name: Verify SQL migration history
+        run: |
+          psql -h 127.0.0.1 -p 5432 -U quiz -d quiz_engine -v ON_ERROR_STOP=1 -c "SET search_path TO qe, public; SELECT version FROM qe_schema_migration ORDER BY id;"
 
       - name: Pytest collect-only
         run: uv run pytest --collect-only -q
