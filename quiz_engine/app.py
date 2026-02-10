@@ -13,6 +13,7 @@ from auth.deps import get_current_user
 from auth.settings import AuthSettings
 from quiz_engine.i18n import get_translator, select_locale
 from quiz_engine.middleware.session import SessionCookieMiddleware
+from quiz_engine.plugins.registry import build_default_registry
 from quiz_engine.routers.admin import router as admin_router
 from quiz_engine.routers.auth import router as auth_router
 from quiz_engine.routers.quizzes import router as quizzes_router
@@ -31,6 +32,7 @@ def create_app() -> FastAPI:
     static_dir = Path(__file__).resolve().parent / "static"
     templates = Jinja2Templates(directory=str(templates_dir))
     app.state.templates = templates
+    app.state.plugin_registry = build_default_registry()
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
     @app.get("/", response_class=HTMLResponse)

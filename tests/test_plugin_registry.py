@@ -13,7 +13,7 @@ from quiz_engine.contracts.runtime_models import (
     StageTrace,
 )
 from quiz_engine.plugins.interfaces import IPlugin, IStageRuntime
-from quiz_engine.plugins.registry import PluginRegistry
+from quiz_engine.plugins.registry import PluginRegistry, build_default_registry
 
 
 class DummyStageRuntime(IStageRuntime):
@@ -100,3 +100,11 @@ def test_plugin_creates_runtime() -> None:
     plugin = DummyPlugin()
     runtime = plugin.create_runtime("session-1", _stage_definition())
     assert isinstance(runtime, DummyStageRuntime)
+
+
+def test_default_registry_registers_slide_plugin() -> None:
+    registry = build_default_registry()
+
+    plugin = registry.get("slide")
+    assert plugin is not None
+    assert plugin.get_manifest().plugin_id == "slide"

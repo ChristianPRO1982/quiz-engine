@@ -8,3 +8,7 @@ Modifying a STABLE schema is a breaking change.
 The engine orchestrates.
 Plugins think.
 Formats rule everything.
+
+## Built-in plugins
+
+- `slide` (v0): static informational stage, no interaction and no score. Reference: `quiz_engine/plugins/slide/README.md`

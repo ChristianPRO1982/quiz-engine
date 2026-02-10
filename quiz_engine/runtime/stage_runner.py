@@ -50,6 +50,8 @@ class StageRunner:
     def handle_player_event(self, event_payload: dict[str, Any]) -> list[PluginFrame]:
         if self._context is None or self._trace is None:
             raise ValueError("Stage is not open.")
+        if self._outcome is not None:
+            raise ValueError("Stage is already closed.")
         if not isinstance(event_payload, dict):
             raise ValueError("event_payload must be a dict.")
         payload = event_payload.get("payload")
@@ -78,10 +80,24 @@ class StageRunner:
     def handle_host_action(self, action: dict[str, Any]) -> list[PluginFrame]:
         if self._trace is None:
             raise ValueError("Stage is not open.")
+        if self._outcome is not None:
+            raise ValueError("Stage is already closed.")
         _require_dict(action, "action")
         ensure_json_like(action, "action")
         frames = self._runtime.on_host_action(action, self._trace)
         return self._validate_frames(frames)
+
+    def close_stage(self) -> StageOutcome:
+        """Force stage closure from engine flow (host/quiz progression)."""
+        if self._trace is None:
+            raise ValueError("Stage is not open.")
+        if self._outcome is not None:
+            return self._outcome
+        if self._trace.ended_at is None:
+            self._trace.ended_at = self._clock()
+        self._outcome = self._runtime.build_outcome(self._trace)
+        self._validate_outcome(self._outcome, self._trace)
+        return self._outcome
 
     def maybe_close(self) -> StageOutcome | None:
         if self._trace is None or self._context is None:
@@ -90,16 +106,10 @@ class StageRunner:
             return self._outcome
 
         if self._is_time_limit_reached(self._context.stage, self._trace):
-            self._trace.ended_at = self._clock()
-            self._outcome = self._runtime.build_outcome(self._trace)
-            self._validate_outcome(self._outcome, self._trace)
-            return self._outcome
+            return self.close_stage()
 
         if self._runtime.is_finished(self._trace):
-            self._trace.ended_at = self._clock()
-            self._outcome = self._runtime.build_outcome(self._trace)
-            self._validate_outcome(self._outcome, self._trace)
-            return self._outcome
+            return self.close_stage()
 
         return None
 

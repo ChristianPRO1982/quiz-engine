@@ -22,3 +22,12 @@ class PluginRegistry:
 
     def list_manifests(self) -> list[PluginManifest]:
         return [plugin.get_manifest() for plugin in self._plugins.values()]
+
+
+def build_default_registry() -> PluginRegistry:
+    """Build a plugin registry with built-in plugins explicitly registered."""
+    from quiz_engine.plugins.slide import SlidePlugin
+
+    registry = PluginRegistry()
+    registry.register(SlidePlugin())
+    return registry

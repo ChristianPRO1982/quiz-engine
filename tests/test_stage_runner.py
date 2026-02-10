@@ -334,6 +334,68 @@ def test_maybe_close_returns_none_when_not_finished() -> None:
     assert outcome is None
 
 
+def test_close_stage_requires_stage_open() -> None:
+    runner = StageRunner(DummyRuntime())
+
+    with pytest.raises(ValueError):
+        runner.close_stage()
+
+
+def test_close_stage_forces_stage_closure() -> None:
+    runtime = DummyRuntime()
+    runtime.finish_after_events = 10
+    close_time = datetime(2024, 1, 1, 12, 0, 7, tzinfo=UTC)
+    runner = StageRunner(runtime, clock=lambda: close_time)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+
+    outcome = runner.close_stage()
+
+    assert outcome is not None
+    assert runner.trace is not None
+    assert runner.trace.ended_at == close_time
+
+
+def test_handle_player_event_rejects_when_stage_closed() -> None:
+    runtime = DummyRuntime()
+    runtime.finish_after_events = 0
+    runner = StageRunner(runtime)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+    runner.maybe_close()
+
+    with pytest.raises(ValueError, match="Stage is already closed."):
+        runner.handle_player_event(
+            {
+                "event_id": "event-1",
+                "player_id": "player-1",
+                "type": "SUBMIT",
+                "payload": {"answer": "A"},
+            }
+        )
+
+
+def test_handle_host_action_rejects_when_stage_closed() -> None:
+    runtime = DummyRuntime()
+    runtime.finish_after_events = 0
+    runner = StageRunner(runtime)
+    context = _context(
+        _stage_definition(),
+        datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    runner.open_stage(context)
+    runner.maybe_close()
+
+    with pytest.raises(ValueError, match="Stage is already closed."):
+        runner.handle_host_action({"type": "pause"})
+
+
 @pytest.mark.parametrize(
     ("outcome_kwargs", "error_message"),
     [
