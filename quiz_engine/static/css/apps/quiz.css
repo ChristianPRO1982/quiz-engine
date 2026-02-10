@@ -26,9 +26,9 @@ a:hover {
 .qe-page {
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: var(--qe-space-6) var(--qe-space-4);
+  padding: 5.4rem var(--qe-space-4) var(--qe-space-6);
 }
 
 .qe-auth-widget {
@@ -44,6 +44,43 @@ a:hover {
   border-radius: 9999px;
   background: var(--qe-surface);
   box-shadow: var(--qe-shadow-1);
+}
+
+.qe-admin-nav {
+  position: fixed;
+  top: 0.8rem;
+  left: 0.8rem;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  max-width: calc(100vw - 11.5rem);
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--qe-border);
+  border-radius: 9999px;
+  background: var(--qe-surface);
+  box-shadow: var(--qe-shadow-1);
+}
+
+.qe-admin-nav__link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 0.2rem 0.5rem;
+  text-decoration: none;
+  color: var(--qe-fg);
+}
+
+.qe-admin-nav__link:hover {
+  text-decoration: none;
+  border-color: var(--qe-border);
+}
+
+.qe-admin-nav__link--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .qe-auth-widget form {
@@ -255,6 +292,23 @@ a:hover {
   gap: var(--qe-space-2);
 }
 
+.qe-list--cards {
+  list-style: none;
+  padding: 0;
+  gap: var(--qe-space-3);
+}
+
+.qe-list-item {
+  border: 1px solid var(--qe-border);
+  border-radius: calc(var(--qe-radius-card) - 0.25rem);
+  background: var(--qe-surface-2);
+  padding: 0.85rem 1rem;
+}
+
+.qe-list-item p {
+  margin: 0.35rem 0;
+}
+
 .qe-muted-text {
   color: var(--qe-muted);
 }
@@ -312,6 +366,33 @@ a:hover {
   color: var(--qe-danger);
 }
 
+.qe-empty-state {
+  display: grid;
+  gap: var(--qe-space-3);
+  border: 1px dashed var(--qe-border);
+  border-radius: calc(var(--qe-radius-card) - 0.25rem);
+  padding: var(--qe-space-4);
+}
+
+.qe-admin-grid {
+  display: grid;
+  gap: var(--qe-space-3);
+}
+
+.qe-admin-tile {
+  display: grid;
+  gap: 0.35rem;
+  border: 1px solid var(--qe-border);
+  border-radius: calc(var(--qe-radius-card) - 0.25rem);
+  background: var(--qe-surface-2);
+  padding: 0.9rem 1rem;
+  text-decoration: none;
+}
+
+.qe-admin-tile:hover {
+  text-decoration: none;
+}
+
 .qe-result-row {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -329,7 +410,11 @@ a:hover {
 
 @media (max-width: 720px) {
   .qe-page {
-    padding: var(--qe-space-5) var(--qe-space-3);
+    padding: 6.2rem var(--qe-space-3) var(--qe-space-5);
+  }
+
+  .qe-admin-nav {
+    max-width: calc(100vw - 7.2rem);
   }
 
   .qe-card {
@@ -338,5 +423,9 @@ a:hover {
 
   .qe-interaction {
     padding: var(--qe-space-3);
+  }
+
+  .qe-result-row {
+    grid-template-columns: 1fr;
   }
 }

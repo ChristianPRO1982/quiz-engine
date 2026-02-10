@@ -6,8 +6,36 @@
       <span>Quiz #{{ quiz.id }}</span>
       <a href="/admin/quizzes">Back to list</a>
     </p>
-    <h1 class="qe-title">{{ quiz.payload.title }}</h1>
-    <p class="qe-hint">Schema: {{ quiz.schema_version }}</p>
-    <pre class="qe-json">{{ quiz_payload_json }}</pre>
+    <h1 class="qe-title">{{ quiz_payload.title }}</h1>
+    <p class="qe-hint">{{ quiz_payload.description or "No description" }}</p>
+    <p class="qe-muted-text">Schema: {{ quiz.schema_version }}</p>
+
+    <section class="qe-results">
+      <h2>Questions</h2>
+      {% if questions %}
+        {% for question in questions %}
+          <article class="qe-result-row">
+            <div>
+              <strong>{{ question.text }}</strong>
+              <ul class="qe-list">
+                {% for choice in question.choices %}
+                  <li>{{ choice }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <span class="qe-muted-text">{{ question.type }}</span>
+          </article>
+        {% endfor %}
+      {% else %}
+        <p class="qe-hint">No questions in this quiz.</p>
+      {% endif %}
+    </section>
+
+    <div class="qe-actions qe-actions--start">
+      <form method="post" action="/admin/quizzes/{{ quiz.id }}/duplicate">
+        <button class="qe-btn" type="submit">Duplicate</button>
+      </form>
+      <a class="qe-btn qe-btn--primary" href="/admin/quizzes/new/step-1">New quiz</a>
+    </div>
   </section>
 {% endblock %}

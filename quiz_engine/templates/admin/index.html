@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <p class="qe-meta">
+      <span>Admin</span>
+      <span class="qe-muted-text">{{ current_user.display_name }}</span>
+    </p>
+    <h1 class="qe-title">Admin dashboard</h1>
+    <p class="qe-hint">Choose what you want to manage.</p>
+    <div class="qe-admin-grid">
+      <a class="qe-admin-tile" href="/admin/quizzes">
+        <strong>My quizzes</strong>
+        <span>Browse and open quiz details.</span>
+      </a>
+      <a class="qe-admin-tile" href="/admin/quizzes/new/step-1">
+        <strong>Create a new quiz</strong>
+        <span>Start the guided authoring flow.</span>
+      </a>
+    </div>
+  </section>
+{% endblock %}

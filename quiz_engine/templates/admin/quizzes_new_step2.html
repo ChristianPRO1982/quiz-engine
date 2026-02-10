@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Create Quiz - Step 2{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <p class="qe-meta">
+      <span>Create quiz</span>
+      <span class="qe-pill">Step 2/3</span>
+    </p>
+    <h1 class="qe-title">Add questions</h1>
+    <p class="qe-hint">Question type: single choice (qcm_single).</p>
+
+    {% if draft.questions %}
+      <ol class="qe-list">
+        {% for question in draft.questions %}
+          <li>
+            <strong>{{ question.text }}</strong>
+            <span class="qe-muted-text">({{ question.choices | length }} choices)</span>
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="qe-hint">No question yet. Add at least one question before saving.</p>
+    {% endif %}
+
+    {% if error %}
+      <p class="qe-error">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" action="/admin/quizzes/new/step-2" class="qe-form-grid">
+      <label>
+        <span>Question text</span>
+        <input type="text" name="question" required />
+      </label>
+      <label>
+        <span>Choice 1</span>
+        <input type="text" name="choice1" required />
+      </label>
+      <label>
+        <span>Choice 2</span>
+        <input type="text" name="choice2" required />
+      </label>
+      <label>
+        <span>Choice 3</span>
+        <input type="text" name="choice3" />
+      </label>
+      <label>
+        <span>Choice 4</span>
+        <input type="text" name="choice4" />
+      </label>
+      <div class="qe-actions">
+        <button class="qe-btn" type="submit" name="action" value="back">Back</button>
+        <button class="qe-btn" type="submit" name="action" value="review">
+          Review draft
+        </button>
+        <button class="qe-btn qe-btn--primary" type="submit" name="action" value="add">
+          Add question
+        </button>
+      </div>
+    </form>
+  </section>
+{% endblock %}

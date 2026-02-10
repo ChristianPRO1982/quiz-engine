@@ -13,6 +13,7 @@ from auth.deps import get_current_user
 from auth.settings import AuthSettings
 from quiz_engine.i18n import get_translator, select_locale
 from quiz_engine.middleware.session import SessionCookieMiddleware
+from quiz_engine.routers.admin import router as admin_router
 from quiz_engine.routers.auth import router as auth_router
 from quiz_engine.routers.quizzes import router as quizzes_router
 
@@ -53,6 +54,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router)
     app.include_router(quizzes_router)
+    app.include_router(admin_router)
 
     return app
 

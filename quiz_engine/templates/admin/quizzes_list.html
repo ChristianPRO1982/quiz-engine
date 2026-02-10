@@ -4,20 +4,24 @@
   <section class="qe-card">
     <p class="qe-meta">
       <span>Quiz Builder</span>
-      <a href="/admin/quizzes/new">New Quiz</a>
+      <a class="qe-btn qe-btn--primary" href="/admin/quizzes/new/step-1">Create new quiz</a>
     </p>
     <h1 class="qe-title">My quizzes</h1>
     {% if quizzes %}
-      <ul class="qe-list">
+      <ul class="qe-list qe-list--cards">
         {% for quiz in quizzes %}
-          <li>
-            <a href="/admin/quizzes/{{ quiz.id }}">{{ quiz.title }}</a>
-            <span class="qe-muted-text">({{ quiz.schema_version }})</span>
+          <li class="qe-list-item">
+            <a href="/admin/quizzes/{{ quiz.id }}">{{ quiz.payload.title or "Untitled quiz" }}</a>
+            <p class="qe-hint">{{ quiz.payload.description or "No description" }}</p>
+            <span class="qe-muted-text">Schema {{ quiz.schema_version }}</span>
           </li>
         {% endfor %}
       </ul>
     {% else %}
-      <p class="qe-hint">No quiz yet.</p>
+      <div class="qe-empty-state">
+        <p class="qe-hint">No quiz yet. Start by creating your first one.</p>
+        <a class="qe-btn qe-btn--primary" href="/admin/quizzes/new/step-1">Create new quiz</a>
+      </div>
     {% endif %}
   </section>
 {% endblock %}

@@ -11,6 +11,9 @@
   </head>
   <body class="qe-page">
     {% include "partials/auth_widget.html" %}
+    {% if current_user %}
+      {% include "partials/admin_nav.html" %}
+    {% endif %}
     <main class="qe-shell">
       {% block content %}{% endblock %}
     </main>
