@@ -1,17 +1,17 @@
-# Sprint 1 — Alembic migrations (qe_* only)
+# Sprint 1 — SQL migrations manuelles (qe_* only)
 
 ## Objectif
-Utiliser Alembic + SQLAlchemy 2.0 pour gérer uniquement le schéma `qe_*`,
+Utiliser des migrations SQL manuelles pour gérer uniquement le schéma `qe_*`,
 sans jamais toucher les tables communes (Django auth + autres services).
 
 ## Règle de filtrage (obligatoire)
-Le mécanisme Alembic/autogenerate doit être configuré pour :
-- inclure uniquement les tables dont le nom commence par `qe_`
+Les scripts SQL du service doivent :
+- créer/modifier/supprimer uniquement des objets `qe_*`
 - ignorer tout le reste (tables communes et autres services)
-- utiliser une table de version Alembic préfixée (`qe_alembic_version`)
+- historiser l'application dans `qe_schema_migration`
 
 Conséquence attendue :
-- `alembic revision --autogenerate` ne doit JAMAIS proposer de modifications hors `qe_*`.
+- aucun script SQL de migration ne doit référencer des tables hors `qe_*`.
 
 ## Conventions de migrations
 - Une migration = un changement logique cohérent
@@ -22,19 +22,22 @@ Conséquence attendue :
 ## Workflow standard
 Créer une migration :
 ```bash
-uv run alembic revision --autogenerate -m "create qe_* core tables"
+# Créer un nouveau script SQL dans db/migrations/sql/
+# ex: 0004_add_qe_xxx.sql
 ```
 
 Appliquer :
 
 ```bash
-uv run alembic upgrade head
+psql -v ON_ERROR_STOP=1 -d carthographie -f db/migrations/sql/0001_create_qe_core_tables.sql
+psql -v ON_ERROR_STOP=1 -d carthographie -f db/migrations/sql/0002_seed_service_settings.sql
+psql -v ON_ERROR_STOP=1 -d carthographie -f db/migrations/sql/0003_replace_answer_result_with_stage_event_outcome.sql
 ```
 
 Rollback :
 
 ```bash
-uv run alembic downgrade -1
+# rollback manuel via script dédié (si prévu) ou restauration DB
 ```
 
 ### Garde-fous CI (requis)
@@ -47,10 +50,9 @@ CI doit échouer si une migration contient :
 
 Checklist CI recommandée :
 
-- ☐ alembic upgrade head sur DB vierge (ou db de test)
-- ☐ alembic downgrade base
-- ☐ alembic upgrade head à nouveau
+- ☐ exécuter les scripts SQL sur DB vierge (ordre 0001 -> ... -> N)
 - ☐ scan "qe-only" sur le contenu des scripts de migration
+- ☐ vérifier `qe_schema_migration` après exécution
 
 ### Interdits
 
