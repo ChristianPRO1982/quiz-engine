@@ -14,32 +14,29 @@ from auth.settings import AuthSettings
 from quiz_engine.middleware.session import get_session_data
 from quiz_engine.models.user import User
 
-_DEV_USERS: dict[str, AuthUser] = {
-    "user1": AuthUser(
-        subject="dev-user1",
-        display_name="Dev User 1",
-        email="user1@local.test",
+
+def list_dev_user_subjects(session: Session) -> list[str]:
+    stmt = select(User.subject).order_by(User.subject.asc())
+    return [subject for subject in session.execute(stmt).scalars()]
+
+
+def resolve_dev_user(session: Session, subject: str) -> AuthUser | None:
+    stmt = select(User).where(User.subject == subject)
+    db_user = session.execute(stmt).scalar_one_or_none()
+    if db_user is None:
+        return None
+
+    user = AuthUser(
+        subject=db_user.subject,
+        display_name=db_user.subject,
+        email=None,
         auth_mode="dev",
-    ),
-    "user2": AuthUser(
-        subject="dev-user2",
-        display_name="Dev User 2",
-        email="user2@local.test",
-        auth_mode="dev",
-    ),
-}
+    )
+    return user
 
 
-def list_dev_user_keys() -> list[str]:
-    return sorted(_DEV_USERS)
-
-
-def resolve_dev_user(choice: str) -> AuthUser | None:
-    return _DEV_USERS.get(choice)
-
-
-def login_dev_user(request: Request, choice: str) -> AuthUser | None:
-    user = resolve_dev_user(choice)
+def login_dev_user(request: Request, session: Session, subject: str) -> AuthUser | None:
+    user = resolve_dev_user(session, subject)
     if user is None:
         return None
 

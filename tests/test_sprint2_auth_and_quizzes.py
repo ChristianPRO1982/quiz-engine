@@ -10,7 +10,8 @@ import quiz_engine.models  # noqa: F401
 from quiz_engine.app import create_app
 from quiz_engine.db.base import Base
 from quiz_engine.db.engine import get_engine
-from quiz_engine.db.session import _sessionmaker
+from quiz_engine.db.session import _sessionmaker, get_session
+from quiz_engine.models.user import User
 
 
 def _setup_db(tmp_path: Path, monkeypatch) -> None:
@@ -22,6 +23,9 @@ def _setup_db(tmp_path: Path, monkeypatch) -> None:
     get_engine.cache_clear()
     _sessionmaker.cache_clear()
     Base.metadata.create_all(get_engine())
+    with get_session() as session:
+        session.add_all([User(subject="user1"), User(subject="user2")])
+        session.commit()
 
 
 def test_dev_login_account_logout_flow(tmp_path: Path, monkeypatch) -> None:
@@ -42,7 +46,7 @@ def test_dev_login_account_logout_flow(tmp_path: Path, monkeypatch) -> None:
 
     account = client.get("/account")
     assert account.status_code == 200
-    assert "dev-user1" in account.text
+    assert "user1" in account.text
     assert "Account" in account.text
     assert "Logout" in account.text
 

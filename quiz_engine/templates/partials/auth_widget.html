@@ -1,7 +1,11 @@
 <div class="qe-auth-widget" aria-label="Authentication">
   {% if current_user %}
     <a class="qe-auth-link" href="/account">Account</a>
-    <form method="post" action="/logout">
+    <form
+      method="post"
+      action="/logout"
+      onsubmit="return confirm('Confirmer la déconnexion ?');"
+    >
       <button class="qe-auth-link" type="submit">Logout</button>
     </form>
   {% else %}

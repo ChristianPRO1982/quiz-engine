@@ -9,9 +9,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from auth.deps import get_current_user
 from auth.settings import AuthSettings
+from quiz_engine.db.session import get_session
 from quiz_engine.services.auth_service import (
     auth_mode,
-    list_dev_user_keys,
+    list_dev_user_subjects,
     login_dev_user,
     logout_user,
 )
@@ -36,12 +37,17 @@ async def login_page(request: Request) -> HTMLResponse:
         return RedirectResponse(url="/account", status_code=303)
 
     settings = AuthSettings.from_env()
+    dev_users: list[str] = []
+    if settings.mode == "dev":
+        with get_session() as session:
+            dev_users = list_dev_user_subjects(session)
+
     return _templates(request).TemplateResponse(
         request,
         "auth/login.html",
         {
             "auth_mode": settings.mode,
-            "dev_users": list_dev_user_keys(),
+            "dev_users": dev_users,
             "current_user": None,
         },
     )
@@ -55,7 +61,8 @@ async def login_submit(request: Request) -> RedirectResponse:
     if auth_mode() != "dev":
         return RedirectResponse(url="/login", status_code=303)
 
-    user = login_dev_user(request, selected_user)
+    with get_session() as session:
+        user = login_dev_user(request, session, selected_user)
     if user is None:
         return RedirectResponse(url="/login", status_code=303)
 
