@@ -25,6 +25,7 @@ def test_auth_settings_respects_explicit_auth_mode(tmp_path: Path, monkeypatch) 
 
     monkeypatch.setenv("AUTH_MODE", "oidc")
     monkeypatch.setenv("AUTH_DEV_FILE", str(dev_file))
+    monkeypatch.setenv("SESSION_SECRET_KEY", "test-secret")
 
     settings = AuthSettings.from_env()
 

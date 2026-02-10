@@ -1,0 +1,10 @@
+<div class="qe-auth-widget" aria-label="Authentication">
+  {% if current_user %}
+    <a class="qe-auth-link" href="/account">Account</a>
+    <form method="post" action="/logout">
+      <button class="qe-auth-link" type="submit">Logout</button>
+    </form>
+  {% else %}
+    <a class="qe-auth-link" href="/login">Connect</a>
+  {% endif %}
+</div>

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Quiz Detail{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <p class="qe-meta">
+      <span>Quiz #{{ quiz.id }}</span>
+      <a href="/admin/quizzes">Back to list</a>
+    </p>
+    <h1 class="qe-title">{{ quiz.payload.title }}</h1>
+    <p class="qe-hint">Schema: {{ quiz.schema_version }}</p>
+    <pre class="qe-json">{{ quiz_payload_json }}</pre>
+  </section>
+{% endblock %}

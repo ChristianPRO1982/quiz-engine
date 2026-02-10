@@ -1,26 +1,14 @@
-<!doctype html>
-<html lang="en" data-theme="normal">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Quiz Engine</title>
-    <link rel="stylesheet" href="/static/css/themes/normal.css" />
-    <link rel="stylesheet" href="/static/css/themes/scout.css" />
-    <link rel="stylesheet" href="/static/css/tokens/quiz-tokens.css" />
-    <link rel="stylesheet" href="/static/css/apps/quiz.css" />
-  </head>
-  <body class="qe-page">
-    <main class="qe-shell">
-      <section class="qe-card">
-        <p class="qe-meta">
-          <span>Quiz Engine</span>
-          {% if is_dev %}
-            <span class="qe-pill qe-pill--dev">{{ _("home.badge.dev") }}</span>
-          {% endif %}
-        </p>
-        <h1 class="qe-title">Bienvenue</h1>
-        <p class="qe-hint">Lance une session ou rejoins avec un code.</p>
-      </section>
-    </main>
-  </body>
-</html>
+{% extends "base.html" %}
+{% block title %}Quiz Engine{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <p class="qe-meta">
+      <span>Quiz Engine</span>
+      {% if is_dev %}
+        <span class="qe-pill qe-pill--dev">{{ _("home.badge.dev") }}</span>
+      {% endif %}
+    </p>
+    <h1 class="qe-title">Bienvenue</h1>
+    <p class="qe-hint">Lance une session ou rejoins avec un code.</p>
+  </section>
+{% endblock %}

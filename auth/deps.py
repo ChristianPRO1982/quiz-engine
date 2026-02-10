@@ -1,32 +1,43 @@
 from __future__ import annotations
 
-from fastapi import Request
+from fastapi import HTTPException, Request, status
+
+from quiz_engine.middleware.session import get_session_data
 
 from .models import AuthUser
-from .settings import AuthSettings
 
-DEV_USER = AuthUser(
-    sub="dev-user-001",
-    email="dev@local.test",
-    name="Dev User",
-    groups=["users", "admins"],
-)
+SESSION_AUTH_USER_KEY = "auth_user"
 
 
-def get_current_user(request: Request) -> AuthUser:
-    """Return authenticated user based on configured auth mode."""
-    settings = AuthSettings.from_env()
-
-    if settings.mode == "dev":
-        return DEV_USER
-
-    session_user = request.session.get("auth_user")
+def get_current_user(request: Request) -> AuthUser | None:
+    """Return current authenticated user or None."""
+    session_user = get_session_data(request).get(SESSION_AUTH_USER_KEY)
     if not isinstance(session_user, dict):
-        raise PermissionError("Not authenticated")
+        return None
+
+    subject = str(session_user.get("subject", "")).strip()
+    display_name = str(session_user.get("display_name", "")).strip()
+    auth_mode = str(session_user.get("auth_mode", "")).strip()
+    email = session_user.get("email")
+    if email is not None:
+        email = str(email)
+
+    if not subject or not display_name or not auth_mode:
+        return None
 
     return AuthUser(
-        sub=str(session_user.get("sub", "")),
-        email=str(session_user.get("email", "")),
-        name=str(session_user.get("name", "")),
-        groups=list(session_user.get("groups", [])),
+        subject=subject,
+        display_name=display_name,
+        email=email,
+        auth_mode=auth_mode,
     )
+
+
+def require_current_user(request: Request) -> AuthUser:
+    """Return current authenticated user or raise HTTP 401."""
+    user = get_current_user(request)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+    return user

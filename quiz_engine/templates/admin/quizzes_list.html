@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}My Quizzes{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <p class="qe-meta">
+      <span>Quiz Builder</span>
+      <a href="/admin/quizzes/new">New Quiz</a>
+    </p>
+    <h1 class="qe-title">My quizzes</h1>
+    {% if quizzes %}
+      <ul class="qe-list">
+        {% for quiz in quizzes %}
+          <li>
+            <a href="/admin/quizzes/{{ quiz.id }}">{{ quiz.title }}</a>
+            <span class="qe-muted-text">({{ quiz.schema_version }})</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="qe-hint">No quiz yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}

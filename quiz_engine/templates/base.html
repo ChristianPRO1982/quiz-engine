@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="{{ locale or 'en' }}" data-theme="normal">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Quiz Engine{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/themes/normal.css" />
+    <link rel="stylesheet" href="/static/css/themes/scout.css" />
+    <link rel="stylesheet" href="/static/css/tokens/quiz-tokens.css" />
+    <link rel="stylesheet" href="/static/css/apps/quiz.css" />
+  </head>
+  <body class="qe-page">
+    {% include "partials/auth_widget.html" %}
+    <main class="qe-shell">
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

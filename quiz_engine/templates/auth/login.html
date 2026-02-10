@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <h1 class="qe-title">Connect</h1>
+    {% if auth_mode == "dev" %}
+      <p class="qe-hint">Select a development user.</p>
+      <div class="qe-actions qe-actions--start">
+        {% for key in dev_users %}
+          <form method="post" action="/login">
+            <input type="hidden" name="user" value="{{ key }}" />
+            <button class="qe-btn qe-btn--primary" type="submit">{{ key }}</button>
+          </form>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="qe-hint">Hub auth mode placeholder.</p>
+    {% endif %}
+  </section>
+{% endblock %}

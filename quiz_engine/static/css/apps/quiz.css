@@ -31,6 +31,41 @@ a:hover {
   padding: var(--qe-space-6) var(--qe-space-4);
 }
 
+.qe-auth-widget {
+  position: fixed;
+  top: 0.8rem;
+  right: 0.8rem;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--qe-border);
+  border-radius: 9999px;
+  background: var(--qe-surface);
+  box-shadow: var(--qe-shadow-1);
+}
+
+.qe-auth-widget form {
+  margin: 0;
+}
+
+.qe-auth-link {
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--qe-fg);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0.15rem 0.5rem;
+}
+
+.qe-auth-link:hover {
+  border-color: var(--qe-border);
+  text-decoration: none;
+}
+
 .qe-shell {
   width: min(980px, 100%);
   display: flex;
@@ -177,6 +212,10 @@ a:hover {
   flex-wrap: wrap;
 }
 
+.qe-actions--start {
+  justify-content: flex-start;
+}
+
 .qe-btn {
   border: 1px solid var(--qe-border);
   background: var(--qe-surface);
@@ -206,6 +245,71 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: var(--qe-space-3);
+}
+
+.qe-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--qe-space-2);
+}
+
+.qe-muted-text {
+  color: var(--qe-muted);
+}
+
+.qe-form-grid {
+  display: grid;
+  gap: var(--qe-space-3);
+}
+
+.qe-form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.qe-form-grid input {
+  border: 1px solid var(--qe-border);
+  border-radius: var(--qe-radius-action);
+  padding: 0.65rem 0.75rem;
+  background: var(--qe-surface);
+  color: var(--qe-fg);
+}
+
+.qe-kv-list {
+  margin: 0;
+  display: grid;
+  gap: var(--qe-space-3);
+}
+
+.qe-kv-list div {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.qe-kv-list dt {
+  color: var(--qe-muted);
+}
+
+.qe-kv-list dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.qe-json {
+  margin: 0;
+  background: var(--qe-surface-2);
+  border: 1px solid var(--qe-border);
+  border-radius: var(--qe-radius-action);
+  padding: var(--qe-space-3);
+  overflow: auto;
+}
+
+.qe-error {
+  margin: 0;
+  color: var(--qe-danger);
 }
 
 .qe-result-row {

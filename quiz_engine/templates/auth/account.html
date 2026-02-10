@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Account{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <h1 class="qe-title">Account</h1>
+    <p class="qe-hint">Connected profile</p>
+    <dl class="qe-kv-list">
+      <div>
+        <dt>Subject</dt>
+        <dd>{{ current_user.subject }}</dd>
+      </div>
+      <div>
+        <dt>Name</dt>
+        <dd>{{ current_user.display_name }}</dd>
+      </div>
+      <div>
+        <dt>Email</dt>
+        <dd>{{ current_user.email or "-" }}</dd>
+      </div>
+      <div>
+        <dt>Mode</dt>
+        <dd>{{ current_user.auth_mode }}</dd>
+      </div>
+    </dl>
+  </section>
+{% endblock %}
