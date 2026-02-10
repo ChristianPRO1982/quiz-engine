@@ -185,6 +185,7 @@
     pendingDeleteQuestionId: null,
     draggingQuestionId: null,
     preDragActiveQuestionId: null,
+    dragUiCollapsed: false,
   };
 
   if (state.draft.questions.length > 0) {
@@ -208,6 +209,40 @@
   const setDirty = (nextValue) => {
     state.dirty = Boolean(nextValue);
     renderToolbar();
+  };
+
+  const beginDragUi = (sourceEl) => {
+    if (state.dragUiCollapsed) {
+      return;
+    }
+    state.dragUiCollapsed = true;
+    state.preDragActiveQuestionId = state.activeQuestionId;
+
+    const beforeTop =
+      sourceEl && typeof sourceEl.getBoundingClientRect === "function"
+        ? sourceEl.getBoundingClientRect().top
+        : null;
+    listEl.classList.add("is-dragging");
+    if (typeof beforeTop === "number") {
+      const afterTop = sourceEl.getBoundingClientRect().top;
+      const delta = afterTop - beforeTop;
+      if (Math.abs(delta) > 1) {
+        window.scrollBy(0, delta);
+      }
+    }
+  };
+
+  const finishDragUi = () => {
+    if (!state.dragUiCollapsed && !state.draggingQuestionId) {
+      return;
+    }
+    state.dragUiCollapsed = false;
+    listEl.classList.remove("is-dragging");
+    listEl.querySelectorAll(".qe-question.is-drop-target").forEach((card) => {
+      card.classList.remove("is-drop-target");
+    });
+    state.draggingQuestionId = null;
+    state.preDragActiveQuestionId = null;
   };
 
   const renderToolbar = () => {
@@ -238,23 +273,28 @@
     handle.draggable = true;
     handle.ariaLabel = "Reorder question";
     handle.textContent = "⋮⋮";
+    handle.addEventListener("pointerdown", () => {
+      beginDragUi(handle);
+    });
+    handle.addEventListener("pointerup", () => {
+      if (!state.draggingQuestionId) {
+        finishDragUi();
+      }
+    });
+    handle.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+    });
     handle.addEventListener("dragstart", (event) => {
+      beginDragUi(handle);
       state.draggingQuestionId = question.question_id;
-      state.preDragActiveQuestionId = state.activeQuestionId;
-      listEl.classList.add("is-dragging");
       if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData("text/plain", question.question_id);
       }
     });
     handle.addEventListener("dragend", () => {
-      listEl.classList.remove("is-dragging");
-      if (!state.activeQuestionId) {
-        state.activeQuestionId = state.preDragActiveQuestionId;
-      }
-      state.preDragActiveQuestionId = null;
-      state.draggingQuestionId = null;
-      renderQuestions();
+      finishDragUi();
     });
 
     const titleButton = document.createElement("button");
@@ -262,7 +302,11 @@
     titleButton.className = "qe-question__title";
     titleButton.textContent = `${index + 1}. ${question.title}`;
     titleButton.addEventListener("click", () => {
-      state.activeQuestionId = question.question_id;
+      if (state.activeQuestionId === question.question_id) {
+        state.activeQuestionId = null;
+      } else {
+        state.activeQuestionId = question.question_id;
+      }
       renderQuestions();
     });
 
@@ -302,16 +346,14 @@
         return;
       }
 
-      const moved = state.draft.questions.splice(fromIndex, 1)[0];
-      const adjustedTargetIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
-      state.draft.questions.splice(adjustedTargetIndex, 0, moved);
+      const sourceQuestion = state.draft.questions[fromIndex];
+      const targetQuestion = state.draft.questions[toIndex];
+      state.draft.questions[fromIndex] = targetQuestion;
+      state.draft.questions[toIndex] = sourceQuestion;
 
-      state.activeQuestionId = moved.question_id;
-      state.draggingQuestionId = null;
-      state.preDragActiveQuestionId = null;
-      listEl.classList.remove("is-dragging");
+      finishDragUi();
       setDirty(true);
-      renderQuestions();
+      renderQuestions({ preserveScroll: true });
     });
 
     if (!isActive) {
@@ -373,7 +415,10 @@
     return card;
   };
 
-  const renderQuestions = () => {
+  const renderQuestions = (options = {}) => {
+    const preserveScroll = Boolean(options.preserveScroll);
+    const previousScrollY = preserveScroll ? window.scrollY : 0;
+
     listEl.replaceChildren();
     if (serverEmptyStateEl) {
       serverEmptyStateEl.hidden = true;
@@ -391,6 +436,10 @@
       const card = createQuestionCard(question, index);
       listEl.appendChild(card);
     });
+
+    if (preserveScroll) {
+      window.scrollTo(0, previousScrollY);
+    }
   };
 
   const addQuestion = (questionType) => {
@@ -562,6 +611,10 @@
 
   saveButton.addEventListener("click", () => {
     void saveDraft();
+  });
+
+  window.addEventListener("dragend", () => {
+    finishDragUi();
   });
 
   window.addEventListener("beforeunload", (event) => {

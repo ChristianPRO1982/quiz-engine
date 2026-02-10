@@ -476,6 +476,7 @@ a:hover {
   border-radius: calc(var(--qe-radius-card) - 0.25rem);
   background: var(--qe-surface-2);
   overflow: hidden;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
 .qe-question.is-active {
@@ -501,6 +502,9 @@ a:hover {
   border-radius: var(--qe-radius-action);
   padding: 0.25rem 0.5rem;
   cursor: grab;
+  user-select: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .qe-question__handle:active {
@@ -536,7 +540,11 @@ a:hover {
 }
 
 .qe-editor-list.is-dragging .qe-question__panel {
-  display: none;
+  display: none !important;
+}
+
+.qe-editor-list.is-dragging .qe-question {
+  box-shadow: none;
 }
 
 .qe-question__field {
