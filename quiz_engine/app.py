@@ -16,6 +16,7 @@ from quiz_engine.middleware.session import SessionCookieMiddleware
 from quiz_engine.plugins.registry import build_default_registry
 from quiz_engine.routers.admin import router as admin_router
 from quiz_engine.routers.auth import router as auth_router
+from quiz_engine.routers.quiz_preview import router as quiz_preview_router
 from quiz_engine.routers.quizzes import router as quizzes_router
 
 
@@ -57,6 +58,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(quizzes_router)
     app.include_router(admin_router)
+    app.include_router(quiz_preview_router)
 
     return app
 

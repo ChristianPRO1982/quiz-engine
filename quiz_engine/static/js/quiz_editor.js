@@ -19,6 +19,7 @@
   const titleInput = document.getElementById("qe-editor-title");
   const descriptionInput = document.getElementById("qe-editor-description");
   const statusEl = document.getElementById("qe-editor-status");
+  const previewButton = document.getElementById("qe-editor-preview");
   const saveButton = document.getElementById("qe-editor-save");
   const addQuestionButton = document.getElementById("qe-editor-add-question");
   const errorEl = document.getElementById("qe-editor-error");
@@ -37,6 +38,7 @@
     !titleInput ||
     !descriptionInput ||
     !statusEl ||
+    !previewButton ||
     !saveButton ||
     !addQuestionButton ||
     !listEl ||
@@ -186,14 +188,96 @@
     draggingQuestionId: null,
     preDragActiveQuestionId: null,
     dragUiCollapsed: false,
+    allowEditorNavigation: false,
   };
-
-  if (state.draft.questions.length > 0) {
-    state.activeQuestionId = state.draft.questions[0].question_id;
-  }
 
   const getQuestionIndexById = (questionId) =>
     state.draft.questions.findIndex((question) => question.question_id === questionId);
+
+  const buildDraftStorageKey = () => `qe-editor-draft-v1:${state.quizId}`;
+
+  const buildDraftPayload = () => ({
+    schema_version: readText(state.draft.schema_version, "v1"),
+    title: readText(state.draft.title, "Untitled quiz"),
+    description: readText(state.draft.description) || null,
+    questions: state.draft.questions.map((question) => ({
+      question_id: question.question_id,
+      type: question.type,
+      title: readText(question.title, "Untitled question"),
+      spec:
+        question.spec &&
+        typeof question.spec === "object" &&
+        !Array.isArray(question.spec)
+          ? question.spec
+          : {},
+    })),
+  });
+
+  const syncDraftSnapshot = () => {
+    if (!window.sessionStorage || state.quizId <= 0) {
+      return;
+    }
+    const storageKey = buildDraftStorageKey();
+    if (!state.dirty) {
+      window.sessionStorage.removeItem(storageKey);
+      return;
+    }
+    const snapshot = {
+      version: 1,
+      quiz_id: state.quizId,
+      dirty: true,
+      active_question_id: state.activeQuestionId,
+      draft: buildDraftPayload(),
+    };
+    window.sessionStorage.setItem(storageKey, JSON.stringify(snapshot));
+  };
+
+  const loadDraftSnapshot = () => {
+    if (!window.sessionStorage || state.quizId <= 0) {
+      return null;
+    }
+    const raw = window.sessionStorage.getItem(buildDraftStorageKey());
+    if (!raw) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        Number(parsed.quiz_id || 0) !== state.quizId ||
+        !parsed.dirty ||
+        !parsed.draft ||
+        typeof parsed.draft !== "object"
+      ) {
+        return null;
+      }
+      return parsed;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const snapshot = loadDraftSnapshot();
+  if (snapshot) {
+    state.draft = {
+      schema_version: readText(snapshot.draft.schema_version, "v1"),
+      title: readText(snapshot.draft.title, "Untitled quiz"),
+      description: readText(snapshot.draft.description),
+      questions: normalizeQuestions(snapshot.draft.questions),
+    };
+    state.activeQuestionId = readText(snapshot.active_question_id) || null;
+    state.dirty = true;
+  }
+
+  if (
+    !state.activeQuestionId ||
+    getQuestionIndexById(state.activeQuestionId) < 0
+  ) {
+    state.activeQuestionId = state.draft.questions.length
+      ? state.draft.questions[0].question_id
+      : null;
+  }
 
   const setError = (message) => {
     const text = readText(message);
@@ -208,6 +292,7 @@
 
   const setDirty = (nextValue) => {
     state.dirty = Boolean(nextValue);
+    syncDraftSnapshot();
     renderToolbar();
   };
 
@@ -252,6 +337,7 @@
         ? "Unsaved"
         : "Saved";
     statusEl.textContent = statusText;
+    previewButton.disabled = state.saving || state.draft.questions.length === 0;
     saveButton.disabled = state.saving || !state.dirty;
   };
 
@@ -521,22 +607,7 @@
     renderToolbar();
     setError("");
 
-    const requestBody = {
-      schema_version: readText(state.draft.schema_version, "v1"),
-      title: readText(state.draft.title, "Untitled quiz"),
-      description: readText(state.draft.description) || null,
-      questions: state.draft.questions.map((question) => ({
-        question_id: question.question_id,
-        type: question.type,
-        title: readText(question.title, "Untitled question"),
-        spec:
-          question.spec &&
-          typeof question.spec === "object" &&
-          !Array.isArray(question.spec)
-            ? question.spec
-            : {},
-      })),
-    };
+    const requestBody = buildDraftPayload();
 
     try {
       const response = await fetch(`/api/quizzes/${state.quizId}`, {
@@ -613,12 +684,21 @@
     void saveDraft();
   });
 
+  previewButton.addEventListener("click", () => {
+    if (state.quizId <= 0 || state.draft.questions.length === 0) {
+      return;
+    }
+    syncDraftSnapshot();
+    state.allowEditorNavigation = true;
+    window.location.assign(`/admin/quizzes/${state.quizId}/preview`);
+  });
+
   window.addEventListener("dragend", () => {
     finishDragUi();
   });
 
   window.addEventListener("beforeunload", (event) => {
-    if (!state.dirty) {
+    if (state.allowEditorNavigation || !state.dirty) {
       return;
     }
     const warning = "Leave without saving?";

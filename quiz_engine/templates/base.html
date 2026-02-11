@@ -9,12 +9,15 @@
     <link rel="stylesheet" href="/static/css/tokens/quiz-tokens.css" />
     <link rel="stylesheet" href="/static/css/apps/quiz.css" />
   </head>
-  <body class="qe-page">
-    {% include "partials/auth_widget.html" %}
-    {% if current_user %}
+  {% set show_chrome = show_admin_chrome if show_admin_chrome is defined else True %}
+  <body class="qe-page{% if not show_chrome %} qe-page--preview{% endif %}">
+    {% if show_chrome %}
+      {% include "partials/auth_widget.html" %}
+    {% endif %}
+    {% if show_chrome and current_user %}
       {% include "partials/admin_nav.html" %}
     {% endif %}
-    <main class="qe-shell">
+    <main class="qe-shell{% if not show_chrome %} qe-shell--preview{% endif %}">
       {% block content %}{% endblock %}
     </main>
   </body>

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Quiz Preview{% endblock %}
+{% block content %}
+  <section class="qe-card qe-preview" data-quiz-id="{{ quiz.id }}">
+    <p class="qe-meta">
+      <span>Quiz #{{ quiz.id }}</span>
+      <a href="/admin/quizzes/{{ quiz.id }}">Exit preview</a>
+    </p>
+    <h1 class="qe-title">Preview</h1>
+    <p class="qe-hint">Read-only playtest using your current draft.</p>
+
+    <section class="qe-preview-toolbar" aria-label="Preview navigation">
+      <button id="qe-preview-prev" class="qe-btn" type="button">Previous</button>
+      <span id="qe-preview-position" class="qe-pill">0 / 0</span>
+      <button id="qe-preview-next" class="qe-btn qe-btn--primary" type="button">Next</button>
+    </section>
+
+    <section id="qe-preview-stage" class="qe-preview-stage" aria-live="polite"></section>
+
+    <section class="qe-actions qe-actions--start">
+      <a class="qe-btn" href="/admin/quizzes/{{ quiz.id }}">Exit preview</a>
+    </section>
+  </section>
+
+  <script id="qe-preview-bootstrap" type="application/json">
+    {{ {"quiz_id": quiz.id, "preview": preview_payload, "editor_payload": editor_payload} | tojson }}
+  </script>
+  <script src="/static/js/quiz_preview.js"></script>
+{% endblock %}

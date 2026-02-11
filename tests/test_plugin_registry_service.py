@@ -5,6 +5,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from quiz_engine.contracts.runtime_models import PluginManifest
+from quiz_engine.plugins.registry import build_default_registry
 from quiz_engine.services.plugin_registry_service import PluginRegistryService
 
 
@@ -79,3 +80,50 @@ def test_list_question_types_keeps_existing_slide_without_duplicate() -> None:
 
     slide_count = len([option for option in options if option.type == "slide"])
     assert slide_count == 1
+
+
+def test_build_preview_view_model_uses_plugin_runtime_for_slide() -> None:
+    service = PluginRegistryService()
+    request = _request_with_registry(build_default_registry())
+
+    view_model = service.build_preview_view_model(
+        request,
+        quiz_id=42,
+        stage_index=0,
+        stage_id="slide-1",
+        plugin_id="slide",
+        stage_title="Welcome",
+        plugin_spec={
+            "schema_version": "v0",
+            "type": "slide",
+            "content": {
+                "title": "Welcome",
+                "body": "Body",
+                "media": {"type": "none", "src": None},
+            },
+        },
+    )
+
+    assert view_model["kind"] == "plugin_frame"
+    assert view_model["is_placeholder"] is False
+    assert view_model["payload"]["title"] == "Welcome"
+    assert view_model["payload"]["body"] == "Body"
+
+
+def test_build_preview_view_model_falls_back_to_placeholder() -> None:
+    service = PluginRegistryService()
+    request = _request_with_registry(build_default_registry())
+
+    view_model = service.build_preview_view_model(
+        request,
+        quiz_id=42,
+        stage_index=1,
+        stage_id="poll-1",
+        plugin_id="poll",
+        stage_title="Poll",
+        plugin_spec={"options": ["A", "B"]},
+    )
+
+    assert view_model["kind"] == "placeholder"
+    assert view_model["is_placeholder"] is True
+    assert "Preview unavailable" in view_model["payload"]["body"]

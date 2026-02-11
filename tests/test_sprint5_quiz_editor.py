@@ -156,6 +156,7 @@ def test_editor_template_contains_required_controls(
 
     assert page.status_code == 200
     assert "qe-editor-status" in page.text
+    assert "qe-editor-preview" in page.text
     assert "qe-editor-save" in page.text
     assert "qe-editor-add-question" in page.text
     assert "qe-question-type-modal" in page.text
