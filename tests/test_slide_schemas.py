@@ -20,7 +20,11 @@ def _valid_spec() -> dict:
 
 def test_validate_slide_plugin_spec_accepts_minimal_payload() -> None:
     validated = validate_slide_plugin_spec(_valid_spec())
-    assert validated["content"] == {"title": "Title", "body": "Body"}
+    assert validated["content"] == {
+        "title": "Title",
+        "body": "Body",
+        "body_format": "text",
+    }
 
 
 def test_build_slide_frame_payload_keeps_media_when_present() -> None:
@@ -28,6 +32,24 @@ def test_build_slide_frame_payload_keeps_media_when_present() -> None:
     spec["content"]["media"] = {"type": "image", "src": "https://img"}
     payload = build_slide_frame_payload(spec)
     assert payload["media"]["type"] == "image"
+    assert payload["body_format"] == "text"
+
+
+def test_validate_slide_plugin_spec_accepts_explicit_body_format_markdown() -> None:
+    spec = _valid_spec()
+    spec["content"]["body_format"] = "markdown"
+
+    validated = validate_slide_plugin_spec(spec)
+
+    assert validated["content"]["body_format"] == "markdown"
+
+
+def test_validate_slide_plugin_spec_rejects_unknown_body_format() -> None:
+    spec = _valid_spec()
+    spec["content"]["body_format"] = "html"
+
+    with pytest.raises(ValueError, match="body_format"):
+        validate_slide_plugin_spec(spec)
 
 
 def test_validate_slide_plugin_spec_rejects_non_dict_plugin_spec() -> None:

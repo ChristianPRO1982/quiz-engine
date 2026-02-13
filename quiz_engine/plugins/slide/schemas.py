@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 ALLOWED_MEDIA_TYPES = {"image", "none"}
+ALLOWED_BODY_FORMATS = {"markdown", "text"}
 
 
 def validate_slide_plugin_spec(plugin_spec: dict[str, Any]) -> dict[str, Any]:
@@ -17,6 +18,7 @@ def validate_slide_plugin_spec(plugin_spec: dict[str, Any]) -> dict[str, Any]:
       "content": {
         "title": str,
         "body": str,
+        "body_format"?: "markdown"|"text",
         "media"?: {"type": "image"|"none", "src": str|None}
       }
     }
@@ -37,12 +39,21 @@ def validate_slide_plugin_spec(plugin_spec: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("plugin_spec.type must be 'slide'.")
 
     content = _require_dict(plugin_spec.get("content"), "plugin_spec.content")
-    _reject_unknown_keys(content, {"title", "body", "media"}, "plugin_spec.content")
+    _reject_unknown_keys(
+        content,
+        {"title", "body", "body_format", "media"},
+        "plugin_spec.content",
+    )
 
     title = _require_str(content.get("title"), "plugin_spec.content.title")
     body = _require_str(content.get("body"), "plugin_spec.content.body")
+    body_format = _validate_body_format(content.get("body_format"))
 
-    normalized_content: dict[str, Any] = {"title": title, "body": body}
+    normalized_content: dict[str, Any] = {
+        "title": title,
+        "body": body,
+        "body_format": body_format,
+    }
     if "media" in content:
         normalized_content["media"] = _validate_media(content["media"])
 
@@ -60,10 +71,23 @@ def build_slide_frame_payload(plugin_spec: dict[str, Any]) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "title": content["title"],
         "body": content["body"],
+        "body_format": content["body_format"],
     }
     if "media" in content:
         payload["media"] = content["media"]
     return payload
+
+
+def _validate_body_format(raw_body_format: Any) -> str:
+    if raw_body_format is None:
+        return "text"
+
+    body_format = _require_str(raw_body_format, "plugin_spec.content.body_format")
+    if body_format not in ALLOWED_BODY_FORMATS:
+        raise ValueError(
+            "plugin_spec.content.body_format must be one of: 'markdown', 'text'."
+        )
+    return body_format
 
 
 def _validate_media(media: Any) -> dict[str, Any]:

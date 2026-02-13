@@ -16,6 +16,7 @@ SLIDE is the first built-in plugin for quiz-engine.
   "content": {
     "title": "Welcome",
     "body": "Rules of the round",
+    "body_format": "markdown",
     "media": {
       "type": "image",
       "src": "https://example.org/slide.png"
@@ -24,4 +25,5 @@ SLIDE is the first built-in plugin for quiz-engine.
 }
 ```
 
+`body_format` supports `"markdown"` and `"text"` and defaults to `"text"` when omitted.
 `media` is optional. If `media.type` is `"none"`, `src` must be `null`.

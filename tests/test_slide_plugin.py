@@ -41,6 +41,7 @@ def _slide_stage(stage_id: str = "stage-1", stage_index: int = 0) -> StageDefini
             "content": {
                 "title": "Welcome",
                 "body": "Round starts now.",
+                "body_format": "markdown",
                 "media": {
                     "type": "image",
                     "src": "https://cdn.example.org/welcome.png",
@@ -101,8 +102,32 @@ def test_slide_runtime_on_stage_open_emits_single_view_model_frame() -> None:
     assert frame.frame_type == "VIEW_MODEL"
     assert frame.payload["title"] == "Welcome"
     assert frame.payload["body"] == "Round starts now."
+    assert frame.payload["body_format"] == "markdown"
     assert frame.payload["media"]["type"] == "image"
     assert frame.sent_at == now
+
+
+def test_slide_runtime_defaults_body_format_to_text_for_legacy_spec() -> None:
+    plugin = SlidePlugin()
+    stage = StageDefinition(
+        stage_id="stage-legacy",
+        stage_index=0,
+        plugin_id="slide",
+        stage_kind="slide",
+        engine_prompt={},
+        plugin_spec={
+            "schema_version": "v0",
+            "type": "slide",
+            "content": {"title": "Legacy", "body": "Plain"},
+        },
+    )
+    runtime = plugin.create_runtime("session-1", stage)
+    now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+
+    frames = runtime.on_stage_open(_context(stage, now))
+
+    assert frames is not None
+    assert frames[0].payload["body_format"] == "text"
 
 
 def test_slide_runtime_build_outcome_returns_no_score() -> None:

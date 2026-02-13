@@ -207,7 +207,11 @@ def test_sprint7_live_session_flow_host_and_player_ws(
                     "spec": {
                         "schema_version": "v0",
                         "type": "slide",
-                        "content": {"title": "Stage 1", "body": "One"},
+                        "content": {
+                            "title": "Stage 1",
+                            "body": "# One\n\n- alpha",
+                            "body_format": "markdown",
+                        },
                     },
                 },
                 {
@@ -217,7 +221,11 @@ def test_sprint7_live_session_flow_host_and_player_ws(
                     "spec": {
                         "schema_version": "v0",
                         "type": "slide",
-                        "content": {"title": "Stage 2", "body": "Two"},
+                        "content": {
+                            "title": "Stage 2",
+                            "body": "**Two**",
+                            "body_format": "markdown",
+                        },
                     },
                 },
             ],
@@ -266,6 +274,7 @@ def test_sprint7_live_session_flow_host_and_player_ws(
             assert stage_0_host["payload"]["stage_index"] == 0
             frame_0_host = _drain_until(host_ws, "PLUGIN_FRAME")
             assert frame_0_host["payload"]["payload"]["title"] == "Stage 1"
+            assert frame_0_host["payload"]["payload"]["body_format"] == "markdown"
 
             running_player = _drain_until(player_ws, "SESSION_STATE_CHANGED")
             assert running_player["payload"]["session_state"] == "RUNNING"
@@ -273,17 +282,20 @@ def test_sprint7_live_session_flow_host_and_player_ws(
             assert stage_0_player["payload"]["stage_index"] == 0
             frame_0_player = _drain_until(player_ws, "PLUGIN_FRAME")
             assert frame_0_player["payload"]["payload"]["title"] == "Stage 1"
+            assert frame_0_player["payload"]["payload"]["body_format"] == "markdown"
 
             host_ws.send_json({"type": "HOST_NEXT_STAGE", "payload": {}})
             stage_1_host = _drain_until(host_ws, "STAGE_CHANGED")
             assert stage_1_host["payload"]["stage_index"] == 1
             frame_1_host = _drain_until(host_ws, "PLUGIN_FRAME")
             assert frame_1_host["payload"]["payload"]["title"] == "Stage 2"
+            assert frame_1_host["payload"]["payload"]["body_format"] == "markdown"
 
             stage_1_player = _drain_until(player_ws, "STAGE_CHANGED")
             assert stage_1_player["payload"]["stage_index"] == 1
             frame_1_player = _drain_until(player_ws, "PLUGIN_FRAME")
             assert frame_1_player["payload"]["payload"]["title"] == "Stage 2"
+            assert frame_1_player["payload"]["payload"]["body_format"] == "markdown"
 
             host_ws.send_json({"type": "HOST_END", "payload": {}})
 

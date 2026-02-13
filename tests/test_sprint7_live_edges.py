@@ -116,6 +116,7 @@ def test_host_join_routes_auth_and_404_and_success(tmp_path: Path, monkeypatch) 
     assert host_page.status_code == 200
     assert session_code in host_page.text
     assert "data:image/png;base64," in host_page.text
+    assert "/static/js/slide_renderer.js" in host_page.text
 
     # Wrong host user gets 404.
     client.post("/logout", follow_redirects=False)
@@ -134,6 +135,7 @@ def test_host_join_routes_auth_and_404_and_success(tmp_path: Path, monkeypatch) 
     player_ok = client.get(f"/player/s/{session_code}?nickname={nickname}")
     assert player_ok.status_code == 200
     assert ("x" * 32) in player_ok.text
+    assert "/static/js/slide_renderer.js" in player_ok.text
 
     player_missing = client.get("/player/s/NOPE")
     assert player_missing.status_code == 404

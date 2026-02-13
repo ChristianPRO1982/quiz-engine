@@ -68,7 +68,8 @@ def test_preview_route_renders_for_authenticated_user(
                         "type": "slide",
                         "content": {
                             "title": "Welcome",
-                            "body": "Round starts now.",
+                            "body": "# Heading\n\n- A\n- B",
+                            "body_format": "markdown",
                             "media": {"type": "none", "src": None},
                         },
                     },
@@ -84,6 +85,9 @@ def test_preview_route_renders_for_authenticated_user(
     assert "qe-preview-prev" in response.text
     assert "qe-preview-next" in response.text
     assert "qe-preview-bootstrap" in response.text
+    assert "/static/js/slide_renderer.js" in response.text
+    assert "body_format" in response.text
+    assert "markdown" in response.text
 
 
 def test_preview_service_can_load_quiz_data(tmp_path: Path, monkeypatch) -> None:
@@ -132,7 +136,11 @@ def test_preview_service_iterates_all_stages_without_error() -> None:
                     "spec": {
                         "schema_version": "v0",
                         "type": "slide",
-                        "content": {"title": "Slide stage", "body": "Body"},
+                        "content": {
+                            "title": "Slide stage",
+                            "body": "Body",
+                            "body_format": "markdown",
+                        },
                     },
                 },
                 {
@@ -150,4 +158,5 @@ def test_preview_service_iterates_all_stages_without_error() -> None:
     assert preview["quiz_id"] == 77
     assert len(preview["stages"]) == 2
     assert preview["stages"][0]["view_model"]["is_placeholder"] is False
+    assert preview["stages"][0]["view_model"]["payload"]["body_format"] == "markdown"
     assert preview["stages"][1]["view_model"]["is_placeholder"] is True

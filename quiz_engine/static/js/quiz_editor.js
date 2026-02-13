@@ -87,6 +87,7 @@
         content: {
           title: "",
           body: "",
+          body_format: "markdown",
           media: {
             type: "none",
             src: null,
@@ -95,6 +96,46 @@
       };
     }
     return {};
+  };
+
+  const normalizeSlideSpec = (rawSpec, fallbackTitle) => {
+    const sourceSpec =
+      rawSpec && typeof rawSpec === "object" && !Array.isArray(rawSpec) ? rawSpec : {};
+    const sourceContent =
+      sourceSpec.content &&
+      typeof sourceSpec.content === "object" &&
+      !Array.isArray(sourceSpec.content)
+        ? sourceSpec.content
+        : {};
+    const sourceMedia =
+      sourceContent.media &&
+      typeof sourceContent.media === "object" &&
+      !Array.isArray(sourceContent.media)
+        ? sourceContent.media
+        : {};
+
+    const mediaSrc = readText(sourceMedia.src);
+    const media =
+      readText(sourceMedia.type, "none") === "image" && mediaSrc
+        ? { type: "image", src: mediaSrc }
+        : { type: "none", src: null };
+    const bodyFormat = readText(sourceContent.body_format, "markdown").toLowerCase();
+
+    return {
+      schema_version: "v0",
+      type: "slide",
+      content: {
+        title: readText(sourceContent.title, fallbackTitle),
+        body: String(sourceContent.body || ""),
+        body_format: bodyFormat === "text" ? "text" : "markdown",
+        media,
+      },
+    };
+  };
+
+  const ensureSlideSpec = (question) => {
+    question.spec = normalizeSlideSpec(question.spec, question.title);
+    return question.spec;
   };
 
   const normalizeQuestion = (rawQuestion, index) => {
@@ -136,6 +177,9 @@
     }
     if (!title) {
       title = questionType === "slide" ? `Slide ${index + 1}` : `Question ${index + 1}`;
+    }
+    if (questionType === "slide") {
+      spec = normalizeSlideSpec(spec, title);
     }
 
     return {
@@ -204,12 +248,19 @@
       question_id: question.question_id,
       type: question.type,
       title: readText(question.title, "Untitled question"),
-      spec:
-        question.spec &&
-        typeof question.spec === "object" &&
-        !Array.isArray(question.spec)
+      spec: (() => {
+        if (question.type === "slide") {
+          return normalizeSlideSpec(
+            question.spec,
+            readText(question.title, "Untitled question")
+          );
+        }
+        return question.spec &&
+          typeof question.spec === "object" &&
+          !Array.isArray(question.spec)
           ? question.spec
-          : {},
+          : {};
+      })(),
     })),
   });
 
@@ -457,32 +508,14 @@
     titleField.value = question.title;
     titleField.addEventListener("input", () => {
       question.title = readText(titleField.value, "Untitled question");
+      if (question.type === "slide") {
+        const slideSpec = ensureSlideSpec(question);
+        slideSpec.content.title = question.title;
+      }
       titleButton.textContent = `${index + 1}. ${question.title}`;
       setDirty(true);
     });
     titleLabel.appendChild(titleField);
-
-    const specLabel = document.createElement("label");
-    specLabel.className = "qe-question__field";
-    specLabel.textContent = "Question spec (JSON)";
-    const specField = document.createElement("textarea");
-    specField.rows = 6;
-    specField.value = JSON.stringify(question.spec || {}, null, 2);
-    specField.addEventListener("change", () => {
-      try {
-        const parsed = JSON.parse(specField.value || "{}");
-        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-          throw new Error("spec must be a JSON object");
-        }
-        question.spec = parsed;
-        setError("");
-        setDirty(true);
-      } catch (error) {
-        setError("Spec must be valid JSON object.");
-        specField.value = JSON.stringify(question.spec || {}, null, 2);
-      }
-    });
-    specLabel.appendChild(specField);
 
     const deleteButton = document.createElement("button");
     deleteButton.className = "qe-btn";
@@ -494,7 +527,54 @@
     });
 
     panel.appendChild(titleLabel);
-    panel.appendChild(specLabel);
+    if (question.type === "slide") {
+      const slideSpec = ensureSlideSpec(question);
+      slideSpec.content.title = question.title;
+
+      const bodyLabel = document.createElement("label");
+      bodyLabel.className = "qe-question__field";
+      bodyLabel.textContent = "Slide body (Markdown)";
+      const bodyField = document.createElement("textarea");
+      bodyField.className = "qe-question__body-markdown";
+      bodyField.rows = 8;
+      bodyField.value = String(slideSpec.content.body || "");
+      bodyField.addEventListener("input", () => {
+        slideSpec.content.body = bodyField.value;
+        slideSpec.content.body_format = "markdown";
+        setDirty(true);
+      });
+      bodyLabel.appendChild(bodyField);
+
+      const helper = document.createElement("p");
+      helper.className = "qe-muted-text";
+      helper.textContent = "Markdown supported.";
+
+      panel.appendChild(bodyLabel);
+      panel.appendChild(helper);
+    } else {
+      const specLabel = document.createElement("label");
+      specLabel.className = "qe-question__field";
+      specLabel.textContent = "Question spec (JSON)";
+      const specField = document.createElement("textarea");
+      specField.rows = 6;
+      specField.value = JSON.stringify(question.spec || {}, null, 2);
+      specField.addEventListener("change", () => {
+        try {
+          const parsed = JSON.parse(specField.value || "{}");
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+            throw new Error("spec must be a JSON object");
+          }
+          question.spec = parsed;
+          setError("");
+          setDirty(true);
+        } catch (error) {
+          setError("Spec must be valid JSON object.");
+          specField.value = JSON.stringify(question.spec || {}, null, 2);
+        }
+      });
+      specLabel.appendChild(specField);
+      panel.appendChild(specLabel);
+    }
     panel.appendChild(deleteButton);
 
     card.appendChild(panel);
@@ -544,6 +624,9 @@
           : `Question ${state.draft.questions.length + 1}`,
       spec: defaultQuestionSpec(sourceType),
     };
+    if (sourceType === "slide") {
+      newQuestion.spec.content.title = newQuestion.title;
+    }
 
     state.draft.questions.splice(insertAt, 0, newQuestion);
     state.activeQuestionId = newQuestion.question_id;

@@ -168,6 +168,7 @@ def test_build_preview_view_model_uses_plugin_runtime_for_slide() -> None:
             "content": {
                 "title": "Welcome",
                 "body": "Body",
+                "body_format": "markdown",
                 "media": {"type": "none", "src": None},
             },
         },
@@ -177,6 +178,7 @@ def test_build_preview_view_model_uses_plugin_runtime_for_slide() -> None:
     assert view_model["is_placeholder"] is False
     assert view_model["payload"]["title"] == "Welcome"
     assert view_model["payload"]["body"] == "Body"
+    assert view_model["payload"]["body_format"] == "markdown"
 
 
 def test_build_preview_view_model_falls_back_to_placeholder() -> None:

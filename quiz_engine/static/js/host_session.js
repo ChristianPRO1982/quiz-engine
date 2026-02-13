@@ -34,37 +34,14 @@ const renderPlayers = (players) => {
 };
 
 const renderFrame = (framePayload) => {
-  frameEl.innerHTML = "";
-
-  const payload = framePayload.payload || {};
-  const title = payload.title || "Stage";
-  const body = payload.body || "";
-
-  const card = document.createElement("article");
-  card.className = "qe-card qe-card--compact qe-preview-frame";
-
-  const heading = document.createElement("h2");
-  heading.className = "qe-title";
-  heading.textContent = title;
-  card.appendChild(heading);
-
-  if (body) {
-    const paragraph = document.createElement("p");
-    paragraph.className = "qe-hint";
-    paragraph.textContent = body;
-    card.appendChild(paragraph);
+  if (window.qeSlideRenderer && typeof window.qeSlideRenderer.renderFrame === "function") {
+    window.qeSlideRenderer.renderFrame(frameEl, framePayload, {
+      fallbackTitle: "Stage",
+      showPlaceholderNote: true,
+    });
+    return;
   }
-
-  const media = payload.media;
-  if (media && media.type === "image" && media.src) {
-    const image = document.createElement("img");
-    image.className = "qe-preview-image";
-    image.src = media.src;
-    image.alt = title;
-    card.appendChild(image);
-  }
-
-  frameEl.appendChild(card);
+  frameEl.textContent = "Renderer unavailable.";
 };
 
 const onMessage = (message) => {

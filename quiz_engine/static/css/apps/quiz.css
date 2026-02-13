@@ -567,6 +567,10 @@ a:hover {
   color: var(--qe-muted);
 }
 
+.qe-question__body-markdown {
+  min-height: 10rem;
+}
+
 .qe-modal {
   border: 0;
   padding: 0;
@@ -646,6 +650,60 @@ a:hover {
 
 .qe-preview-frame .qe-meta {
   justify-content: flex-start;
+}
+
+.qe-slide-body {
+  color: var(--qe-fg);
+}
+
+.qe-slide-body--text {
+  white-space: pre-line;
+}
+
+.qe-slide-body--markdown {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.qe-slide-body--markdown h1,
+.qe-slide-body--markdown h2,
+.qe-slide-body--markdown h3,
+.qe-slide-body--markdown p {
+  margin: 0;
+}
+
+.qe-slide-body--markdown h1,
+.qe-slide-body--markdown h2,
+.qe-slide-body--markdown h3 {
+  line-height: 1.15;
+}
+
+.qe-slide-body--markdown h1 {
+  font-size: clamp(1.25rem, 2.8vw, 1.65rem);
+}
+
+.qe-slide-body--markdown h2 {
+  font-size: clamp(1.1rem, 2.4vw, 1.4rem);
+}
+
+.qe-slide-body--markdown h3 {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+}
+
+.qe-slide-body--markdown p {
+  line-height: 1.45;
+}
+
+.qe-slide-body__list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.qe-slide-body--markdown a {
+  color: var(--qe-link);
+  text-decoration: underline;
 }
 
 .qe-preview-image {

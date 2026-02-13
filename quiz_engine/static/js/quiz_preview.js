@@ -72,9 +72,11 @@
       content.media && typeof content.media === "object" && content.media
         ? content.media
         : null;
+    const bodyFormat = readText(content.body_format, "text").toLowerCase();
     const payload = {
       title: readText(content.title, title),
       body: readText(content.body),
+      body_format: bodyFormat === "markdown" ? "markdown" : "text",
     };
     if (media && readText(media.type, "none") === "image" && readText(media.src)) {
       payload.media = { type: "image", src: readText(media.src) };
@@ -146,44 +148,18 @@
       stage.view_model && typeof stage.view_model === "object" ? stage.view_model : {};
     const payload =
       viewModel.payload && typeof viewModel.payload === "object" ? viewModel.payload : {};
-
-    const frame = document.createElement("article");
-    frame.className = "qe-card qe-card--compact qe-preview-frame";
-
-    const meta = document.createElement("p");
-    meta.className = "qe-meta";
-    meta.textContent = `Stage ${state.index + 1} • ${stage.plugin_id || "unknown"}`;
-    frame.appendChild(meta);
-
-    const title = document.createElement("h2");
-    title.className = "qe-title";
-    title.textContent = readText(payload.title || stage.title, `Stage ${state.index + 1}`);
-    frame.appendChild(title);
-
-    const body = document.createElement("p");
-    body.className = "qe-hint";
-    body.textContent = readText(payload.body);
-    frame.appendChild(body);
-
-    const media =
-      payload.media && typeof payload.media === "object" && payload.media ? payload.media : null;
-    if (media && readText(media.type) === "image" && readText(media.src)) {
-      const image = document.createElement("img");
-      image.className = "qe-preview-image";
-      image.src = readText(media.src);
-      image.alt = readText(payload.title || stage.title, "Stage image");
-      image.loading = "lazy";
-      frame.appendChild(image);
+    if (window.qeSlideRenderer && typeof window.qeSlideRenderer.renderFrame === "function") {
+      window.qeSlideRenderer.renderFrame(stageEl, { ...viewModel, payload }, {
+        fallbackTitle: readText(payload.title || stage.title, `Stage ${state.index + 1}`),
+        metaText: `Stage ${state.index + 1} • ${stage.plugin_id || "unknown"}`,
+        showPlaceholderNote: true,
+      });
+    } else {
+      const fallback = document.createElement("p");
+      fallback.className = "qe-hint";
+      fallback.textContent = readText(payload.body, "Renderer unavailable.");
+      stageEl.appendChild(fallback);
     }
-
-    if (viewModel.is_placeholder) {
-      const note = document.createElement("p");
-      note.className = "qe-muted-text";
-      note.textContent = "Static placeholder only.";
-      frame.appendChild(note);
-    }
-
-    stageEl.appendChild(frame);
     positionEl.textContent = `${state.index + 1} / ${state.stages.length}`;
     previousButton.disabled = state.index === 0;
     nextButton.disabled = state.index >= state.stages.length - 1;
