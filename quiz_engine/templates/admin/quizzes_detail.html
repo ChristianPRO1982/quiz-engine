@@ -13,6 +13,9 @@
     <section class="qe-editor-toolbar" aria-label="Editor save toolbar">
       <span id="qe-editor-status" class="qe-pill">Saved</span>
       <div class="qe-editor-toolbar__actions">
+        <form method="post" action="/host/quizzes/{{ quiz.id }}/start">
+          <button class="qe-btn" type="submit">Start session</button>
+        </form>
         <button id="qe-editor-preview" class="qe-btn" type="button">Preview</button>
         <button id="qe-editor-save" class="qe-btn qe-btn--primary" type="button" disabled>Save</button>
       </div>

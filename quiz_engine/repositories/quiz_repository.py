@@ -43,6 +43,10 @@ class QuizRepository:
         )
         return session.execute(stmt).scalar_one_or_none()
 
+    def get_by_id(self, session: Session, *, quiz_id: int) -> Quiz | None:
+        stmt = select(Quiz).where(Quiz.id == quiz_id)
+        return session.execute(stmt).scalar_one_or_none()
+
     def update_payload(
         self,
         session: Session,

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Player Session{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <p class="qe-meta">
+      <span>Session</span>
+      <strong id="qe-player-session-code">{{ session_code }}</strong>
+    </p>
+    <h1 class="qe-title">Player screen</h1>
+    <p class="qe-hint">Wait for the host to start and advance stages.</p>
+
+    <section class="qe-interaction">
+      <label for="qe-player-nickname">Nickname</label>
+      <input
+        id="qe-player-nickname"
+        type="text"
+        maxlength="32"
+        value="{{ nickname }}"
+        placeholder="Your nickname"
+      />
+      <div class="qe-actions qe-actions--start">
+        <button class="qe-btn qe-btn--primary" id="qe-player-join" type="button">Join</button>
+        <button class="qe-btn" id="qe-player-leave" type="button">Leave</button>
+      </div>
+    </section>
+
+    <p class="qe-muted-text">State: <span id="qe-player-state">{{ session_state }}</span></p>
+    <p class="qe-muted-text">Stage: <span id="qe-player-stage">none</span></p>
+    <p id="qe-player-status" class="qe-hint">Connecting live channel...</p>
+
+    <section class="qe-card qe-card--compact">
+      <p class="qe-meta"><span>Live frame</span></p>
+      <div id="qe-player-frame" class="qe-preview-stage"></div>
+    </section>
+  </section>
+
+  <script id="qe-player-bootstrap" type="application/json">
+    {{ {
+      "session_code": session_code,
+      "nickname": nickname,
+      "session_state": session_state
+    } | tojson }}
+  </script>
+  <script src="/static/js/ws_client.js"></script>
+  <script src="/static/js/player_session.js"></script>
+{% endblock %}

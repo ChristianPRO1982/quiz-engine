@@ -16,6 +16,11 @@
             <a href="/admin/quizzes/{{ quiz.id }}">{{ quiz.payload.title or "Untitled quiz" }}</a>
             <p class="qe-hint">{{ quiz.payload.description or "No description" }}</p>
             <span class="qe-muted-text">Schema {{ quiz.schema_version }}</span>
+            <div class="qe-actions qe-actions--start">
+              <form method="post" action="/host/quizzes/{{ quiz.id }}/start">
+                <button class="qe-btn" type="submit">Start session</button>
+              </form>
+            </div>
           </li>
         {% endfor %}
       </ul>

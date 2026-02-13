@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Host Session{% endblock %}
+{% block content %}
+  <section class="qe-card">
+    <p class="qe-meta">
+      <span>Session code</span>
+      <strong id="qe-host-session-code">{{ session_code }}</strong>
+    </p>
+    <h1 class="qe-title">Live session host</h1>
+    <p class="qe-hint">Share the code or QR with players, then run the quiz live.</p>
+
+    <div class="qe-admin-grid">
+      <article class="qe-card qe-card--compact">
+        <p class="qe-muted-text">Join URL</p>
+        <p class="qe-hint" id="qe-host-join-url">{{ join_url }}</p>
+        <img src="{{ qr_data_url }}" alt="Join session QR code" class="qe-preview-image" />
+      </article>
+
+      <article class="qe-card qe-card--compact">
+        <p class="qe-muted-text">Players</p>
+        <ul id="qe-host-players" class="qe-list">
+          {% for player in players %}
+            <li data-player-id="{{ player.player_id }}">{{ player.nickname }}</li>
+          {% endfor %}
+        </ul>
+      </article>
+    </div>
+
+    <section class="qe-card qe-card--compact">
+      <p class="qe-meta">
+        <span>Session state</span>
+        <strong id="qe-host-state">{{ session_state }}</strong>
+      </p>
+      <p class="qe-muted-text">Current stage: <span id="qe-host-stage">none</span></p>
+      <div class="qe-actions qe-actions--start">
+        <button class="qe-btn qe-btn--primary" id="qe-host-start" type="button">Start</button>
+        <button class="qe-btn" id="qe-host-next" type="button">Next</button>
+        <button class="qe-btn" id="qe-host-end" type="button">End</button>
+      </div>
+      <p id="qe-host-status" class="qe-hint">Connecting live channel...</p>
+    </section>
+
+    <section class="qe-card qe-card--compact">
+      <p class="qe-meta"><span>Live frame</span></p>
+      <div id="qe-host-frame" class="qe-preview-stage"></div>
+    </section>
+  </section>
+
+  <script id="qe-host-bootstrap" type="application/json">
+    {{ {
+      "session_code": session_code,
+      "session_state": session_state,
+      "join_url": join_url
+    } | tojson }}
+  </script>
+  <script src="/static/js/ws_client.js"></script>
+  <script src="/static/js/host_session.js"></script>
+{% endblock %}
