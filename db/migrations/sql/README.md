@@ -7,6 +7,7 @@ These migrations are designed to be run manually by a PostgreSQL administrator.
 1. `0001_create_qe_core_tables.sql`
 2. `0002_seed_service_settings.sql`
 3. `0003_replace_answer_result_with_stage_event_outcome.sql`
+4. `0004_normalize_slide_markdown_payloads.sql`
 
 ## Tracking table
 
