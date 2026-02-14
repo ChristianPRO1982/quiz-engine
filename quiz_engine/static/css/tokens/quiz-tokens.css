@@ -10,6 +10,7 @@
 
   --qe-radius-card: var(--ds-radius-card, 0.75rem);
   --qe-radius-action: var(--ds-radius-action, 9999px);
+  --qe-radius-field: var(--ds-radius-field, 0.6rem);
 
   --qe-shadow-1: 0 10px 24px rgba(0, 0, 0, 0.14);
   --qe-shadow-2: 0 16px 38px rgba(0, 0, 0, 0.18);

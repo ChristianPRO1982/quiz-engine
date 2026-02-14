@@ -7,6 +7,7 @@ html[data-theme="normal"] {
   --ds-fg: #5a2b1f;
   --ds-muted: rgba(90, 43, 31, 0.70);
   --ds-border: #8b1e1e;
+  --ds-radius-field: 0.5rem;
 
   --ds-primary: #b7410e;
   --ds-success: #18bb67;
@@ -23,6 +24,7 @@ html[data-theme="normal"] {
     --ds-fg: #b17054;
     --ds-muted: rgba(177, 112, 84, 0.78);
     --ds-border: rgba(177, 112, 84, 0.22);
+    --ds-radius-field: 0.5rem;
 
     --ds-primary: #5c1210;
     --ds-success: #18bb67;

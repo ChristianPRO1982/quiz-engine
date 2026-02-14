@@ -334,7 +334,7 @@ a:hover {
 
 .qe-form-grid input {
   border: 1px solid var(--qe-border);
-  border-radius: var(--qe-radius-action);
+  border-radius: var(--qe-radius-field);
   padding: 0.65rem 0.75rem;
   background: var(--qe-surface);
   color: var(--qe-fg);
@@ -456,7 +456,17 @@ a:hover {
 .qe-question__field textarea {
   width: 100%;
   border: 1px solid var(--qe-border);
-  border-radius: var(--qe-radius-action);
+  border-radius: var(--qe-radius-field);
+  padding: 0.65rem 0.75rem;
+  background: var(--qe-surface);
+  color: var(--qe-fg);
+  font: inherit;
+}
+
+.qe-interaction input,
+.qe-interaction textarea {
+  border: 1px solid var(--qe-border);
+  border-radius: var(--qe-radius-field);
   padding: 0.65rem 0.75rem;
   background: var(--qe-surface);
   color: var(--qe-fg);
