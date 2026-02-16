@@ -202,16 +202,14 @@ Breaking these principles breaks the project.
 
 # 11. Authority Hierarchy
 
-In case of ambiguity:
+The canonical authority hierarchy is defined in:
 
-1. runtime_schema_v1.md
-2. scoreEntry_contract_v1.md
-3. runtime_plugin_io_v1.md
-4. engine_responsibilities_v1.md
-5. PROJECT_CONTRACT.md
+docs/contracts/README.md (section: Contract Hierarchy)
 
-This document defines philosophy.
-Contracts define structure.
+In case of ambiguity, apply that hierarchy exactly.
+
+PROJECT_CONTRACT.md defines philosophy and guardrails.
+Contracts in docs/contracts/* define runtime structure.
 
 ---
 

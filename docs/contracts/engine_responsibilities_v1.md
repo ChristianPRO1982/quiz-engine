@@ -234,14 +234,11 @@ The engine does not validate:
 
 # 7. Authority Hierarchy
 
-Authoritative sources:
+Global contract hierarchy is defined in:
 
-1. runtime_schema_v1.md
-2. scoreEntry_contract_v1.md
-3. runtime_plugin_io_v1.md
-4. engine_responsibilities_v1.md
+docs/contracts/README.md (section: Contract Hierarchy)
 
-If contradiction occurs,
+For this document scope:
 runtime_schema_v1.md prevails for data,
 scoreEntry_contract_v1.md prevails for scoring.
 

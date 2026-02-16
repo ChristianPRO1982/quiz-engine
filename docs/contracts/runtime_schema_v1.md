@@ -92,7 +92,7 @@ A Stage represents one plugin execution unit.
   "stage_index": "integer",
   "config": "object",
   "seed": "integer",
-  "status": "PENDING | ACTIVE | RESOLVED"
+  "status": "PENDING | ACTIVE | RESOLVED | FAILED"
 }
 ```
 
@@ -102,6 +102,7 @@ Rules:
 * `config` is plugin-defined.
 * `seed` must be used for deterministic behavior.
 * Engine transitions status.
+* `FAILED` means plugin/runtime error; no scoring recovery is allowed.
 
 ---
 

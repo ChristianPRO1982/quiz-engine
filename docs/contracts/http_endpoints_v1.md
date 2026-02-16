@@ -158,7 +158,8 @@ Response:
 
 No score totals included.
 
-Snapshots are available via WebSocket only.
+Snapshots are available via WebSocket
+and via GET /sessions/{session_id}/snapshot (optional read-only endpoint).
 
 ---
 
@@ -174,7 +175,7 @@ Response:
 {
   "stage_id": "string",
   "plugin_key": "string",
-  "status": "PENDING | ACTIVE | RESOLVED"
+  "status": "PENDING | ACTIVE | RESOLVED | FAILED"
 }
 ```
 
