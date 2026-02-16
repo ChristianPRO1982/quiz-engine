@@ -37,7 +37,6 @@ You must NOT:
 
 - Use floats
 - Use percentages
-- Rank players
 - Access engine storage
 - Modify session state
 - Redefine StageOutcome

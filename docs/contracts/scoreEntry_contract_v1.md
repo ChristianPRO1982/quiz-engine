@@ -192,8 +192,6 @@ Future versions may introduce:
 
 But must remain integer-only.
 
-```
-
 ---
 
 # 🎯 Definition of Done

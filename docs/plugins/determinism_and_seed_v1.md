@@ -66,7 +66,7 @@ import random
 
 rng = random.Random(seed)
 value = rng.randint(0, 10)
-````
+```
 
 Never use:
 
@@ -74,8 +74,6 @@ Never use:
 * time-based randomness
 * uuid-based randomness
 * OS entropy
-
-```
 
 ---
 

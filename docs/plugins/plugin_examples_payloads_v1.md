@@ -1,7 +1,4 @@
-# ✅ Fichier réécrit — `docs/plugins/plugin_examples_payloads.md`
-
-````markdown id="ex9m2c"
-# Plugin Example Payloads — v1
+# Plugin Examples Payloads — v1
 Non-authoritative examples of runtime payloads
 
 Status: REFERENCE (Non-Canonical)
@@ -59,7 +56,7 @@ Example of a resolved multiple-choice stage.
   ],
   "metadata": null
 }
-````
+```
 
 Notes:
 

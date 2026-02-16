@@ -173,7 +173,6 @@ Cross-stage logic must be encoded in stage config.
 Plugins must not:
 
 * Call engine persistence
-* Compute global rankings
 * Modify session state
 * Override stage lifecycle
 * Inject non-integer scoring
