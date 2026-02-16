@@ -1,151 +1,100 @@
-# Runtime schemas — Source of Truth
+# Contracts — quiz-engine
+Authoritative runtime contracts
 
-This directory contains the **authoritative runtime schemas** of the `quiz-engine` project.
+Status: CANONICAL INDEX
+Scope: Engine ↔ Plugin runtime
 
-These documents define **all data structures, lifecycles, and interactions**
-used at runtime between:
-- the engine core
-- plugins
-- WebSocket transports
-- replay / persistence mechanisms
+This directory contains the authoritative runtime contracts
+for quiz-engine.
 
-If something is not documented here, **it must not exist in code**.
+If a structure exists at runtime, it must be defined here.
 
----
-
-## Golden Rule
-
-> **Formats rule everything.**
-
-No runtime behavior, data structure, or transport format may be introduced
-without being explicitly documented in this folder.
+If it is not defined here, it must not exist in code.
 
 ---
 
-## schema Status
+# Purpose of This Folder
 
-Each schema document MUST declare its status at the top:
+These documents define:
 
-- **DRAFT**  
-  The schema may evolve and is not yet guaranteed stable.
+- Runtime data models
+- Engine ↔ Plugin interface
+- WebSocket interaction model
+- HTTP runtime surface
+- Plugin manifest structure
+- Scoring contract
 
-- **STABLE**  
-  The schema is frozen.
-  Any modification is a **breaking change** and requires:
-  - a new `schema_version`
-  - updated documentation
-  - updated fixtures
-  - updated tests
+They do NOT define:
 
-Silent changes are strictly forbidden.
-
----
-
-## Versioning Rules
-
-- All runtime schemas are explicitly versioned using:
-```
-schema_version: vX
-
-- `schema_version` applies to:
-- runtime objects
-- WebSocket payloads
-- plugin manifests
-- outcomes and traces
-
-Engine and plugin **code versions** follow Semantic Versioning and are separate
-from schema versions.
+- Business logic
+- UI rendering
+- Database schema
+- Infrastructure configuration
 
 ---
 
-## Scope of These schemas
+# Contract Hierarchy
 
-The schemas in this folder define:
+The authoritative order is:
 
-- Runtime data models (Stage, Context, Events, Frames, Outcomes)
-- Engine ↔ Plugin interfaces
-- WebSocket message structures
-- HTTP endpoints used by the engine runtime
-- Invariants and validation rules
-- Serialization requirements (JSON-only, UTC timestamps)
+1. runtime_schema_v1.md
+2. scoreEntry_contract_v1.md
+3. runtime_plugin_io_v1.md
+4. engine_responsibilities_v1.md
+5. engine_plugin_interfaces_v1.md
+6. plugin_manifest_contract_v1.md
+7. http_endpoints_v1.md
 
-They do **not** define:
-- quiz business logic
-- scoring rules
-- UI rendering details
-- database schemas
+If a contradiction appears, higher documents prevail.
 
 ---
 
-## Engine Responsibilities (Fixed)
+# Schema Versioning
 
-The engine core:
-- orchestrates stage lifecycles
-- transports events and frames
-- aggregates numeric score deltas
-- stores traces and outcomes for replay
-- enforces schema validation
+All runtime structures must include:
 
-The engine core MUST NEVER:
-- interpret answers
-- calculate scores
-- apply quiz logic
-- branch behavior based on plugin content
+schema_version: "v1"
 
----
+If a breaking change occurs:
 
-## Plugin Responsibilities (Fixed)
+- A new schema_version must be created
+- Old schemas must remain archived
+- Documentation must be updated before code
 
-Plugins:
-- own all intelligence (rules, scoring, grading, reveal)
-- interpret their own payloads
-- may emit live render frames
-- must be deterministic when using randomness
-
-Plugins interact with the engine **only via these schemas**.
+Silent structural changes are forbidden.
 
 ---
 
-## WebSocket Discipline
+# Golden Rule
 
-All WebSocket messages:
-- follow a `{ type, payload }` envelope
-- carry only JSON-serializable payloads
-- use server-generated timestamps as the source of truth
+> Code implements contracts.
+> Contracts define structure.
+> Structure defines architecture.
 
-No Python-only objects may cross system boundaries.
-
----
-
-## Change Process
-
-If a new requirement appears:
-
-1. **STOP coding**
-2. Propose a schema update (documentation only)
-3. Decide whether it is:
- - backward-compatible → same `schema_version`
- - breaking → new `schema_version`
-4. Update:
- - this documentation
- - related fixtures
- - related tests
-5. Only then implement code
+Never modify runtime code without updating contracts first.
 
 ---
 
-## Enforcement
+# Stability
 
-- Tests and fixtures are part of the schema.
-- CI must fail if:
-- undocumented fields appear
-- a STABLE schema is modified without version bump
-- Codex and any AI assistant MUST follow these documents strictly.
+These contracts are stable under v1.
 
----
+Any structural change requires:
 
-## Final Reminder
+1. Contract update
+2. Explicit version bump
+3. Updated tests and fixtures
+4. Then implementation
 
-> A strict engine with explicit schemas is easier to evolve
-> than a clever engine with hidden assumptions.
-```
+Contract-driven development is mandatory.
+
+# Freeze Policy
+
+The v1 contracts are frozen.
+
+Any breaking change requires:
+- new *_v2.md files
+- updated references in docs/CODEX_RULES.md and docs/PROJECT_CONTRACT.md
+- implementation changes only after documentation is updated
+
+Do not edit v1 files to introduce structural changes.

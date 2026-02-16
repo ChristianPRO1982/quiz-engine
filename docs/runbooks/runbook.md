@@ -1,80 +1,212 @@
-# Runbook migrations SQL PostgreSQL (`app_qe`)
+# Runbook — quiz-engine
+Operational guide for engine runtime
 
-Ce runbook décrit comment :
-1. ajouter temporairement les grants à `app_qe`,
-2. lancer les migrations SQL manuelles,
-3. supprimer les grants de `app_qe`.
+Status: REFERENCE
+Scope: Runtime operations only
 
-## Pré-requis
+Authoritative architecture:
+- docs/PROJECT_CONTRACT.md
+- docs/contracts/*
 
-- Base: `carthographie`
-- Rôle applicatif: `app_qe`
-- Scripts SQL: `db/migrations/sql/*.sql`
-- Les scripts sont exécutés par l'admin (ou via `SET ROLE app_qe`).
+This runbook covers operational procedures.
+It does not redefine contracts.
 
-## 1) Ajouter les grants pour `app_qe`
+---
 
-Exécuter en admin PostgreSQL :
+# 1. Runtime Overview
 
-```sql
-GRANT CONNECT ON DATABASE carthographie TO app_qe;
+The engine:
 
-CREATE SCHEMA IF NOT EXISTS qe AUTHORIZATION app_qe;
-GRANT USAGE, CREATE ON SCHEMA qe TO app_qe;
-GRANT USAGE, CREATE ON SCHEMA public TO app_qe;
+- Manages sessions
+- Orchestrates stages
+- Routes WebSocket messages
+- Persists StageOutcome and ScoreEntry
+- Aggregates integer deltas mechanically
 
-ALTER ROLE app_qe IN DATABASE carthographie SET search_path = qe, public;
-```
+Plugins:
 
-## 2) Lancer les migrations SQL (manuelles)
+- Implement game logic
+- Produce StageOutcome
+- Produce ScoreEntry
 
-Option simple (admin dans `psql`) :
+---
 
-```sql
-\c carthographie
-SET ROLE app_qe;
-\set ON_ERROR_STOP on
-\i db/migrations/sql/0001_create_qe_core_tables.sql
-\i db/migrations/sql/0002_seed_service_settings.sql
-\i db/migrations/sql/0003_replace_answer_result_with_stage_event_outcome.sql
-RESET ROLE;
-```
+# 2. Session Lifecycle Operations
 
-Option shell (admin) :
+## Create Session
+POST /sessions
 
-```bash
-psql -v ON_ERROR_STOP=1 -d carthographie -f db/migrations/sql/0001_create_qe_core_tables.sql
-psql -v ON_ERROR_STOP=1 -d carthographie -f db/migrations/sql/0002_seed_service_settings.sql
-psql -v ON_ERROR_STOP=1 -d carthographie -f db/migrations/sql/0003_replace_answer_result_with_stage_event_outcome.sql
-```
+Result:
+- status = LOBBY
 
-### Vérifier quelles migrations ont été appliquées
+---
 
-```sql
-SET search_path TO qe, public;
-SELECT version, applied_at, applied_by
-FROM qe_schema_migration
-ORDER BY applied_at, id;
-```
+## Start Session
+POST /sessions/{session_id}/start
 
-## 3) Supprimer les grants de `app_qe`
+Result:
+- status = RUNNING
+- First stage activated
 
-Quand les migrations sont terminées :
+---
 
-```sql
-REVOKE CREATE ON SCHEMA public FROM app_qe;
-REVOKE CREATE ON SCHEMA qe FROM app_qe;
+## Finish Session
+POST /sessions/{session_id}/finish
 
-ALTER ROLE app_qe IN DATABASE carthographie SET search_path = qe;
-```
+Result:
+- status = FINISHED
 
-Optionnel (si tu veux bloquer toute connexion ensuite) :
+Engine does not compute winners.
 
-```sql
-REVOKE CONNECT ON DATABASE carthographie FROM app_qe;
-```
+---
 
-## Notes
+# 3. Stage Runtime Operations
 
-- Les scripts SQL sont idempotents autant que possible (`IF EXISTS`, `IF NOT EXISTS`, `ON CONFLICT DO NOTHING`).
-- En cas d'état partiel ancien, nettoyer les objets `qe_*` et les types `qe_*` avant de relancer `0001`.
+For each stage:
+
+1. Engine instantiates plugin runtime
+2. Engine calls initialize()
+3. Engine routes PLAYER_ACTION
+4. Engine triggers resolve()
+5. Engine persists StageOutcome
+6. Engine aggregates ScoreEntry
+
+If resolve() fails:
+
+- Mark stage FAILED
+- Emit STAGE_ERROR
+- Do not fabricate scoring
+
+---
+
+# 4. Snapshot Inspection
+
+Snapshots represent:
+
+- total_score per player
+- total_grade_value per player
+- total_grade_max per player
+
+Snapshots are:
+
+- Derived
+- Integer-only
+- Pure summations
+- Not authoritative
+
+No ranking must be inferred.
+
+---
+
+# 5. Common Operational Issues
+
+## 5.1 Plugin Resolution Failure
+
+Symptoms:
+- STAGE_ERROR event
+- Stage remains unresolved
+
+Actions:
+- Check plugin entrypoint
+- Verify StageRuntime interface compliance
+- Validate determinism constraints
+
+---
+
+## 5.2 Non-Deterministic Behavior
+
+Symptoms:
+- Different StageOutcome for same seed
+- Inconsistent scoring
+
+Actions:
+- Check random usage
+- Ensure seed usage
+- Remove time-based logic
+- Remove external I/O from resolve()
+
+---
+
+## 5.3 Float-Based Scoring Detected
+
+Symptoms:
+- Validation failure
+- StageOutcome rejected
+
+Actions:
+- Verify ScoreEntry integer-only rule
+- Remove float accumulation
+- Replace percentage with integer scale
+
+---
+
+# 6. Data Integrity Rules
+
+Never:
+
+- Modify stored StageOutcome
+- Recompute past scoring
+- Re-run resolve() for resolved stage
+
+StageOutcome is immutable.
+
+---
+
+# 7. Recovery Strategy
+
+If engine crashes mid-stage:
+
+- Restore session state
+- Reload active stage
+- Re-instantiate plugin
+- Replay stored player actions
+- Call resolve()
+
+Determinism guarantees consistency.
+
+---
+
+# 8. Logging Guidelines
+
+Engine logs must include:
+
+- session_id
+- stage_id
+- plugin_key
+- lifecycle transitions
+- error events
+
+Engine logs must not:
+
+- Log ranking decisions
+- Log computed winners
+- Log derived percentages
+
+---
+
+# 9. Operational Boundaries
+
+Engine must not:
+
+- Inject scoring corrections
+- Adjust totals manually
+- Modify ScoreEntry post-persistence
+
+All scoring integrity belongs to plugin logic.
+
+---
+
+# 10. Future Extensions
+
+Future runbook sections may include:
+
+- Replay tooling
+- Monitoring metrics
+- Health checks
+- Performance tuning
+
+But must preserve:
+
+- Dumb engine philosophy
+- Integer-only scoring
+- Deterministic runtime

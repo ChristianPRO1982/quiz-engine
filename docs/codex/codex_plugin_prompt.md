@@ -1,50 +1,130 @@
-You are developing a **stand-alone quiz-engine plugin**, not the engine itself.
+# Codex Plugin Generation Prompt — v1
+Template for generating new plugins
 
-Use the following Markdown documents as **authoritative specifications**:
-* `docs/plugins/plugin_contracts_v0.md`
-* `docs/plugins/plugin_lifecycle_v0.md`
-* `docs/plugins/ws_messages_v0.md`
-* `docs/plugins/plugin_examples_payloads.md`
-* `docs/plugins/determinism_and_seed.md`
-* `docs/plugins/plugin_packaging_and_manifest.md`
+Status: CANONICAL
+Scope: AI-assisted plugin development
 
-Your goal is to implement one plugin that fully respects the V0 runtime contracts.
+Use this prompt when generating a new plugin.
 
-Constraints:
-* The plugin owns all business logic:
-  * answer interpretation
-  * scoring rules (speed, inverse ranking, group effects, etc.)
-  * grading (0/1, /20, custom scales)
-  * reveal logic and visuals (PluginFrame)
-* The plugin must treat quiz-engine as dumb:
-  * engine only transports events and frames
-  * engine only aggregates `ScoreDelta.delta_score`
-* All payloads must be JSON-serializable (JSON-like only).
-* All time-based logic must rely on server_received_at.
-* If randomness or bots are used, the plugin must require and use `random_seed`.
+---
 
-Scope:
-* Implement only the plugin package.
-* No direct access to quiz-engine internals.
-* No database usage.
-* No UI framework assumptions (frames are pure view-models).
+You are implementing a new plugin for quiz-engine.
 
-Required structure:
-* A class implementing `IPlugin`
-* A stage runtime class implementing `IStageRuntime`
-* A valid `PluginManifest`
-* Clear separation between:
-  * stage configuration (`plugin_spec`)
-  * runtime state (internal)
-  * replayable state (`plugin_state_out`)
+You MUST strictly follow the authoritative contracts:
 
-Workflow:
-1. Read the Markdown specs carefully.
-2. Implement the plugin respecting lifecycle and determinism rules.
-3. Include minimal unit tests for:
-  * deterministic behavior
-  * correct handling of PlayerEvent
-  * valid StageOutcome output
-4. Do not invent new contracts or fields.
+- docs/contracts/runtime_schema_v1.md
+- docs/contracts/scoreEntry_contract_v1.md
+- docs/contracts/runtime_plugin_io_v1.md
+- docs/contracts/engine_plugin_interfaces_v1.md
+- docs/contracts/engine_responsibilities_v1.md
+- docs/CODEX_RULES.md
 
-If something seems ambiguous, follow the Markdown strictly and prefer the most conservative interpretation.
+The engine is intentionally dumb.
+All business logic belongs to the plugin.
+
+---
+
+# Plugin Requirements
+
+You must implement:
+
+- A StageRuntime class
+- Deterministic behavior
+- Integer-only scoring
+- A resolve() method returning StageOutcome
+
+You must NOT:
+
+- Use floats
+- Use percentages
+- Rank players
+- Access engine storage
+- Modify session state
+- Redefine StageOutcome
+- Redefine ScoreEntry
+
+---
+
+# Output Requirements
+
+Your output must include:
+
+1. Plugin manifest (if required)
+2. StageRuntime implementation
+3. Deterministic use of seed
+4. Example StageOutcome output
+5. Example score_entries
+
+All scoring must use ScoreEntry
+as defined in scoreEntry_contract_v1.md.
+
+---
+
+# Determinism Constraint
+
+Given identical:
+
+- config
+- seed
+- player inputs
+
+resolve() must produce identical StageOutcome.
+
+No time-based randomness.
+No external I/O during resolution.
+
+---
+
+# WebSocket Compliance
+
+All runtime events must follow:
+
+{
+  "type": "EVENT_NAME",
+  "payload": { ... }
+}
+
+No alternative envelope allowed.
+
+---
+
+# StageOutcome Rules
+
+resolve() must return a dictionary matching:
+
+runtime_schema_v1.md
+
+Specifically:
+
+- stage_id
+- plugin_key
+- public_state
+- private_state (optional)
+- score_entries (optional)
+
+score_entries must:
+
+- Use integer values only
+- Respect validation rules
+- Be deterministic
+- Not include floats
+
+---
+
+# Code Constraints
+
+- Follow PEP8
+- Use modular structure
+- No business logic in engine
+- No global state
+- No cross-session state
+
+---
+
+# Architectural Guardrail
+
+If uncertain:
+
+- Do not invent new runtime structures
+- Do not modify contracts
+- Conform strictly to existing contracts

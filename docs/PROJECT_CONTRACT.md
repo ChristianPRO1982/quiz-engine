@@ -1,158 +1,224 @@
-# Quiz-Engine — Project Contract
+# PROJECT CONTRACT — quiz-engine
+Architectural constitution of the project
 
-## 1. Purpose
-This project aims to build a real-time quiz game engine designed for live sessions
-(host + players via smartphones), prioritizing simplicity, robustness, and long-term
-maintainability for a solo developer.
+Status: CANONICAL
+Scope: Entire repository
 
-The goal is NOT to build features quickly, but to build a clean, extensible core
-that can be safely evolved over time.
+This document defines the non-negotiable principles of quiz-engine.
 
----
+Detailed technical contracts are defined in:
+- docs/contracts/*
+- docs/CODEX_RULES.md
 
-## 2. Product Philosophy
-- Solo developer, “garage mode”
-- Prefer clarity over cleverness
-- Minimal viable architecture first
-- Extensibility over premature optimization
-- Breaking changes are acceptable (semantic versioning applies)
+If a contradiction appears, contracts prevail.
 
 ---
 
-## 3. Roles (Fixed for V1)
-- **Player**: joins a session and participates
-- **Host**: creates and runs a session
-- **Quiz Creator**: designs quizzes (future)
-- **Admin**: manages global configuration (future)
+# 1. Project Philosophy
 
-No fine-grained permission system in V1.
+quiz-engine is built around one core idea:
 
----
+The engine is dumb.
+Plugins are smart.
 
-## 4. Core Technical Principles
-- Backend: **FastAPI**
-- Real-time communication: **WebSocket**
-- Server is the single source of truth
-- Session state is:
-  - **Stateful in memory during a session**
-  - **Stateless between sessions**
-- No quiz logic inside the engine core
-- No plugin-specific logic inside the engine core
+The engine orchestrates.
+Plugins implement game logic.
+
+This separation is absolute.
 
 ---
 
-## 5. Architecture Rules
-- One monorepo
-- Clear separation between:
-  - Engine core
-  - Plugins
-  - Contracts (schemas, events)
-- Plugins live inside `/plugins/<plugin_name>/`
-- Engine interacts with plugins only via a strict contract
+# 2. Engine Responsibilities (High-Level)
+
+The engine manages:
+
+- Sessions
+- Players
+- Stages
+- WebSocket routing
+- Persistence
+- Mechanical aggregation of integer score deltas
+- Host overlay snapshots
+
+The engine does NOT:
+
+- Compute scoring logic
+- Interpret answers
+- Rank players
+- Decide winners
+- Apply grading formulas
+- Render UI
+- Implement game mechanics
+
+All business logic belongs to plugins.
 
 ---
 
-## 6. Quiz & Plugin Model (Future-Oriented)
-- A quiz is defined as a workflow of nodes (JSON)
-- Plugins are written in Python
-- JSON is used for configuration and data exchange only
-- Each plugin:
-  - Interprets its own JSON payload
-  - Provides its own human-readable Markdown export
-- The engine must never interpret quiz content
+# 3. Plugin Responsibilities
+
+Plugins are responsible for:
+
+- Game rules
+- Stage logic
+- Player action interpretation
+- Scoring logic
+- Grading logic
+- Determinism
+- Stage resolution
+- Producing ScoreEntry
+
+Plugins must:
+
+- Be deterministic
+- Use provided seed
+- Produce integer-only scoring
+- Return valid StageOutcome
+
+Plugins must not:
+
+- Modify session lifecycle
+- Access engine persistence
+- Introduce floats in scoring
 
 ---
 
-## 7. Versioning & Compatibility
-- Semantic Versioning applies to the engine
-- Quizzes declare the engine version they were created with
-- Import rules:
-  - Same MAJOR version → permissive import
-  - Different MAJOR version → incompatible
-- Breaking changes are allowed between MAJOR versions
+# 4. Scoring Model
+
+Scoring is defined by:
+
+docs/contracts/scoreEntry_contract_v1.md
+
+Rules:
+
+- Integer-only
+- No floats
+- No percentages
+- No ranking inside engine
+- Engine aggregates mechanically only
+
+Ranking, if needed, must be implemented at plugin level
+or in external presentation layers.
 
 ---
 
-## 8. Data & Privacy Principles
+# 5. Runtime Model
 
-- Data minimization by default
-- No persistent identity for players by default
-- Session data:
-  - Stored in memory during runtime
-  - Checkpointed only at safe moments (end of stage)
-- No long-term storage without explicit consent
-- Retention duration is configurable by admin
+Runtime structures are defined in:
 
-### Consent Management
+docs/contracts/runtime_schema_v1.md
 
-- Quiz-engine is responsible for managing player consent within its own scope.
-- Consent is required for:
-  - processing and displaying a player's pseudo during gameplay
-- Additional consent is required for:
-  - sending session results by email (authenticated users only)
+WebSocket interaction is defined in:
 
-Authenticated users may participate in quiz-engine:
-- as **logged players**, with consent stored and reused across sessions
-- or as **guest players**, with session-only consent and no persistence
+docs/contracts/runtime_plugin_io_v1.md
 
-Session-only players:
-- must provide consent at each session
-- never have their email processed or stored
+These contracts are authoritative.
 
 ---
 
-## 9. Session Design Principles
-- Session lifecycle is explicit and finite
-- Valid session states are limited and deterministic
-- Recovery after crash is “soft”:
-  - Resume from last completed step
-  - Current step may be lost
+# 6. Determinism Guarantee
+
+Given identical:
+
+- Stage configuration
+- Seed
+- Player actions
+
+The plugin must produce identical StageOutcome.
+
+The engine must not inject randomness.
+
+Determinism is mandatory.
 
 ---
 
-## 10. Frontend Philosophy
-- Frontend is intentionally minimal
-- No frontend business logic
-- Frontend reflects server state only
-- UX must remain functional on smartphones
+# 7. Architectural Boundaries
+
+The following must never occur:
+
+- Business logic inside engine
+- Scoring formulas inside engine
+- Ranking logic inside engine
+- Float-based scoring anywhere
+- Duplicate runtime schemas
+- Alternative WebSocket envelopes
+
+All runtime communication must follow:
+
+{
+  "type": "EVENT_NAME",
+  "payload": { ... }
+}
 
 ---
 
-## 11. Testing & Quality
-- Automated tests are mandatory
-- Tests must cover:
-  - Core state transitions
-  - Event validation
-  - WebSocket communication
-- CI must be green before merging or releasing
+# 8. Contract-Driven Development
+
+All changes must follow this order:
+
+1. Update contract in docs/contracts/
+2. Review architectural impact
+3. Update implementation
+4. Update tests
+
+Code must never drift from contracts.
+
+Contracts are the source of truth.
 
 ---
 
-## 12. Scope Discipline
-- Each sprint has a clearly defined scope
-- No feature creep inside a sprint
-- Refactoring is allowed only when it reduces complexity
-- One sprint = one clear technical objective
+# 9. Small-Scale Target
+
+quiz-engine targets:
+
+- 10–80 concurrent players
+- Smartphone-first experience
+- QR-based joining
+- Real-time interaction
+- Post-session replay / review
+
+It is not designed for massive scale.
+
+Simplicity > premature optimization.
 
 ---
 
-## 13. Definition of Done (Global)
-A feature is considered done only if:
-- It respects this contract
-- It is tested
-- It does not introduce coupling with future features
-- It does not break the engine/plugin separation
+# 10. Long-Term Stability
+
+Future evolution must preserve:
+
+- Dumb engine philosophy
+- Plugin-owned business logic
+- Integer-only scoring
+- Deterministic execution
+- Contract-driven architecture
+
+Breaking these principles breaks the project.
 
 ---
 
-## 14. Non-Goals
-- No attempt to support every quiz type
-- No attempt to build a full LMS
-- No real-time analytics in V1
-- No horizontal scaling in early versions
+# 11. Authority Hierarchy
+
+In case of ambiguity:
+
+1. runtime_schema_v1.md
+2. scoreEntry_contract_v1.md
+3. runtime_plugin_io_v1.md
+4. engine_responsibilities_v1.md
+5. PROJECT_CONTRACT.md
+
+This document defines philosophy.
+Contracts define structure.
 
 ---
 
-## 15. Guiding Rule
-> If a future version of myself cannot understand or extend this system after
-> several months away, the design has failed.
+# 12. Architecture Freeze (v1)
+
+Runtime contracts under schema_version "v1" are frozen.
+
+No structural change is allowed without:
+- creating a new schema_version (v2, v3, ...)
+- keeping v1 documents unchanged (archived but still readable)
+- updating documentation before code
+
+Guidance documents (docs/plugins/*, docs/runbooks/*) may evolve
+without a schema_version bump, as long as they do not redefine contracts.

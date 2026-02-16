@@ -1,221 +1,140 @@
-# Codex Task List — Implement Runtime Contracts + Plugin Interfaces (quiz-engine only)
+# Codex Task List — quiz-engine
+AI-safe development roadmap
 
-## Scope
-Implement the V0 runtime contracts and engine↔plugin interfaces inside quiz-engine.
-No plugin business logic. No concrete plugins required (use a dummy plugin for tests).
+Status: CANONICAL
+Scope: Engine + Plugins evolution
 
-## Non-goals
-- No scoring rules in engine (engine only sums ScoreDelta).
-- No answer interpretation in engine.
-- No full UI/templates work here (only transport-ready structures).
+All tasks must comply with:
 
----
+- docs/CODEX_RULES.md
+- docs/contracts/*
 
-## Files to Create / Modify
-
-### Create
-- `quiz_engine/contracts/runtime_models.py`
-- `quiz_engine/contracts/serialization.py`
-- `quiz_engine/plugins/interfaces.py`
-- `quiz_engine/plugins/registry.py`
-- `quiz_engine/runtime/stage_runner.py`
-- `quiz_engine/runtime/score_aggregator.py`
-- `quiz_engine/runtime/trace_store.py`
-- `quiz_engine/ws/messages.py`
-- `tests/test_runtime_models.py`
-- `tests/test_serialization.py`
-- `tests/test_plugin_registry.py`
-- `tests/test_stage_runner.py`
-- `tests/test_score_aggregator.py`
-
-### Modify (if exists)
-- `quiz_engine/settings/...` (only if you need config for plugin discovery)
-- `quiz_engine/app.py` / routers to wire WS routes (minimal)
+The engine is dumb.
+Plugins own business logic.
+Scoring is integer-only.
 
 ---
 
-## Implementation Plan (Phases)
+# Phase 1 — Core Runtime (Engine)
 
-## Phase A — Runtime Models (POO)
-### Goal
-Implement Python runtime contracts as models with validation and strict JSON-serializable payload constraints.
+## 1. Session Lifecycle
+- Implement session creation
+- Implement state transitions:
+  - LOBBY → RUNNING → FINISHED
+- Persist timestamps
 
-### Tasks
-1. Implement models:
-   - `PluginManifest`
-   - `StageDefinition`
-   - `PlayerIdentity`
-   - `StageContext`
-   - `PlayerEvent`
-   - `StageTrace`
-   - `PluginFrame`
-   - `ScoreDelta`
-   - `GradeDelta`
-   - `StageOutcome`
+## 2. Player Management
+- Register players
+- Track active/inactive status
+- Associate players with session
 
-2. Enforce invariants:
-   - `stage_index >= 0`
-   - `server_received_at` always required on `PlayerEvent` (engine assigns it)
-   - payload dicts must be JSON-like (dict/list/str/int/float/bool/None)
-   - `ScoreDelta.delta_score` finite (reject NaN/inf)
-   - `GradeDelta.max_value > 0` if provided
-   - ids non-empty strings
+## 3. Stage Orchestration
+- Create stages
+- Assign plugin_key
+- Provide deterministic seed
+- Activate stage
+- Trigger resolve()
+- Persist StageOutcome
 
-3. Add minimal helper methods (no business logic):
-   - `to_transport_dict()` -> dict JSON-ready (datetime -> ISO 8601 string)
-   - `from_transport_dict()` -> rehydrate (ISO -> datetime)
-
-### Tests
-- Create test cases for each invariant.
-- Ensure transport round-trip works for all models.
+## 4. ScoreEntry Persistence
+- Store ScoreEntry
+- Aggregate delta_score mechanically
+- Expose snapshot totals
+- Do not implement ranking
 
 ---
 
-## Phase B — Serialization Utilities
-### Goal
-Centralize serialization rules for datetime and JSON-like validation.
+# Phase 2 — WebSocket Runtime
 
-### Tasks
-1. Implement:
-   - `is_json_like(value) -> bool`
-   - `ensure_json_like(value, path) -> None` (raises ValueError)
-   - `datetime_to_iso(dt) -> str` (UTC, ISO 8601)
-   - `iso_to_datetime(s) -> datetime`
-   - `dump_model(model) -> dict` (calls model serializer)
-   - `load_model(cls, data) -> cls`
+## 5. WS Envelope
+- Enforce { type, payload } structure
+- Reject malformed messages
 
-2. Ensure no timezone ambiguity:
-   - store UTC `Z` format consistently
+## 6. Action Routing
+- Validate session/stage ownership
+- Forward PLAYER_ACTION to plugin
+- Do not interpret action content
 
-### Tests
-- Validate ISO formatting, timezone handling
-- Validate deep JSON-like checking (nested lists/dicts)
+## 7. Broadcast Flow
+- STAGE_STARTED
+- STAGE_UPDATE
+- STAGE_RESOLVED
+- STAGE_ERROR
+- HOST_SNAPSHOT
 
----
-
-## Phase C — Plugin Interfaces + Registry
-### Goal
-Define stable plugin-facing interfaces and a registry that loads plugins.
-
-### Tasks
-1. Implement interfaces:
-   - `IPlugin` with `get_manifest()` and `create_runtime(...)`
-   - `IStageRuntime` with:
-     - `on_stage_open(context) -> list[PluginFrame] | None`
-     - `on_player_event(event, trace) -> list[PluginFrame] | None`
-     - `on_host_action(action, trace) -> list[PluginFrame] | None`
-     - `is_finished(trace) -> bool`
-     - `build_outcome(trace) -> StageOutcome`
-
-2. Implement `PluginRegistry`:
-   - register plugins in-memory
-   - lookup by `plugin_id`
-   - provide list of manifests for “load all plugins” step
-
-3. Add a dummy plugin for tests (in tests only):
-   - returns a manifest
-   - stage runtime that echoes frames and returns an outcome
-
-### Tests
-- registry registers and resolves plugin_id
-- manifest listing works
-- dummy plugin runtime calls work
+No alternative envelope allowed.
 
 ---
 
-## Phase D — Stage Runner (Engine Orchestration)
-### Goal
-Orchestrate a stage in quiz-engine: accept events, append trace, call plugin runtime, emit frames, close stage.
+# Phase 3 — Plugin System
 
-### Tasks
-1. Implement `StageRunner` responsibilities:
-   - `open_stage(context) -> None`
-   - `handle_player_event(event_payload_dict) -> list[PluginFrame]`
-     - engine sets `server_received_at`
-     - validates payload JSON-like
-     - appends `PlayerEvent` to `StageTrace`
-     - calls plugin runtime `on_player_event`
-   - `handle_host_action(action_dict) -> list[PluginFrame]`
-   - `maybe_close() -> StageOutcome | None`
-     - checks time_limit_ms if set (engine)
-     - checks plugin `is_finished(trace)`
-     - if closed: calls `build_outcome(trace)` and returns it
+## 8. Plugin Registration
+- Map plugin_key → plugin class
+- Enforce StageRuntime interface
 
-2. Ensure runner is deterministic:
-   - no random in engine
-   - only plugin uses random_seed from StageDefinition
+## 9. Determinism Enforcement
+- Provide seed to plugin
+- Prevent engine-side randomness
 
-### Tests
-- open -> handle events -> frames returned
-- trace append-only and ordering respected
-- closing returns StageOutcome
+## 10. StageOutcome Validation
+- Validate structure
+- Validate integer-only scoring
+- Reject float values
 
 ---
 
-## Phase E — Trace Store + Score Aggregator
-### Goal
-Provide engine-owned persistence hooks and score aggregation.
+# Phase 4 — Safety & Integrity
 
-### Tasks
-1. `TraceStore` (in-memory first):
-   - store per session_id per stage_id:
-     - StageTrace
-     - StageOutcome
-2. `ScoreAggregator`:
-   - apply `StageOutcome.score_deltas` by summing per player
-   - store totals and per-stage totals if you want
-   - store GradeDelta as recorded, no computation
+## 11. Contract Validation
+- Ensure runtime_schema compliance
+- Ensure ScoreEntry compliance
 
-### Tests
-- aggregator sums correctly with multiple deltas
-- handles missing score_deltas gracefully
-- grade deltas stored but not aggregated unless explicitly requested later
+## 12. Snapshot Integrity
+- Ensure pure summation aggregation
+- Prevent ranking logic
+
+## 13. Immutability
+- Prevent modification of stored StageOutcome
+- Prevent re-resolution of stages
 
 ---
 
-## Phase F — WS Message Envelopes (quiz-engine side)
-### Goal
-Define consistent WS message shapes for engine and plugin frames.
+# Phase 5 — Example Plugins
 
-### Tasks
-1. Implement message helpers:
-   - envelope: `{ "type": str, "payload": dict }`
-2. Define constants:
-   - `PLAYER_EVENT` (client -> server)
-   - `PLUGIN_FRAME` (server -> clients)
-   - `ENGINE_STAGE_OPENED`, `ENGINE_STAGE_CLOSED`, `ENGINE_SCORE_UPDATE`
-3. Ensure payloads are JSON-only:
-   - datetimes are strings
+## 14. Minimal QCM Plugin
+- Deterministic scoring
+- Integer-only ScoreEntry
 
-### Tests
-- envelope builder returns valid JSON-like dicts
+## 15. Zero-Score Informational Plugin
+- No scoring
+- Only public_state
 
 ---
 
-## Local Commands (dev + tests)
-- Install deps:
-  - `uv sync --dev`
-- Run tests:
-  - `uv run pytest -q`
-- Lint/format (if enabled):
-  - `uv run ruff check .`
-  - `uv run ruff format --check .`
+# Explicit Non-Tasks
+
+The following must never be implemented in the engine:
+
+- Leaderboard ranking
+- Podium calculation
+- Percentage calculation
+- Float-based scoring
+- Business rule interpretation
+- Game mechanics
+
+All such logic belongs to plugins.
 
 ---
 
-## Definition of Done (DoD)
-- All runtime models exist with invariants enforced.
-- Transport serialization round-trips for all contracts.
-- Plugin interfaces exist and dummy plugin passes tests.
-- StageRunner can process events and produce frames/outcome.
-- ScoreAggregator sums score deltas only.
-- TraceStore persists traces/outcomes (in-memory acceptable for now).
-- All tests pass in CI.
+# Stability Rule
 
----
+If a task requires modifying:
 
-## Notes / Guardrails
-- Engine must never interpret `PlayerEvent.payload` content.
-- Engine must never compute scoring rules; only sum `ScoreDelta`.
-- Payload dicts must remain JSON-like for WS + replay.
-- Any plugin requiring randomness must rely on `StageDefinition.random_seed`.
+- StageOutcome structure
+- ScoreEntry structure
+- Engine responsibilities
+
+The change must be made in contracts first,
+then implemented in code.
+
+Never modify code without updating contracts.
