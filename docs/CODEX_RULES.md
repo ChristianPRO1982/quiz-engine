@@ -34,8 +34,13 @@ The engine does NOT:
 - rank players
 - decide winners
 - calculate percentages
+- render Host UI
+- render Player UI
+- define Host UI behavior
+- define Player UI behavior
 
 All game logic belongs to plugins.
+Host UI and Player UI are 100% plugin-owned.
 
 ---
 

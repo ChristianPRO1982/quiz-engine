@@ -21,6 +21,7 @@ You MUST strictly follow the authoritative contracts:
 
 The engine is intentionally dumb.
 All business logic belongs to the plugin.
+Host UI and Player UI behavior are 100% plugin-owned.
 
 ---
 
@@ -31,6 +32,8 @@ You must implement:
 - A StageRuntime class
 - Deterministic behavior
 - Integer-only scoring
+- Host UI behavior
+- Player UI behavior
 - A resolve() method returning StageOutcome
 
 You must NOT:

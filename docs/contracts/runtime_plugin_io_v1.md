@@ -30,6 +30,8 @@ The plugin:
 - Owns business logic
 - Owns scoring logic
 - Owns determinism
+- Owns Host UI behavior
+- Owns Player UI behavior
 - Produces StageOutcome
 
 ---

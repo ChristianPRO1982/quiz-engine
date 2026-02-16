@@ -173,6 +173,10 @@ The engine must never:
 - Contain grading formulas
 - Render HTML
 - Decide UI behavior
+- Render Host UI
+- Render Player UI
+- Define Host UI behavior
+- Define Player UI behavior
 - Implement game mechanics
 - Apply time-based bonuses
 - Interpret correctness

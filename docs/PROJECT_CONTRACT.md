@@ -48,6 +48,8 @@ The engine does NOT:
 - Decide winners
 - Apply grading formulas
 - Render UI
+- Define Host UI behavior
+- Define Player UI behavior
 - Implement game mechanics
 
 All business logic belongs to plugins.
@@ -61,6 +63,8 @@ Plugins are responsible for:
 - Game rules
 - Stage logic
 - Player action interpretation
+- Host UI behavior
+- Player UI behavior
 - Scoring logic
 - Grading logic
 - Determinism
