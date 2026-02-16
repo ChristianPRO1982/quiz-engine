@@ -51,9 +51,14 @@ If a contradiction appears, higher documents prevail.
 
 # Schema Versioning
 
-All runtime structures must include:
+Versioned runtime payload structures must include:
 
 schema_version: "v1"
+
+In v1, this applies to:
+
+- StageOutcome
+- ScoreEntry
 
 If a breaking change occurs:
 

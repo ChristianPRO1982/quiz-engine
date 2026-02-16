@@ -31,6 +31,14 @@ The runtime operates on:
 - StageOutcome
 - ScoreEntry (external canonical reference)
 
+Versioned payload structures in v1 are:
+
+- StageOutcome
+- ScoreEntry
+
+Session, Player, and Stage are runtime entities
+and do not include a schema_version field.
+
 The engine orchestrates.
 Plugins decide.
 
