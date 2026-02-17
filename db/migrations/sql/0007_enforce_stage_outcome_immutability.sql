@@ -4,9 +4,80 @@
 BEGIN;
 
 SET LOCAL search_path TO qe, public;
+LOCK TABLE qe_stage_outcome IN ACCESS EXCLUSIVE MODE;
 
 DO $$
+DECLARE
+    v_deleted_count INTEGER := 0;
 BEGIN
+    CREATE TABLE IF NOT EXISTS qe_stage_outcome_dedup_backup (
+        id INTEGER PRIMARY KEY,
+        session_id INTEGER NOT NULL,
+        stage_id VARCHAR(64) NOT NULL,
+        stage_index INTEGER NOT NULL,
+        payload JSON NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL,
+        deduped_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    ALTER TABLE qe_stage_outcome_dedup_backup
+        ADD COLUMN IF NOT EXISTS deduped_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+    CREATE TEMP TABLE tmp_qe_stage_outcome_dedup_ids (
+        id INTEGER PRIMARY KEY
+    ) ON COMMIT DROP;
+
+    INSERT INTO tmp_qe_stage_outcome_dedup_ids (id)
+    SELECT id
+    FROM (
+        SELECT
+            id,
+            ROW_NUMBER() OVER (
+                PARTITION BY session_id, stage_id
+                ORDER BY created_at ASC, id ASC
+            ) AS rn_by_stage_id,
+            ROW_NUMBER() OVER (
+                PARTITION BY session_id, stage_index
+                ORDER BY created_at ASC, id ASC
+            ) AS rn_by_stage_index
+        FROM qe_stage_outcome
+    ) ranked
+    WHERE rn_by_stage_id > 1
+       OR rn_by_stage_index > 1;
+
+    INSERT INTO qe_stage_outcome_dedup_backup (
+        id,
+        session_id,
+        stage_id,
+        stage_index,
+        payload,
+        created_at,
+        deduped_at
+    )
+    SELECT
+        o.id,
+        o.session_id,
+        o.stage_id,
+        o.stage_index,
+        o.payload,
+        o.created_at,
+        CURRENT_TIMESTAMP
+    FROM qe_stage_outcome o
+    JOIN tmp_qe_stage_outcome_dedup_ids d
+      ON d.id = o.id
+    ON CONFLICT (id) DO NOTHING;
+
+    DELETE FROM qe_stage_outcome o
+    USING tmp_qe_stage_outcome_dedup_ids d
+    WHERE o.id = d.id;
+
+    GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
+    IF v_deleted_count > 0 THEN
+        RAISE NOTICE
+            'Removed % duplicate qe_stage_outcome rows before immutability constraints.',
+            v_deleted_count;
+    END IF;
+
     IF EXISTS (
         SELECT 1
         FROM qe_stage_outcome
