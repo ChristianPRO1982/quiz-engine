@@ -16,6 +16,9 @@
 | qe | qe_schema_migration | qe_schema_migration_version_key | version | 1 | [NULL] |
 | qe | qe_score_entry | qe_score_entry_pkey | id | 1 | [NULL] |
 | qe | qe_score_entry | qe_score_entry_session_id_fkey | session_id | 1 | 1 |
+| qe | qe_score_entry | qe_score_entry_stage_triplet_fkey | session_id | 1 | 1 |
+| qe | qe_score_entry | qe_score_entry_stage_triplet_fkey | stage_id | 2 | 2 |
+| qe | qe_score_entry | qe_score_entry_stage_triplet_fkey | stage_index | 3 | 3 |
 | qe | qe_service_setting | qe_service_setting_pkey | key | 1 | [NULL] |
 | qe | qe_session | qe_session_host_user_id_fkey | host_user_id | 1 | 1 |
 | qe | qe_session | qe_session_pkey | id | 1 | [NULL] |
@@ -25,6 +28,9 @@
 | qe | qe_stage | qe_stage_session_id_fkey | session_id | 1 | 1 |
 | qe | qe_stage | uq_qe_stage_session_stage_id | session_id | 1 | [NULL] |
 | qe | qe_stage | uq_qe_stage_session_stage_id | stage_id | 2 | [NULL] |
+| qe | qe_stage | uq_qe_stage_session_stage_id_stage_index | session_id | 1 | [NULL] |
+| qe | qe_stage | uq_qe_stage_session_stage_id_stage_index | stage_id | 2 | [NULL] |
+| qe | qe_stage | uq_qe_stage_session_stage_id_stage_index | stage_index | 3 | [NULL] |
 | qe | qe_stage | uq_qe_stage_session_stage_index | session_id | 1 | [NULL] |
 | qe | qe_stage | uq_qe_stage_session_stage_index | stage_index | 2 | [NULL] |
 | qe | qe_stage_event | qe_stage_event_pkey | id | 1 | [NULL] |

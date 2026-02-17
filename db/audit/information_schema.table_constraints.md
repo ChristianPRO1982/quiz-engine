@@ -54,6 +54,7 @@
 | qe | qe_score_entry | qe_score_entry_stage_id_not_null | CHECK |
 | qe | qe_score_entry | qe_score_entry_stage_index_not_null | CHECK |
 | qe | qe_score_entry | qe_score_entry_session_id_fkey | FOREIGN KEY |
+| qe | qe_score_entry | qe_score_entry_stage_triplet_fkey | FOREIGN KEY |
 | qe | qe_score_entry | qe_score_entry_pkey | PRIMARY KEY |
 | qe | qe_service_setting | qe_service_setting_key_not_null | CHECK |
 | qe | qe_service_setting | qe_service_setting_updated_at_not_null | CHECK |
@@ -81,6 +82,7 @@
 | qe | qe_stage | qe_stage_session_id_fkey | FOREIGN KEY |
 | qe | qe_stage | qe_stage_pkey | PRIMARY KEY |
 | qe | qe_stage | uq_qe_stage_session_stage_id | UNIQUE |
+| qe | qe_stage | uq_qe_stage_session_stage_id_stage_index | UNIQUE |
 | qe | qe_stage | uq_qe_stage_session_stage_index | UNIQUE |
 | qe | qe_stage_event | qe_stage_event_created_at_not_null | CHECK |
 | qe | qe_stage_event | qe_stage_event_id_not_null | CHECK |

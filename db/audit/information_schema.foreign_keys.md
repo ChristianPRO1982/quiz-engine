@@ -6,6 +6,9 @@
 | qe | qe_player | user_id | qe_player_user_id_fkey | qe | qe_user | id | NO ACTION | NO ACTION |
 | qe | qe_quiz | created_by_user_id | qe_quiz_created_by_user_id_fkey | qe | qe_user | id | NO ACTION | NO ACTION |
 | qe | qe_score_entry | session_id | qe_score_entry_session_id_fkey | qe | qe_session | id | NO ACTION | CASCADE |
+| qe | qe_score_entry | session_id | qe_score_entry_stage_triplet_fkey | qe | qe_stage | session_id | NO ACTION | NO ACTION |
+| qe | qe_score_entry | stage_id | qe_score_entry_stage_triplet_fkey | qe | qe_stage | stage_id | NO ACTION | NO ACTION |
+| qe | qe_score_entry | stage_index | qe_score_entry_stage_triplet_fkey | qe | qe_stage | stage_index | NO ACTION | NO ACTION |
 | qe | qe_session | host_user_id | qe_session_host_user_id_fkey | qe | qe_user | id | NO ACTION | NO ACTION |
 | qe | qe_session | quiz_id | qe_session_quiz_id_fkey | qe | qe_quiz | id | NO ACTION | NO ACTION |
 | qe | qe_stage | session_id | qe_stage_session_id_fkey | qe | qe_session | id | NO ACTION | CASCADE |

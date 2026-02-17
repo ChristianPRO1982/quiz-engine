@@ -19,6 +19,7 @@
 | qe | qe_stage | ix_qe_stage_session_id | CREATE INDEX ix_qe_stage_session_id ON qe.qe_stage USING btree (session_id) |
 | qe | qe_stage | qe_stage_pkey | CREATE UNIQUE INDEX qe_stage_pkey ON qe.qe_stage USING btree (id) |
 | qe | qe_stage | uq_qe_stage_session_stage_id | CREATE UNIQUE INDEX uq_qe_stage_session_stage_id ON qe.qe_stage USING btree (session_id, stage_id) |
+| qe | qe_stage | uq_qe_stage_session_stage_id_stage_index | CREATE UNIQUE INDEX uq_qe_stage_session_stage_id_stage_index ON qe.qe_stage USING btree (session_id, stage_id, stage_index) |
 | qe | qe_stage | uq_qe_stage_session_stage_index | CREATE UNIQUE INDEX uq_qe_stage_session_stage_index ON qe.qe_stage USING btree (session_id, stage_index) |
 | qe | qe_stage_event | ix_qe_stage_event_session_id | CREATE INDEX ix_qe_stage_event_session_id ON qe.qe_stage_event USING btree (session_id) |
 | qe | qe_stage_event | qe_stage_event_pkey | CREATE UNIQUE INDEX qe_stage_event_pkey ON qe.qe_stage_event USING btree (id) |
