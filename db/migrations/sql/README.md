@@ -12,6 +12,7 @@ These migrations are designed to be run manually by a PostgreSQL administrator.
 6. `0006_add_runtime_session_stage_and_score_entry.sql`
 7. `0007_enforce_stage_outcome_immutability.sql`
 8. `0008_enforce_score_entry_immutability_and_stage_fk.sql`
+9. `0009_enforce_stage_outcome_stage_fk_and_schema_version.sql`
 
 ## Tracking table
 
@@ -25,7 +26,8 @@ Notes:
 
 - `db/audit/*.md` are DB snapshot exports and may lag behind files listed above.
 - Re-run the audit queries after applying new migrations to refresh `db/audit/qe_schema_migration.rows.md`.
-- Current repository snapshot has been refreshed on 2026-02-17 and includes applied migrations up to `0008_enforce_score_entry_immutability_and_stage_fk`.
+- Current migration files include `0009_enforce_stage_outcome_stage_fk_and_schema_version.sql`.
+- Current repository audit snapshot was refreshed on 2026-02-17 and includes applied migrations up to `0008_enforce_score_entry_immutability_and_stage_fk`.
 
 ## Status query
 

@@ -56,7 +56,7 @@ Plugins decide.
   "started_at": "timestamp | null",
   "ended_at": "timestamp | null"
 }
-````
+```
 
 The engine manages lifecycle transitions.
 Plugins do not control session state directly.

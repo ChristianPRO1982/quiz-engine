@@ -41,6 +41,7 @@ Canonical examples:
 - Session `status` (runtime) ↔ `qe_session.state` (DB enum)
 - Session `session_id` (runtime string id) ↔ `qe_session.session_code` (external code)
 - Session internal PK ↔ `qe_session.id` (DB integer key)
+- Player action stream ↔ `qe_stage_event` (`payload`, `created_at`, stage identifiers)
 - StageOutcome (runtime) ↔ `qe_stage_outcome.payload` (stored JSON)
 - ScoreEntry (runtime) ↔ `qe_score_entry` columns (`delta_score`, `grade_value`, `grade_max`, ...)
 
@@ -177,7 +178,7 @@ If engine crashes mid-stage:
 - Restore session state
 - Reload active stage
 - Re-instantiate plugin
-- Replay stored player actions
+- Replay stored player actions from `qe_stage_event` in deterministic order (`created_at`, `id`)
 - Call resolve()
 
 Determinism guarantees consistency.

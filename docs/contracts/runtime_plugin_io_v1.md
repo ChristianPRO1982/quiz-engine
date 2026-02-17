@@ -45,7 +45,7 @@ All WebSocket messages must follow this structure:
   "type": "EVENT_NAME",
   "payload": { ... }
 }
-````
+```
 
 Rules:
 
