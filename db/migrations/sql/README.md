@@ -10,6 +10,7 @@ These migrations are designed to be run manually by a PostgreSQL administrator.
 4. `0004_normalize_slide_markdown_payloads.sql`
 5. `0005_rename_session_state_ended_to_finished.sql`
 6. `0006_add_runtime_session_stage_and_score_entry.sql`
+7. `0007_enforce_stage_outcome_immutability.sql`
 
 ## Tracking table
 
