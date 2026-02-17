@@ -129,19 +129,22 @@ resolve() must return a dictionary matching:
 
 runtime_schema_v1.md
 
-Specifically:
+Specifically, v1 StageOutcome includes:
 
+* schema_version
 * stage_id
 * plugin_key
+* finished_at
 * public_state
 * private_state
 * score_entries
+* metadata
 
 score_entries must conform to:
 
 scoreEntry_contract_v1.md
 
-Engine will validate structural integrity only.
+Engine validates structural integrity only.
 
 ---
 

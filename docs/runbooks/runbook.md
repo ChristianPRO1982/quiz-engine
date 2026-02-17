@@ -31,6 +31,24 @@ Plugins:
 
 ---
 
+# 1.1 Runtime vs Persistence Mapping
+
+Runtime contracts describe API/runtime entities.
+PostgreSQL uses persistence names in `qe.*` tables.
+
+Canonical examples:
+
+- Session `status` (runtime) ↔ `qe_session.state` (DB enum)
+- Session `session_id` (runtime string id) ↔ `qe_session.session_code` (external code)
+- Session internal PK ↔ `qe_session.id` (DB integer key)
+- StageOutcome (runtime) ↔ `qe_stage_outcome.payload` (stored JSON)
+- ScoreEntry (runtime) ↔ `qe_score_entry` columns (`delta_score`, `grade_value`, `grade_max`, ...)
+
+This mapping is operational guidance only.
+Runtime contracts in `docs/contracts/*` remain authoritative.
+
+---
+
 # 2. Session Lifecycle Operations
 
 ## Create Session
