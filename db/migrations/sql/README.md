@@ -20,6 +20,11 @@ Each migration inserts one row in `qe.qe_schema_migration` (or `qe_schema_migrat
 - when,
 - by which DB user.
 
+Notes:
+
+- `db/audit/*.md` are DB snapshot exports and may lag behind files listed above.
+- Re-run the audit queries after applying pending migrations to refresh `db/audit/qe_schema_migration.rows.md`.
+
 ## Status query
 
 ```sql

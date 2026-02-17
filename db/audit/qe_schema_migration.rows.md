@@ -1,3 +1,6 @@
+> Snapshot note: this export reflects the DB state captured on 2026-02-10.
+> Newer migration files in `db/migrations/sql/` may exist but are not listed here until applied and re-audited.
+
 | id | version | description | applied_at | applied_by |
 |---|---|---|---|---|
 | 1 | 0001_create_qe_core_tables | Create initial qe_* tables and enum types | 2026-02-10 08:52:21.924 +0100 | carthographie |

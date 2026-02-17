@@ -75,7 +75,7 @@ Example of a stage that only displays content.
 {
   "schema_version": "v1",
   "stage_id": "stage_2",
-  "plugin_key": "info_slide",
+  "plugin_key": "slide",
   "finished_at": "2024-01-01T12:05:00Z",
   "public_state": {
     "title": "Historical Context",
