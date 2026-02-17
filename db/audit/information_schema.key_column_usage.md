@@ -37,6 +37,9 @@
 | qe | qe_stage_event | qe_stage_event_session_id_fkey | session_id | 1 | 1 |
 | qe | qe_stage_outcome | qe_stage_outcome_pkey | id | 1 | [NULL] |
 | qe | qe_stage_outcome | qe_stage_outcome_session_id_fkey | session_id | 1 | 1 |
+| qe | qe_stage_outcome | qe_stage_outcome_stage_triplet_fkey | session_id | 1 | 1 |
+| qe | qe_stage_outcome | qe_stage_outcome_stage_triplet_fkey | stage_id | 2 | 2 |
+| qe | qe_stage_outcome | qe_stage_outcome_stage_triplet_fkey | stage_index | 3 | 3 |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | session_id | 1 | [NULL] |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | stage_id | 2 | [NULL] |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_index | session_id | 1 | [NULL] |

@@ -12,4 +12,5 @@
 | qe | qe_stage | qe_stage_session_id_fkey | qe | qe_session_pkey | NONE | NO ACTION | CASCADE |
 | qe | qe_stage_event | qe_stage_event_session_id_fkey | qe | qe_session_pkey | NONE | NO ACTION | CASCADE |
 | qe | qe_stage_outcome | qe_stage_outcome_session_id_fkey | qe | qe_session_pkey | NONE | NO ACTION | CASCADE |
+| qe | qe_stage_outcome | qe_stage_outcome_stage_triplet_fkey | qe | uq_qe_stage_session_stage_id_stage_index | NONE | NO ACTION | NO ACTION |
 | qe | qe_user_role | qe_user_role_user_id_fkey | qe | qe_user_pkey | NONE | NO ACTION | CASCADE |

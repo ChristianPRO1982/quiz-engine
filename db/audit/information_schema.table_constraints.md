@@ -92,6 +92,7 @@
 | qe | qe_stage_event | qe_stage_event_stage_index_not_null | CHECK |
 | qe | qe_stage_event | qe_stage_event_session_id_fkey | FOREIGN KEY |
 | qe | qe_stage_event | qe_stage_event_pkey | PRIMARY KEY |
+| qe | qe_stage_outcome | ck_qe_stage_outcome_payload_schema_version_v1 | CHECK |
 | qe | qe_stage_outcome | qe_stage_outcome_created_at_not_null | CHECK |
 | qe | qe_stage_outcome | qe_stage_outcome_id_not_null | CHECK |
 | qe | qe_stage_outcome | qe_stage_outcome_payload_not_null | CHECK |
@@ -99,6 +100,7 @@
 | qe | qe_stage_outcome | qe_stage_outcome_stage_id_not_null | CHECK |
 | qe | qe_stage_outcome | qe_stage_outcome_stage_index_not_null | CHECK |
 | qe | qe_stage_outcome | qe_stage_outcome_session_id_fkey | FOREIGN KEY |
+| qe | qe_stage_outcome | qe_stage_outcome_stage_triplet_fkey | FOREIGN KEY |
 | qe | qe_stage_outcome | qe_stage_outcome_pkey | PRIMARY KEY |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | UNIQUE |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_index | UNIQUE |

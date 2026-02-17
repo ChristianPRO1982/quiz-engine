@@ -14,4 +14,7 @@
 | qe | qe_stage | session_id | qe_stage_session_id_fkey | qe | qe_session | id | NO ACTION | CASCADE |
 | qe | qe_stage_event | session_id | qe_stage_event_session_id_fkey | qe | qe_session | id | NO ACTION | CASCADE |
 | qe | qe_stage_outcome | session_id | qe_stage_outcome_session_id_fkey | qe | qe_session | id | NO ACTION | CASCADE |
+| qe | qe_stage_outcome | session_id | qe_stage_outcome_stage_triplet_fkey | qe | qe_stage | session_id | NO ACTION | NO ACTION |
+| qe | qe_stage_outcome | stage_id | qe_stage_outcome_stage_triplet_fkey | qe | qe_stage | stage_id | NO ACTION | NO ACTION |
+| qe | qe_stage_outcome | stage_index | qe_stage_outcome_stage_triplet_fkey | qe | qe_stage | stage_index | NO ACTION | NO ACTION |
 | qe | qe_user_role | user_id | qe_user_role_user_id_fkey | qe | qe_user | id | NO ACTION | CASCADE |

@@ -30,6 +30,9 @@
 | qe | qe_stage | qe_score_entry_stage_triplet_fkey | session_id |
 | qe | qe_stage | qe_score_entry_stage_triplet_fkey | stage_id |
 | qe | qe_stage | qe_score_entry_stage_triplet_fkey | stage_index |
+| qe | qe_stage | qe_stage_outcome_stage_triplet_fkey | session_id |
+| qe | qe_stage | qe_stage_outcome_stage_triplet_fkey | stage_id |
+| qe | qe_stage | qe_stage_outcome_stage_triplet_fkey | stage_index |
 | qe | qe_stage | qe_stage_pkey | id |
 | qe | qe_stage | uq_qe_stage_session_stage_id | session_id |
 | qe | qe_stage | uq_qe_stage_session_stage_id | stage_id |
@@ -39,6 +42,7 @@
 | qe | qe_stage | uq_qe_stage_session_stage_index | session_id |
 | qe | qe_stage | uq_qe_stage_session_stage_index | stage_index |
 | qe | qe_stage_event | qe_stage_event_pkey | id |
+| qe | qe_stage_outcome | ck_qe_stage_outcome_payload_schema_version_v1 | payload |
 | qe | qe_stage_outcome | qe_stage_outcome_pkey | id |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | session_id |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | stage_id |
