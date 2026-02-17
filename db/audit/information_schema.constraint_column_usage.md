@@ -38,6 +38,7 @@
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | stage_id |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_index | session_id |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_index | stage_index |
+| qe | qe_stage_outcome_dedup_backup | qe_stage_outcome_dedup_backup_pkey | id |
 | qe | qe_user | qe_consent_audit_user_id_fkey | id |
 | qe | qe_user | qe_consent_user_id_fkey | id |
 | qe | qe_user | qe_player_user_id_fkey | id |

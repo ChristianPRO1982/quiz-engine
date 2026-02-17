@@ -82,6 +82,13 @@
 | qe | qe_stage_outcome | 4 | stage_index | integer | NO | [NULL] |
 | qe | qe_stage_outcome | 5 | payload | json | NO | [NULL] |
 | qe | qe_stage_outcome | 6 | created_at | timestamp with time zone | NO | CURRENT_TIMESTAMP |
+| qe | qe_stage_outcome_dedup_backup | 1 | id | integer | NO | [NULL] |
+| qe | qe_stage_outcome_dedup_backup | 2 | session_id | integer | NO | [NULL] |
+| qe | qe_stage_outcome_dedup_backup | 3 | stage_id | character varying | NO | [NULL] |
+| qe | qe_stage_outcome_dedup_backup | 4 | stage_index | integer | NO | [NULL] |
+| qe | qe_stage_outcome_dedup_backup | 5 | payload | json | NO | [NULL] |
+| qe | qe_stage_outcome_dedup_backup | 6 | created_at | timestamp with time zone | NO | [NULL] |
+| qe | qe_stage_outcome_dedup_backup | 7 | deduped_at | timestamp with time zone | NO | CURRENT_TIMESTAMP |
 | qe | qe_user | 1 | id | integer | NO | nextval('qe.qe_user_id_seq'::regclass) |
 | qe | qe_user | 2 | subject | character varying | NO | [NULL] |
 | qe | qe_user | 3 | created_at | timestamp with time zone | NO | CURRENT_TIMESTAMP |

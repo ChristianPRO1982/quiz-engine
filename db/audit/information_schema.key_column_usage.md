@@ -35,6 +35,7 @@
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | stage_id | 2 | [NULL] |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_index | session_id | 1 | [NULL] |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_index | stage_index | 2 | [NULL] |
+| qe | qe_stage_outcome_dedup_backup | qe_stage_outcome_dedup_backup_pkey | id | 1 | [NULL] |
 | qe | qe_user | qe_user_pkey | id | 1 | [NULL] |
 | qe | qe_user | qe_user_subject_key | subject | 1 | [NULL] |
 | qe | qe_user_role | qe_user_role_pkey | id | 1 | [NULL] |

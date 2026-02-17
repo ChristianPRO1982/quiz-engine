@@ -11,5 +11,6 @@
 | qe | qe_stage | BASE TABLE |
 | qe | qe_stage_event | BASE TABLE |
 | qe | qe_stage_outcome | BASE TABLE |
+| qe | qe_stage_outcome_dedup_backup | BASE TABLE |
 | qe | qe_user | BASE TABLE |
 | qe | qe_user_role | BASE TABLE |

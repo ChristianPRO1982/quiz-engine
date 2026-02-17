@@ -26,6 +26,7 @@
 | qe | qe_stage_outcome | qe_stage_outcome_pkey | CREATE UNIQUE INDEX qe_stage_outcome_pkey ON qe.qe_stage_outcome USING btree (id) |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | CREATE UNIQUE INDEX uq_qe_stage_outcome_session_stage_id ON qe.qe_stage_outcome USING btree (session_id, stage_id) |
 | qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_index | CREATE UNIQUE INDEX uq_qe_stage_outcome_session_stage_index ON qe.qe_stage_outcome USING btree (session_id, stage_index) |
+| qe | qe_stage_outcome_dedup_backup | qe_stage_outcome_dedup_backup_pkey | CREATE UNIQUE INDEX qe_stage_outcome_dedup_backup_pkey ON qe.qe_stage_outcome_dedup_backup USING btree (id) |
 | qe | qe_user | qe_user_pkey | CREATE UNIQUE INDEX qe_user_pkey ON qe.qe_user USING btree (id) |
 | qe | qe_user | qe_user_subject_key | CREATE UNIQUE INDEX qe_user_subject_key ON qe.qe_user USING btree (subject) |
 | qe | qe_user_role | qe_user_role_pkey | CREATE UNIQUE INDEX qe_user_role_pkey ON qe.qe_user_role USING btree (id) |
