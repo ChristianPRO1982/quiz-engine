@@ -24,6 +24,7 @@ Notes:
 
 - `db/audit/*.md` are DB snapshot exports and may lag behind files listed above.
 - Re-run the audit queries after applying pending migrations to refresh `db/audit/qe_schema_migration.rows.md`.
+- Current repository snapshot has been refreshed on 2026-02-17 and includes migrations up to `0007_enforce_stage_outcome_immutability`.
 
 ## Status query
 

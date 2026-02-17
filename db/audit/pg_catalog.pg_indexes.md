@@ -9,13 +9,23 @@
 | qe | qe_quiz | qe_quiz_pkey | CREATE UNIQUE INDEX qe_quiz_pkey ON qe.qe_quiz USING btree (id) |
 | qe | qe_schema_migration | qe_schema_migration_pkey | CREATE UNIQUE INDEX qe_schema_migration_pkey ON qe.qe_schema_migration USING btree (id) |
 | qe | qe_schema_migration | qe_schema_migration_version_key | CREATE UNIQUE INDEX qe_schema_migration_version_key ON qe.qe_schema_migration USING btree (version) |
+| qe | qe_score_entry | ix_qe_score_entry_player_id | CREATE INDEX ix_qe_score_entry_player_id ON qe.qe_score_entry USING btree (player_id) |
+| qe | qe_score_entry | ix_qe_score_entry_session_id | CREATE INDEX ix_qe_score_entry_session_id ON qe.qe_score_entry USING btree (session_id) |
+| qe | qe_score_entry | ix_qe_score_entry_session_stage_index | CREATE INDEX ix_qe_score_entry_session_stage_index ON qe.qe_score_entry USING btree (session_id, stage_index) |
+| qe | qe_score_entry | qe_score_entry_pkey | CREATE UNIQUE INDEX qe_score_entry_pkey ON qe.qe_score_entry USING btree (id) |
 | qe | qe_service_setting | qe_service_setting_pkey | CREATE UNIQUE INDEX qe_service_setting_pkey ON qe.qe_service_setting USING btree (key) |
 | qe | qe_session | qe_session_pkey | CREATE UNIQUE INDEX qe_session_pkey ON qe.qe_session USING btree (id) |
 | qe | qe_session | qe_session_session_code_key | CREATE UNIQUE INDEX qe_session_session_code_key ON qe.qe_session USING btree (session_code) |
+| qe | qe_stage | ix_qe_stage_session_id | CREATE INDEX ix_qe_stage_session_id ON qe.qe_stage USING btree (session_id) |
+| qe | qe_stage | qe_stage_pkey | CREATE UNIQUE INDEX qe_stage_pkey ON qe.qe_stage USING btree (id) |
+| qe | qe_stage | uq_qe_stage_session_stage_id | CREATE UNIQUE INDEX uq_qe_stage_session_stage_id ON qe.qe_stage USING btree (session_id, stage_id) |
+| qe | qe_stage | uq_qe_stage_session_stage_index | CREATE UNIQUE INDEX uq_qe_stage_session_stage_index ON qe.qe_stage USING btree (session_id, stage_index) |
 | qe | qe_stage_event | ix_qe_stage_event_session_id | CREATE INDEX ix_qe_stage_event_session_id ON qe.qe_stage_event USING btree (session_id) |
 | qe | qe_stage_event | qe_stage_event_pkey | CREATE UNIQUE INDEX qe_stage_event_pkey ON qe.qe_stage_event USING btree (id) |
 | qe | qe_stage_outcome | ix_qe_stage_outcome_session_id | CREATE INDEX ix_qe_stage_outcome_session_id ON qe.qe_stage_outcome USING btree (session_id) |
 | qe | qe_stage_outcome | qe_stage_outcome_pkey | CREATE UNIQUE INDEX qe_stage_outcome_pkey ON qe.qe_stage_outcome USING btree (id) |
+| qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_id | CREATE UNIQUE INDEX uq_qe_stage_outcome_session_stage_id ON qe.qe_stage_outcome USING btree (session_id, stage_id) |
+| qe | qe_stage_outcome | uq_qe_stage_outcome_session_stage_index | CREATE UNIQUE INDEX uq_qe_stage_outcome_session_stage_index ON qe.qe_stage_outcome USING btree (session_id, stage_index) |
 | qe | qe_user | qe_user_pkey | CREATE UNIQUE INDEX qe_user_pkey ON qe.qe_user USING btree (id) |
 | qe | qe_user | qe_user_subject_key | CREATE UNIQUE INDEX qe_user_subject_key ON qe.qe_user USING btree (subject) |
 | qe | qe_user_role | qe_user_role_pkey | CREATE UNIQUE INDEX qe_user_role_pkey ON qe.qe_user_role USING btree (id) |

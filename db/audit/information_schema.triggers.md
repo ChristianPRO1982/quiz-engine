@@ -1,3 +1,5 @@
 | trigger_schema | event_object_table | trigger_name | action_timing | event_manipulation | action_orientation | action_statement |
-|---|
-| *(0 row)* |
+|---|---|---|---|---|---|---|
+| qe | qe_stage_outcome | trg_qe_stage_outcome_no_delete | BEFORE | DELETE | ROW | EXECUTE FUNCTION qe.qe_forbid_stage_outcome_mutation() |
+| qe | qe_stage_outcome | trg_qe_stage_outcome_no_truncate | BEFORE | TRUNCATE | STATEMENT | EXECUTE FUNCTION qe.qe_forbid_stage_outcome_mutation() |
+| qe | qe_stage_outcome | trg_qe_stage_outcome_no_update | BEFORE | UPDATE | ROW | EXECUTE FUNCTION qe.qe_forbid_stage_outcome_mutation() |
