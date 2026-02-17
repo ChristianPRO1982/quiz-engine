@@ -118,7 +118,8 @@ Players send:
 Engine:
 
 * Validates session + stage
-* Forwards action to plugin runtime
+* Resolves `player_id` from authenticated/session-bound connection identity
+* Forwards `player_id` and `action` to plugin runtime
 * Does not interpret action content
 
 Plugin may update internal state.
@@ -251,7 +252,7 @@ The engine must not:
 For each stage:
 
 1. initialize(config, seed, players)
-2. handle_player_action(action)
+2. handle_player_action(player_id, action)
 3. optionally emit updates
 4. resolve() → StageOutcome
 
