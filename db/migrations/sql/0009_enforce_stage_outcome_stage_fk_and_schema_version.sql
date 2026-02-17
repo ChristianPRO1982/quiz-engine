@@ -60,31 +60,23 @@ END$$;
 
 DO $$
 DECLARE
-    v_schema_patched_count INTEGER := 0;
+    v_legacy_invalid_schema_count INTEGER := 0;
 BEGIN
-    UPDATE qe_stage_outcome so
-    SET payload = jsonb_set(
-        so.payload::jsonb,
-        '{schema_version}',
-        to_jsonb('v1'::text),
-        true
-    )::json
-    WHERE jsonb_typeof(so.payload::jsonb) = 'object'
-      AND NULLIF(BTRIM(so.payload::jsonb ->> 'schema_version'), '') IS NULL;
+    SELECT COUNT(*)
+    INTO v_legacy_invalid_schema_count
+    FROM qe_stage_outcome so
+    WHERE (so.payload::jsonb ->> 'schema_version') IS DISTINCT FROM 'v1';
 
-    GET DIAGNOSTICS v_schema_patched_count = ROW_COUNT;
-
-    IF v_schema_patched_count > 0 THEN
+    IF v_legacy_invalid_schema_count > 0 THEN
         RAISE NOTICE
-            'Normalized schema_version to v1 on % qe_stage_outcome payload rows.',
-            v_schema_patched_count;
+            'Found % legacy qe_stage_outcome rows without schema_version=v1; they are kept immutable.',
+            v_legacy_invalid_schema_count;
     END IF;
 END$$;
 
 DO $$
 DECLARE
     v_invalid_stage_ref_count INTEGER;
-    v_invalid_schema_count INTEGER;
 BEGIN
     SELECT COUNT(*)
     INTO v_invalid_stage_ref_count
@@ -99,17 +91,6 @@ BEGIN
         RAISE EXCEPTION
             'Cannot enforce qe_stage_outcome stage FK: % rows do not match qe_stage(session_id, stage_id, stage_index).',
             v_invalid_stage_ref_count;
-    END IF;
-
-    SELECT COUNT(*)
-    INTO v_invalid_schema_count
-    FROM qe_stage_outcome so
-    WHERE (so.payload::jsonb ->> 'schema_version') IS DISTINCT FROM 'v1';
-
-    IF v_invalid_schema_count > 0 THEN
-        RAISE EXCEPTION
-            'Cannot enforce qe_stage_outcome payload schema_version=v1: % rows are invalid.',
-            v_invalid_schema_count;
     END IF;
 END$$;
 
@@ -163,14 +144,15 @@ BEGIN
     ) THEN
         ALTER TABLE qe_stage_outcome
             ADD CONSTRAINT ck_qe_stage_outcome_payload_schema_version_v1
-            CHECK ((payload::jsonb ->> 'schema_version') = 'v1');
+            CHECK ((payload::jsonb ->> 'schema_version') = 'v1')
+            NOT VALID;
     END IF;
 END$$;
 
 INSERT INTO qe_schema_migration (version, description)
 VALUES (
     '0009_enforce_stage_outcome_stage_fk_and_schema_version',
-    'Backfill missing qe_stage rows and normalize missing outcome schema_version, then enforce stage FK and payload schema_version=v1'
+    'Backfill missing qe_stage rows, enforce stage FK, and add NOT VALID schema_version=v1 check for new outcomes'
 )
 ON CONFLICT (version) DO NOTHING;
 
