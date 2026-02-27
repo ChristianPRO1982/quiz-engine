@@ -1,6 +1,7 @@
 """SQLAlchemy models for quiz-engine."""
 
 from .consent import Consent, ConsentAudit
+from .plugin_catalog import PluginCatalog
 from .quiz import Quiz
 from .session import Player, Session
 from .settings import ServiceSetting
@@ -12,6 +13,7 @@ __all__ = [
     "Consent",
     "ConsentAudit",
     "Player",
+    "PluginCatalog",
     "Quiz",
     "ServiceSetting",
     "Session",

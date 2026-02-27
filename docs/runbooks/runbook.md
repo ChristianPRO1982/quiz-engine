@@ -129,6 +129,7 @@ Actions:
 - Check plugin entrypoint
 - Verify StageRuntime interface compliance
 - Validate determinism constraints
+- Trigger admin plugin scan (moderator-only) to refresh catalog and registry
 
 ---
 
@@ -156,6 +157,29 @@ Actions:
 - Verify ScoreEntry integer-only rule
 - Remove float accumulation
 - Replace percentage with integer scale
+
+---
+
+## 5.4 Plugin Catalog Drift
+
+Symptoms:
+- Plugin appears in DB catalog but not on disk
+- New plugin exists on disk but not shown in admin/UI
+
+Actions:
+- Login with a moderator user
+- Trigger Admin plugin scan
+- Confirm sync result (added/updated/removed)
+- Verify `qe_plugin_catalog` now matches filesystem plugins
+
+Moderator role provisioning (PostgreSQL):
+
+```sql
+SET search_path TO qe, public;
+INSERT INTO qe_user_role (user_id, role)
+VALUES (<user_id>, 'moderator')
+ON CONFLICT (user_id, role) DO NOTHING;
+```
 
 ---
 

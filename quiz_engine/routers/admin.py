@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlencode
 
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -10,9 +10,15 @@ from pydantic import ValidationError
 
 from auth.deps import get_current_user
 from quiz_engine.db.session import get_session
+from quiz_engine.plugins.registry import build_default_registry
 from quiz_engine.schemas.quiz_editor_schemas import normalize_editor_payload
 from quiz_engine.schemas.quiz_schemas import QuizCreateRequest
-from quiz_engine.services.auth_service import ensure_user_record
+from quiz_engine.services.auth_service import (
+    ensure_user_record,
+    list_user_roles,
+    user_has_role,
+)
+from quiz_engine.services.plugin_catalog_service import PluginCatalogService
 from quiz_engine.services.plugin_registry_service import PluginRegistryService
 from quiz_engine.services.quiz_draft_service import QuizDraftService
 from quiz_engine.services.quiz_editor_service import QuizEditorService
@@ -23,6 +29,7 @@ quiz_service = QuizService()
 draft_service = QuizDraftService()
 quiz_editor_service = QuizEditorService()
 plugin_registry_service = PluginRegistryService()
+plugin_catalog_service = PluginCatalogService()
 
 
 def _templates(request: Request):
@@ -48,11 +55,50 @@ async def admin_index_page(request: Request) -> HTMLResponse:
     if redirect is not None:
         return redirect
 
+    with get_session() as session:
+        db_user = ensure_user_record(session, auth_user)
+        user_roles = list_user_roles(session, user_id=db_user.id)
+        plugin_catalog_rows = plugin_catalog_service.list_catalog(session)
+
+    scan_summary = _scan_summary_from_query(request)
+
     return _templates(request).TemplateResponse(
         request,
         "admin/index.html",
-        {"current_user": auth_user},
+        {
+            "current_user": auth_user,
+            "can_scan_plugins": "moderator" in user_roles,
+            "plugin_catalog": plugin_catalog_rows,
+            "scan_summary": scan_summary,
+        },
     )
+
+
+@router.post("/admin/plugins/scan", response_model=None)
+async def admin_scan_plugins(request: Request) -> Response:
+    auth_user, redirect = _require_html_user(request)
+    if redirect is not None:
+        return redirect
+
+    with get_session() as session:
+        db_user = ensure_user_record(session, auth_user)
+        if not user_has_role(session, user_id=db_user.id, role="moderator"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Moderator role is required to scan plugins.",
+            )
+        scan_result = plugin_catalog_service.scan_and_sync(session)
+
+    request.app.state.plugin_registry = build_default_registry()
+
+    query = {
+        "scan_status": "ok" if not scan_result.errors else "partial",
+        "scan_added": str(len(scan_result.added)),
+        "scan_updated": str(len(scan_result.updated)),
+        "scan_removed": str(len(scan_result.removed)),
+        "scan_errors": str(len(scan_result.errors)),
+    }
+    return RedirectResponse(url=f"/admin?{urlencode(query)}", status_code=303)
 
 
 @router.get("/admin/quizzes", response_class=HTMLResponse)
@@ -409,3 +455,27 @@ async def quiz_duplicate(request: Request, quiz_id: int) -> Response:
 
     draft_service.duplicate_from_payload(request, payload)
     return RedirectResponse(url="/admin/quizzes/new/step-1", status_code=303)
+
+
+def _scan_summary_from_query(request: Request) -> dict[str, int | str] | None:
+    status_text = str(request.query_params.get("scan_status", "")).strip()
+    if not status_text:
+        return None
+    if status_text not in {"ok", "partial"}:
+        status_text = "partial"
+    return {
+        "status": status_text,
+        "added": _parse_int_query(request, "scan_added"),
+        "updated": _parse_int_query(request, "scan_updated"),
+        "removed": _parse_int_query(request, "scan_removed"),
+        "errors": _parse_int_query(request, "scan_errors"),
+    }
+
+
+def _parse_int_query(request: Request, key: str) -> int:
+    raw = request.query_params.get(key)
+    try:
+        value = int(str(raw).strip())
+    except (TypeError, ValueError):
+        return 0
+    return max(value, 0)

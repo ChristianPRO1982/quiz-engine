@@ -19,6 +19,7 @@ This folder provides:
 
 - Determinism guidelines
 - Seed usage rules
+- Plugin type guidelines (`info`, `quiz`, `scoreboard`, `form`)
 - Example StageOutcome payloads
 - Example WebSocket messages
 - Practical implementation advice
@@ -57,6 +58,7 @@ Plugins must:
 - Follow StageRuntime interface
 - Be deterministic
 - Use provided seed
+- Declare a general plugin type for cataloging
 - Produce integer-only ScoreEntry
 - Return valid StageOutcome
 

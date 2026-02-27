@@ -12,7 +12,7 @@ from auth.deps import SESSION_AUTH_USER_KEY
 from auth.models import AuthUser
 from auth.settings import AuthSettings
 from quiz_engine.middleware.session import get_session_data
-from quiz_engine.models.user import User
+from quiz_engine.models.user import User, UserRole
 
 
 def list_dev_user_subjects(session: Session) -> list[str]:
@@ -63,3 +63,15 @@ def ensure_user_record(session: Session, auth_user: AuthUser) -> User:
     session.commit()
     session.refresh(db_user)
     return db_user
+
+
+def list_user_roles(session: Session, *, user_id: int) -> set[str]:
+    stmt = select(UserRole.role).where(UserRole.user_id == user_id)
+    return {role for role in session.execute(stmt).scalars()}
+
+
+def user_has_role(session: Session, *, user_id: int, role: str) -> bool:
+    if not role:
+        return False
+    stmt = select(UserRole.id).where(UserRole.user_id == user_id, UserRole.role == role)
+    return session.execute(stmt).scalar_one_or_none() is not None

@@ -71,6 +71,10 @@ No alternative envelope allowed.
 ## 8. Plugin Registration
 - Map plugin_key → plugin class
 - Enforce StageRuntime interface
+- Discover plugins from runtime package namespace
+- Persist plugin catalog snapshot in database
+- Remove catalog entries for missing plugins after scan
+- Require plugin general type (`info`, `quiz`, `scoreboard`, `form`)
 
 ## 9. Determinism Enforcement
 - Provide seed to plugin

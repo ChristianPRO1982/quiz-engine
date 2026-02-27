@@ -35,6 +35,7 @@ class SandboxSlidePlugin(IPlugin):
                 "Used when the built-in slide package is unavailable."
             ),
             capabilities={
+                "general_type": "info",
                 "produces_scoring": False,
                 "produces_grading": False,
                 "uses_seed": False,

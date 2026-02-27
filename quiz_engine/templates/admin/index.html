@@ -18,5 +18,31 @@
         <span>Start the guided authoring flow.</span>
       </a>
     </div>
+    {% if can_scan_plugins %}
+      <hr />
+      <h2 class="qe-title" style="font-size:1.15rem;">Plugin catalog</h2>
+      <p class="qe-hint">Scan plugins from the runtime package and sync the catalog database table.</p>
+      <form method="post" action="/admin/plugins/scan" style="margin-bottom:1rem;">
+        <button type="submit" class="qe-btn qe-btn--primary">Scan plugins</button>
+      </form>
+      {% if scan_summary %}
+        <p class="qe-hint">
+          Scan status: <strong>{{ scan_summary.status }}</strong>
+          (added: {{ scan_summary.added }}, updated: {{ scan_summary.updated }}, removed: {{ scan_summary.removed }}, errors: {{ scan_summary.errors }})
+        </p>
+      {% endif %}
+      {% if plugin_catalog %}
+        <ul class="qe-list">
+          {% for plugin in plugin_catalog %}
+            <li>
+              <strong>{{ plugin.plugin_id }}</strong>
+              <span class="qe-muted-text">({{ plugin.plugin_type }}, v{{ plugin.plugin_version }})</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="qe-hint">No plugins registered in catalog yet.</p>
+      {% endif %}
+    {% endif %}
   </section>
 {% endblock %}

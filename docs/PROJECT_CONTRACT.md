@@ -10,6 +10,9 @@ Detailed technical contracts are defined in:
 - docs/contracts/*
 - docs/CODEX_RULES.md
 
+Plugin discovery and catalog synchronization are defined in:
+- docs/contracts/plugin_catalog_sync_contract_v1.md
+
 If a contradiction appears, contracts prevail.
 
 ---
@@ -77,6 +80,7 @@ Plugins must:
 - Use provided seed
 - Produce integer-only scoring
 - Return valid StageOutcome
+- Declare a general plugin type for cataloging (`info`, `quiz`, `scoreboard`, `form`)
 
 Plugins must not:
 
@@ -116,6 +120,11 @@ WebSocket interaction is defined in:
 docs/contracts/runtime_plugin_io_v1.md
 
 These contracts are authoritative.
+
+Plugin manifest evolution and plugin catalog synchronization are defined in:
+
+- docs/contracts/plugin_manifest_contract_v2.md
+- docs/contracts/plugin_catalog_sync_contract_v1.md
 
 ---
 

@@ -12,6 +12,8 @@ Authoritative contracts:
 - docs/contracts/runtime_plugin_io_v1.md
 - docs/contracts/engine_responsibilities_v1.md
 - docs/contracts/engine_plugin_interfaces_v1.md
+- docs/contracts/plugin_manifest_contract_v2.md
+- docs/contracts/plugin_catalog_sync_contract_v1.md
 
 If a contradiction appears, contracts prevail over generated code.
 
@@ -131,6 +133,7 @@ Plugins must:
 - Return valid StageOutcome
 - Use integer-only scoring
 - Use provided seed
+- Declare catalog plugin type (`info`, `quiz`, `scoreboard`, `form`)
 
 Plugins must not:
 

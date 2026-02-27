@@ -22,6 +22,7 @@ These documents define:
 - WebSocket interaction model
 - HTTP runtime surface
 - Plugin manifest structure
+- Plugin catalog scan and synchronization
 - Scoring contract
 
 They do NOT define:
@@ -44,6 +45,11 @@ The authoritative order is:
 5. engine_plugin_interfaces_v1.md
 6. plugin_manifest_contract_v1.md
 7. http_endpoints_v1.md
+
+For plugin manifest evolution and catalog synchronization:
+
+- plugin_manifest_contract_v2.md
+- plugin_catalog_sync_contract_v1.md
 
 If a contradiction appears, higher documents prevail.
 

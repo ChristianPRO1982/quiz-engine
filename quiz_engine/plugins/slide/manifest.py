@@ -16,6 +16,7 @@ def build_slide_manifest() -> PluginManifest:
         schema_version="v0",
         description="Static informational stage with no interaction and no scoring.",
         capabilities={
+            "general_type": "info",
             "produces_scoring": False,
             "produces_grading": False,
             "uses_seed": False,
