@@ -36,16 +36,13 @@ def _slide_stage(stage_id: str = "stage-1", stage_index: int = 0) -> StageDefini
         stage_kind="slide",
         engine_prompt={},
         plugin_spec={
-            "schema_version": "v0",
-            "type": "slide",
-            "content": {
-                "title": "Welcome",
-                "body": "Round starts now.",
-                "body_format": "markdown",
-                "media": {
-                    "type": "image",
-                    "src": "https://cdn.example.org/welcome.png",
-                },
+            "schema_version": "v1",
+            "title": "Welcome",
+            "body": "Round starts now.",
+            "body_format": "markdown",
+            "media": {
+                "type": "image",
+                "src": "https://cdn.example.org/welcome.png",
             },
         },
     )
@@ -78,8 +75,7 @@ def test_slide_plugin_rejects_invalid_spec() -> None:
         stage_kind="slide",
         engine_prompt={},
         plugin_spec={
-            "schema_version": "v0",
-            "type": "slide",
+            "schema_version": "v1",
         },
     )
 
@@ -128,6 +124,29 @@ def test_slide_runtime_defaults_body_format_to_text_for_legacy_spec() -> None:
 
     assert frames is not None
     assert frames[0].payload["body_format"] == "text"
+
+
+def test_slide_runtime_accepts_v1_content_wrapper_shape() -> None:
+    plugin = SlidePlugin()
+    stage = StageDefinition(
+        stage_id="stage-v1-wrapper",
+        stage_index=0,
+        plugin_id="slide",
+        stage_kind="slide",
+        engine_prompt={},
+        plugin_spec={
+            "schema_version": "v1",
+            "type": "slide",
+            "content": {"title": "Wrapped", "body": "Body"},
+        },
+    )
+    runtime = plugin.create_runtime("session-1", stage)
+    now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+
+    frames = runtime.on_stage_open(_context(stage, now))
+
+    assert frames is not None
+    assert frames[0].payload["title"] == "Wrapped"
 
 
 def test_slide_runtime_build_outcome_returns_no_score() -> None:

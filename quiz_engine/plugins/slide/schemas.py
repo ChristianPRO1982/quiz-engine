@@ -1,4 +1,4 @@
-"""Schema validation for the SLIDE plugin spec (v0)."""
+"""Schema validation for the SLIDE plugin spec (v0/v1 compatible)."""
 
 from __future__ import annotations
 
@@ -6,12 +6,13 @@ from typing import Any
 
 ALLOWED_MEDIA_TYPES = {"image", "none"}
 ALLOWED_BODY_FORMATS = {"markdown", "text"}
+ALLOWED_SCHEMA_VERSIONS = {"v0", "v1"}
 
 
 def validate_slide_plugin_spec(plugin_spec: dict[str, Any]) -> dict[str, Any]:
     """Validate and normalize the SLIDE plugin spec.
 
-    Expected shape:
+    Expected v0 shape:
     {
       "schema_version": "v0",
       "type": "slide",
@@ -22,23 +23,60 @@ def validate_slide_plugin_spec(plugin_spec: dict[str, Any]) -> dict[str, Any]:
         "media"?: {"type": "image"|"none", "src": str|None}
       }
     }
+
+    Expected v1 shape:
+    {
+      "schema_version": "v1",
+      "title": str,
+      "body": str,
+      "body_format"?: "markdown"|"text",
+      "media"?: {"type": "image"|"none", "src": str|None}
+    }
+
+    v1 also accepts the v0 `content` envelope for compatibility.
     """
     _require_dict(plugin_spec, "plugin_spec")
-    _reject_unknown_keys(
-        plugin_spec,
-        {"schema_version", "type", "content"},
-        "plugin_spec",
-    )
 
     schema_version = plugin_spec.get("schema_version")
-    if schema_version != "v0":
-        raise ValueError("plugin_spec.schema_version must be 'v0'.")
+    if schema_version not in ALLOWED_SCHEMA_VERSIONS:
+        raise ValueError("plugin_spec.schema_version must be one of: 'v0', 'v1'.")
 
     plugin_type = plugin_spec.get("type")
-    if plugin_type != "slide":
-        raise ValueError("plugin_spec.type must be 'slide'.")
+    if plugin_type is not None and plugin_type != "slide":
+        raise ValueError("plugin_spec.type must be 'slide' when provided.")
 
-    content = _require_dict(plugin_spec.get("content"), "plugin_spec.content")
+    if schema_version == "v0":
+        _reject_unknown_keys(
+            plugin_spec,
+            {"schema_version", "type", "content"},
+            "plugin_spec",
+        )
+        if plugin_type != "slide":
+            raise ValueError("plugin_spec.type must be 'slide'.")
+        content = _require_dict(plugin_spec.get("content"), "plugin_spec.content")
+    else:
+        has_content = "content" in plugin_spec
+        if has_content:
+            _reject_unknown_keys(
+                plugin_spec,
+                {"schema_version", "type", "content"},
+                "plugin_spec",
+            )
+            content = _require_dict(plugin_spec.get("content"), "plugin_spec.content")
+        else:
+            _reject_unknown_keys(
+                plugin_spec,
+                {"schema_version", "type", "title", "body", "body_format", "media"},
+                "plugin_spec",
+            )
+            content = {
+                "title": plugin_spec.get("title"),
+                "body": plugin_spec.get("body"),
+                "body_format": plugin_spec.get("body_format"),
+            }
+            if "media" in plugin_spec:
+                content["media"] = plugin_spec.get("media")
+
     _reject_unknown_keys(
         content,
         {"title", "body", "body_format", "media"},
@@ -58,7 +96,7 @@ def validate_slide_plugin_spec(plugin_spec: dict[str, Any]) -> dict[str, Any]:
         normalized_content["media"] = _validate_media(content["media"])
 
     return {
-        "schema_version": "v0",
+        "schema_version": schema_version,
         "type": "slide",
         "content": normalized_content,
     }

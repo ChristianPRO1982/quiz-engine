@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from importlib import import_module
+
 from quiz_engine.contracts.runtime_models import PluginManifest
 from quiz_engine.plugins.interfaces import IPlugin
 
@@ -26,8 +28,19 @@ class PluginRegistry:
 
 def build_default_registry() -> PluginRegistry:
     """Build a plugin registry with built-in plugins explicitly registered."""
-    from quiz_engine.plugins.slide import SlidePlugin
 
     registry = PluginRegistry()
-    registry.register(SlidePlugin())
+    registry.register(_load_slide_plugin())
     return registry
+
+
+def _load_slide_plugin() -> IPlugin:
+    """Load the built-in slide plugin or fallback to the sandbox implementation."""
+    try:
+        module = import_module("quiz_engine.plugins.slide")
+        plugin_cls = module.SlidePlugin
+        return plugin_cls()
+    except Exception:
+        from quiz_engine.plugins.sandbox_slide import SandboxSlidePlugin
+
+        return SandboxSlidePlugin()

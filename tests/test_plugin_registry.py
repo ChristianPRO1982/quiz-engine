@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from importlib import import_module
 
 import pytest
 
+import quiz_engine.plugins.registry as registry_module
 from quiz_engine.contracts.runtime_models import (
     PluginManifest,
     StageDefinition,
@@ -108,3 +110,24 @@ def test_default_registry_registers_slide_plugin() -> None:
     plugin = registry.get("slide")
     assert plugin is not None
     assert plugin.get_manifest().plugin_id == "slide"
+
+
+def test_default_registry_falls_back_to_sandbox_slide_when_import_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    real_import = import_module
+
+    def _failing_import(name: str):  # noqa: ANN202
+        if name == "quiz_engine.plugins.slide":
+            raise ModuleNotFoundError("slide package removed")
+        return real_import(name)
+
+    monkeypatch.setattr(registry_module, "import_module", _failing_import)
+
+    registry = build_default_registry()
+    plugin = registry.get("slide")
+
+    assert plugin is not None
+    assert plugin.get_manifest().plugin_id == "slide"
+    assert plugin.get_manifest().capabilities is not None
+    assert plugin.get_manifest().capabilities.get("sandbox_mode") is True
