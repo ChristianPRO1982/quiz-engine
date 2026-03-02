@@ -1,6 +1,9 @@
 <div class="qe-auth-widget" aria-label="Authentication">
   {% if current_user %}
     <a class="qe-auth-link" href="/account">Account</a>
+    {% if auth_roles %}
+      <span class="qe-auth-roles" aria-label="Roles">{{ auth_roles | join(", ") }}</span>
+    {% endif %}
     <form
       method="post"
       action="/logout"

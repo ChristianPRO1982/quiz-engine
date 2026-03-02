@@ -70,6 +70,15 @@ def list_user_roles(session: Session, *, user_id: int) -> set[str]:
     return {role for role in session.execute(stmt).scalars()}
 
 
+def list_user_roles_for_subject(session: Session, *, subject: str) -> set[str]:
+    stmt = (
+        select(UserRole.role)
+        .join(User, UserRole.user_id == User.id)
+        .where(User.subject == subject)
+    )
+    return {role for role in session.execute(stmt).scalars()}
+
+
 def user_has_role(session: Session, *, user_id: int, role: str) -> bool:
     if not role:
         return False

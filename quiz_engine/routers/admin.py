@@ -67,7 +67,7 @@ async def admin_index_page(request: Request) -> HTMLResponse:
         "admin/index.html",
         {
             "current_user": auth_user,
-            "can_scan_plugins": "moderator" in user_roles,
+            "can_scan_plugins": "admin" in user_roles,
             "plugin_catalog": plugin_catalog_rows,
             "scan_summary": scan_summary,
         },
@@ -82,10 +82,10 @@ async def admin_scan_plugins(request: Request) -> Response:
 
     with get_session() as session:
         db_user = ensure_user_record(session, auth_user)
-        if not user_has_role(session, user_id=db_user.id, role="moderator"):
+        if not user_has_role(session, user_id=db_user.id, role="admin"):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Moderator role is required to scan plugins.",
+                detail="Admin role is required to scan plugins.",
             )
         scan_result = plugin_catalog_service.scan_and_sync(session)
 

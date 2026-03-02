@@ -103,6 +103,12 @@ a:hover {
   text-decoration: none;
 }
 
+.qe-auth-roles {
+  font-size: 0.82rem;
+  color: var(--qe-muted);
+  white-space: nowrap;
+}
+
 .qe-shell {
   width: min(980px, 100%);
   display: flex;

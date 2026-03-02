@@ -129,7 +129,7 @@ Actions:
 - Check plugin entrypoint
 - Verify StageRuntime interface compliance
 - Validate determinism constraints
-- Trigger admin plugin scan (moderator-only) to refresh catalog and registry
+- Trigger admin plugin scan (admin-only) to refresh catalog and registry
 
 ---
 
@@ -167,17 +167,17 @@ Symptoms:
 - New plugin exists on disk but not shown in admin/UI
 
 Actions:
-- Login with a moderator user
+- Login with an admin user
 - Trigger Admin plugin scan
 - Confirm sync result (added/updated/removed)
 - Verify `qe_plugin_catalog` now matches filesystem plugins
 
-Moderator role provisioning (PostgreSQL):
+Admin role provisioning (PostgreSQL):
 
 ```sql
 SET search_path TO qe, public;
 INSERT INTO qe_user_role (user_id, role)
-VALUES (<user_id>, 'moderator')
+VALUES (<user_id>, 'admin')
 ON CONFLICT (user_id, role) DO NOTHING;
 ```
 

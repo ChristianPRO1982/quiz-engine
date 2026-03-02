@@ -24,11 +24,11 @@ may be excluded by engine policy.
 # 2. Scan Authorization
 
 Plugin scan can be triggered from Admin UI only by users
-with moderator capability.
+with admin capability.
 
 Operational source of truth:
 
-- `qe_user_role` contains role `moderator`
+- `qe_user_role` contains role `admin`
 
 ---
 
@@ -84,4 +84,3 @@ This contract does NOT define:
 - stage runtime payload schemas
 - websocket envelope
 - score aggregation logic
-

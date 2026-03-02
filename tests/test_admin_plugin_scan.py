@@ -25,16 +25,19 @@ def _setup_db(tmp_path: Path, monkeypatch) -> None:
     _sessionmaker.cache_clear()
     Base.metadata.create_all(get_engine())
     with get_session() as session:
-        user = User(subject="mod-user")
-        non_mod = User(subject="plain-user")
-        session.add_all([user, non_mod])
+        user = User(subject="admin-user")
+        moderator = User(subject="moderator-user")
+        non_admin = User(subject="plain-user")
+        session.add_all([user, moderator, non_admin])
         session.commit()
         session.refresh(user)
-        session.add(UserRole(user_id=user.id, role="moderator"))
+        session.refresh(moderator)
+        session.add(UserRole(user_id=user.id, role="admin"))
+        session.add(UserRole(user_id=moderator.id, role="moderator"))
         session.commit()
 
 
-def test_admin_page_shows_scan_button_only_for_moderator(
+def test_admin_page_shows_scan_button_only_for_admin(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
@@ -45,15 +48,18 @@ def test_admin_page_shows_scan_button_only_for_moderator(
     plain_page = client.get("/admin")
     assert plain_page.status_code == 200
     assert "Scan plugins" not in plain_page.text
+    assert 'aria-label="Roles"' not in plain_page.text
 
     client.post("/logout")
-    client.post("/login", data={"user": "mod-user"})
-    mod_page = client.get("/admin")
-    assert mod_page.status_code == 200
-    assert "Scan plugins" in mod_page.text
+    client.post("/login", data={"user": "admin-user"})
+    admin_page = client.get("/admin")
+    assert admin_page.status_code == 200
+    assert "Scan plugins" in admin_page.text
+    assert 'aria-label="Roles"' in admin_page.text
+    assert "admin" in admin_page.text
 
 
-def test_admin_plugin_scan_requires_moderator(tmp_path: Path, monkeypatch) -> None:
+def test_admin_plugin_scan_requires_admin(tmp_path: Path, monkeypatch) -> None:
     _setup_db(tmp_path, monkeypatch)
     client = TestClient(create_app())
 
@@ -63,13 +69,13 @@ def test_admin_plugin_scan_requires_moderator(tmp_path: Path, monkeypatch) -> No
     assert response.status_code == 403
 
 
-def test_admin_plugin_scan_redirects_with_summary_for_moderator(
+def test_admin_plugin_scan_redirects_with_summary_for_admin(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
     _setup_db(tmp_path, monkeypatch)
     client = TestClient(create_app())
-    client.post("/login", data={"user": "mod-user"})
+    client.post("/login", data={"user": "admin-user"})
 
     monkeypatch.setattr(
         "quiz_engine.routers.admin.plugin_catalog_service.scan_and_sync",
@@ -97,3 +103,15 @@ def test_admin_plugin_scan_redirects_with_summary_for_moderator(
     assert "scan_updated=1" in location
     assert "scan_removed=1" in location
     assert "scan_errors=1" in location
+
+
+def test_auth_widget_shows_moderator_role(tmp_path: Path, monkeypatch) -> None:
+    _setup_db(tmp_path, monkeypatch)
+    client = TestClient(create_app())
+    client.post("/login", data={"user": "moderator-user"})
+
+    account = client.get("/account")
+
+    assert account.status_code == 200
+    assert 'aria-label="Roles"' in account.text
+    assert "moderator" in account.text

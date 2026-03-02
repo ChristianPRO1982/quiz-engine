@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -11,6 +12,7 @@ from starlette.templating import Jinja2Templates
 
 from auth.deps import get_current_user
 from auth.settings import AuthSettings
+from quiz_engine.db.session import get_session
 from quiz_engine.i18n import get_translator, select_locale
 from quiz_engine.middleware.session import SessionCookieMiddleware
 from quiz_engine.plugins.registry import build_default_registry
@@ -21,7 +23,17 @@ from quiz_engine.routers.join import router as join_router
 from quiz_engine.routers.quiz_preview import router as quiz_preview_router
 from quiz_engine.routers.quizzes import router as quizzes_router
 from quiz_engine.routers.ws import router as ws_router
+from quiz_engine.services.auth_service import list_user_roles_for_subject
 from quiz_engine.services.session_live_service import SessionLiveService
+
+
+def _template_auth_context(request: Request) -> dict[str, Any]:
+    current_user = get_current_user(request)
+    if current_user is None:
+        return {"auth_roles": []}
+    with get_session() as session:
+        roles = list_user_roles_for_subject(session, subject=current_user.subject)
+    return {"auth_roles": sorted(roles)}
 
 
 def create_app() -> FastAPI:
@@ -35,7 +47,10 @@ def create_app() -> FastAPI:
 
     templates_dir = Path(__file__).resolve().parent / "templates"
     static_dir = Path(__file__).resolve().parent / "static"
-    templates = Jinja2Templates(directory=str(templates_dir))
+    templates = Jinja2Templates(
+        directory=str(templates_dir),
+        context_processors=[_template_auth_context],
+    )
     app.state.templates = templates
     app.state.plugin_registry = build_default_registry()
     app.state.session_live_service = SessionLiveService()
