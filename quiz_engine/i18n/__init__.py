@@ -21,9 +21,16 @@ class DictTranslations(gettext.NullTranslations):
         self._catalog = catalog
 
     def gettext(self, message: str) -> str:
-        return self._catalog.get(message, message)
+        translated = self._catalog.get(message)
+        if translated is not None:
+            return translated
+        if self._fallback is not None:
+            return self._fallback.gettext(message)
+        return message
 
     def ngettext(self, singular: str, plural: str, n: int) -> str:
+        if self._fallback is not None:
+            return self._fallback.ngettext(singular, plural, n)
         return self.gettext(singular if n == 1 else plural)
 
 
@@ -94,18 +101,25 @@ def select_locale(accept_language: str | None, preferred: str | None = None) -> 
 
 @lru_cache
 def _translation(locale: str) -> gettext.NullTranslations:
+    po_path = Path(str(PO_PATH).format(locale=locale))
+    catalog = _load_po_catalog(po_path)
+    po_translator = DictTranslations(catalog) if catalog else None
+
     mo_path = Path(str(MO_PATH).format(locale=locale))
     if mo_path.exists():
         try:
-            return gettext.translation(
+            mo_translator = gettext.translation(
                 DOMAIN, localedir=str(LOCALES_PATH), languages=[locale]
             )
+            if po_translator is not None:
+                po_translator.add_fallback(mo_translator)
+                return po_translator
+            return mo_translator
         except FileNotFoundError:
-            return gettext.NullTranslations()
-    po_path = Path(str(PO_PATH).format(locale=locale))
-    catalog = _load_po_catalog(po_path)
-    if catalog:
-        return DictTranslations(catalog)
+            pass
+
+    if po_translator is not None:
+        return po_translator
     return gettext.NullTranslations()
 
 

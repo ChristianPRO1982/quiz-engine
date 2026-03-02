@@ -36,6 +36,18 @@ def test_build_slide_frame_payload_keeps_media_when_present() -> None:
     assert payload["body_format"] == "text"
 
 
+def test_build_slide_frame_payload_accepts_image_url_alias() -> None:
+    spec = _valid_spec()
+    spec["image_url"] = "https://cdn.example.org/slide.png"
+
+    payload = build_slide_frame_payload(spec)
+
+    assert payload["media"] == {
+        "type": "image",
+        "src": "https://cdn.example.org/slide.png",
+    }
+
+
 def test_validate_slide_plugin_spec_accepts_explicit_body_format_markdown() -> None:
     spec = _valid_spec()
     spec["body_format"] = "markdown"
