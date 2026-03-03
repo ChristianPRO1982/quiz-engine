@@ -1,0 +1,237 @@
+"""Schema helpers for the built-in MCQ plugin."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from quiz_engine.plugins.mcq.config import MCQConfig
+
+_ALLOWED_ROOT_KEYS = {
+    "schema_version",
+    "type",
+    "plugin",
+    "title",
+    "prompt",
+    "mode",
+    "time_limit_s",
+    "points",
+    "examination",
+    "choices",
+}
+_ALLOWED_CHOICE_KEYS = {"id", "label", "is_correct", "weight"}
+
+
+def validate_mcq_plugin_spec(
+    plugin_spec: dict[str, Any],
+    config: MCQConfig,
+) -> dict[str, Any]:
+    if not isinstance(plugin_spec, dict):
+        raise ValueError("mcq plugin_spec must be an object.")
+
+    _require_only_known_keys(
+        plugin_spec, allowed=_ALLOWED_ROOT_KEYS, field_name="mcq plugin_spec"
+    )
+    _validate_schema_version(plugin_spec.get("schema_version"))
+    _validate_type(plugin_spec.get("type"))
+    _validate_plugin(plugin_spec.get("plugin"))
+
+    mode = _require_text(plugin_spec.get("mode"), "mcq mode")
+    if mode not in config.enabled_modes:
+        raise ValueError(
+            "mcq mode "
+            f"{mode!r} is disabled. "
+            f"Enabled modes: {', '.join(config.enabled_modes)}."
+        )
+
+    title = _require_text(plugin_spec.get("title"), "mcq title")
+    prompt = _require_text(plugin_spec.get("prompt"), "mcq prompt")
+
+    time_limit_s = plugin_spec.get("time_limit_s", config.default_time_limit_s)
+    time_limit_s = _require_int(time_limit_s, "mcq time_limit_s")
+    if time_limit_s not in config.allowed_time_limits_s:
+        allowed = ", ".join(str(item) for item in config.allowed_time_limits_s)
+        raise ValueError(f"mcq time_limit_s must be one of: {allowed}.")
+
+    points = plugin_spec.get("points", config.default_points)
+    points = _require_int(points, "mcq points")
+    if points < config.min_points or points > config.max_points:
+        raise ValueError(
+            f"mcq points must be within [{config.min_points}, {config.max_points}]."
+        )
+
+    raw_examination = plugin_spec.get("examination", False)
+    if not isinstance(raw_examination, bool):
+        raise ValueError("mcq examination must be a boolean.")
+    examination = raw_examination
+
+    choices = _normalize_choices(plugin_spec.get("choices"), mode=mode)
+
+    payload: dict[str, Any] = {
+        "schema_version": "v1",
+        "type": "quiz",
+        "plugin": "mcq",
+        "title": title,
+        "prompt": prompt,
+        "mode": mode,
+        "time_limit_s": time_limit_s,
+        "points": points,
+        "examination": examination,
+        "choices": choices,
+    }
+    return payload
+
+
+def build_mcq_frame_payload(
+    plugin_spec: dict[str, Any],
+    *,
+    config: MCQConfig,
+    player_count: int,
+    phase: str = "ANSWERING",
+    prestart_countdown_s: int | None = None,
+) -> dict[str, Any]:
+    validated = validate_mcq_plugin_spec(plugin_spec, config=config)
+    return {
+        "plugin": "mcq",
+        "phase": phase,
+        "title": validated["title"],
+        "prompt": validated["prompt"],
+        "mode": validated["mode"],
+        "time_limit_s": validated["time_limit_s"],
+        "points": validated["points"],
+        "examination": validated["examination"],
+        "player_count": player_count,
+        "prestart_countdown_s": prestart_countdown_s,
+        "player_choice_view": {
+            "default": config.default_player_choice_view,
+            "allow_toggle": config.allow_player_toggle_choice_view,
+        },
+        "choices": [
+            {
+                "id": choice["id"],
+                "index": index,
+                "label": choice["label"],
+            }
+            for index, choice in enumerate(validated["choices"])
+        ],
+    }
+
+
+def extract_correct_choice_ids(plugin_spec: dict[str, Any]) -> set[str]:
+    mode = plugin_spec["mode"]
+    if mode == "multianswer":
+        return {
+            choice["id"]
+            for choice in plugin_spec["choices"]
+            if choice.get("weight", 0) > 0
+        }
+    return {
+        choice["id"]
+        for choice in plugin_spec["choices"]
+        if choice.get("is_correct")
+    }
+
+
+def extract_choice_weights(plugin_spec: dict[str, Any]) -> dict[str, int]:
+    mode = plugin_spec["mode"]
+    if mode != "multianswer":
+        return {}
+    return {choice["id"]: int(choice["weight"]) for choice in plugin_spec["choices"]}
+
+
+def _normalize_choices(raw_value: Any, *, mode: str) -> list[dict[str, Any]]:
+    if not isinstance(raw_value, list):
+        raise ValueError("mcq choices must be a list.")
+    if len(raw_value) < 2:
+        raise ValueError("mcq choices must contain at least 2 choices.")
+
+    normalized: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for index, raw_choice in enumerate(raw_value):
+        if not isinstance(raw_choice, dict):
+            raise ValueError(f"mcq choice #{index + 1} must be an object.")
+        _require_only_known_keys(
+            raw_choice,
+            allowed=_ALLOWED_CHOICE_KEYS,
+            field_name=f"mcq choice #{index + 1}",
+        )
+
+        choice_id = _require_text(raw_choice.get("id"), f"mcq choice #{index + 1}.id")
+        if choice_id in seen_ids:
+            raise ValueError(f"mcq choice ids must be unique: {choice_id!r}")
+        seen_ids.add(choice_id)
+
+        label = _require_text(raw_choice.get("label"), f"mcq choice #{index + 1}.label")
+        choice: dict[str, Any] = {"id": choice_id, "label": label}
+
+        if mode == "multianswer":
+            if "is_correct" in raw_choice:
+                raise ValueError("mcq multianswer choices must not declare is_correct.")
+            weight = _require_int(raw_choice.get("weight"), "mcq choice weight")
+            choice["weight"] = weight
+        else:
+            if "weight" in raw_choice:
+                raise ValueError(f"mcq mode {mode!r} choices must not declare weight.")
+            is_correct = raw_choice.get("is_correct")
+            if not isinstance(is_correct, bool):
+                raise ValueError("mcq choices must declare boolean is_correct.")
+            choice["is_correct"] = is_correct
+
+        normalized.append(choice)
+
+    if mode != "multianswer" and not any(choice["is_correct"] for choice in normalized):
+        raise ValueError("mcq choices must include at least one correct answer.")
+
+    return normalized
+
+
+def _validate_schema_version(value: Any) -> None:
+    if value is None:
+        return
+    if not isinstance(value, str):
+        raise ValueError("mcq schema_version must be a string when provided.")
+    normalized = value.strip().lower()
+    if normalized not in {"v1"}:
+        raise ValueError("mcq schema_version must be 'v1' when provided.")
+
+
+def _validate_type(value: Any) -> None:
+    if value is None:
+        return
+    if not isinstance(value, str):
+        raise ValueError("mcq type must be a string when provided.")
+    normalized = value.strip().lower()
+    if normalized != "quiz":
+        raise ValueError("mcq type must be 'quiz' when provided.")
+
+
+def _validate_plugin(value: Any) -> None:
+    if value is None:
+        return
+    if not isinstance(value, str):
+        raise ValueError("mcq plugin must be a string when provided.")
+    normalized = value.strip().lower()
+    if normalized != "mcq":
+        raise ValueError("mcq plugin must be 'mcq' when provided.")
+
+
+def _require_only_known_keys(
+    source: dict[str, Any],
+    *,
+    allowed: set[str],
+    field_name: str,
+) -> None:
+    unknown = sorted(set(source) - allowed)
+    if unknown:
+        raise ValueError(f"{field_name} contains unknown key(s): {', '.join(unknown)}")
+
+
+def _require_text(value: Any, field_name: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field_name} must be a non-empty string.")
+    return value.strip()
+
+
+def _require_int(value: Any, field_name: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ValueError(f"{field_name} must be an integer.")
+    return value
