@@ -28,10 +28,11 @@ class SlidePlugin(IPlugin):
     def __init__(self) -> None:
         self._manifest = PluginManifest(
             plugin_id=SLIDE_PLUGIN_ID,
-            plugin_version="1.0.0",
+            plugin_version="1.1.0",
             display_name="Slide",
             schema_version="v0",
             description="Informational slide stage (title, markdown body, image).",
+            plugin_type="info",
             capabilities={
                 "general_type": "info",
                 "produces_scoring": False,
@@ -43,6 +44,81 @@ class SlidePlugin(IPlugin):
                 "supports_host_actions": False,
                 "supports_no_score": True,
             },
+            stage_config_schema={
+                "type": "object",
+                "required": ["schema_version", "content"],
+                "properties": {
+                    "schema_version": {
+                        "type": "string",
+                        "enum": ["v0", "v1"],
+                        "title": "Schema version",
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["slide"],
+                        "title": "Type",
+                    },
+                    "content": {
+                        "type": "object",
+                        "required": ["title", "body"],
+                        "title": "Content",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "title": "Title",
+                                "description": "Main heading shown to players.",
+                                "default": "New slide",
+                            },
+                            "body": {
+                                "type": "string",
+                                "title": "Body",
+                                "description": "Main slide content.",
+                                "x-ui-widget": "markdown",
+                                "default": "Describe your content here.",
+                            },
+                            "body_format": {
+                                "type": "string",
+                                "title": "Body format",
+                                "enum": ["text", "markdown"],
+                                "default": "markdown",
+                            },
+                            "media": {
+                                "type": "object",
+                                "title": "Media",
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "title": "Media type",
+                                        "enum": ["none", "image"],
+                                        "default": "none",
+                                    },
+                                    "src": {
+                                        "type": ["string", "null"],
+                                        "title": "Media URL",
+                                        "description": (
+                                            "Image URL. Leave empty when media "
+                                            "type is 'none'."
+                                        ),
+                                        "default": None,
+                                    },
+                                },
+                                "default": {"type": "none", "src": None},
+                            },
+                        },
+                    },
+                },
+            },
+            default_stage_config={
+                "schema_version": "v1",
+                "type": "slide",
+                "content": {
+                    "title": "New slide",
+                    "body": "Describe your content here.",
+                    "body_format": "markdown",
+                    "media": {"type": "none", "src": None},
+                },
+            },
+            editor_hints={"default_title_prefix": "Slide"},
         )
 
     def get_manifest(self) -> PluginManifest:

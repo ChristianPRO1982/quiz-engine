@@ -27,9 +27,7 @@ class PluginRegistryService:
         options: list[QuestionTypeOption] = []
         for manifest in registry.list_manifests():
             capabilities = (
-                manifest.capabilities
-                if isinstance(manifest.capabilities, dict)
-                else {}
+                manifest.capabilities if isinstance(manifest.capabilities, dict) else {}
             )
             plugin_type = getattr(manifest, "plugin_type", None) or capabilities.get(
                 "general_type"
