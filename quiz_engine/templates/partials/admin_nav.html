@@ -1,7 +1,9 @@
 <nav class="qe-admin-nav" aria-label="Admin navigation">
   <a class="qe-admin-nav__link" href="/admin">Admin</a>
   <a class="qe-admin-nav__link" href="/admin/quizzes">Quizzes</a>
-  <a class="qe-admin-nav__link" href="/admin/quizzes/new/step-1">New quiz</a>
+  <form class="qe-admin-nav__form" method="post" action="/admin/quizzes">
+    <button class="qe-admin-nav__link qe-admin-nav__link--button" type="submit">New quiz</button>
+  </form>
   <span class="qe-admin-nav__link qe-admin-nav__link--disabled" aria-disabled="true"
     >Sessions (soon)</span
   >

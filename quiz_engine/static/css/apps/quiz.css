@@ -63,6 +63,10 @@ a:hover {
   box-shadow: var(--qe-shadow-1);
 }
 
+.qe-admin-nav__form {
+  margin: 0;
+}
+
 .qe-admin-nav__link {
   display: inline-flex;
   align-items: center;
@@ -71,6 +75,12 @@ a:hover {
   padding: 0.2rem 0.5rem;
   text-decoration: none;
   color: var(--qe-fg);
+}
+
+.qe-admin-nav__link--button {
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
 }
 
 .qe-admin-nav__link:hover {
@@ -410,6 +420,18 @@ a:hover {
   background: var(--qe-surface-2);
   padding: 0.9rem 1rem;
   text-decoration: none;
+}
+
+.qe-admin-tile-form {
+  margin: 0;
+}
+
+.qe-admin-tile--button {
+  width: 100%;
+  text-align: left;
+  color: var(--qe-fg);
+  font: inherit;
+  cursor: pointer;
 }
 
 .qe-admin-tile:hover {

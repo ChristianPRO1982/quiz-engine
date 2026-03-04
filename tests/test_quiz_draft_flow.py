@@ -39,12 +39,16 @@ def test_guided_draft_flow_create_quiz_and_redirect_to_detail(
 
     client.post("/login", data={"user": "user1"})
 
-    page = client.get("/admin/quizzes/new/step-1")
-    assert page.status_code == 200
-    assert "Step 1/3" in page.text
+    legacy_step1 = client.get("/admin/quizzes/new/step-1", follow_redirects=False)
+    assert legacy_step1.status_code == 303
+    assert legacy_step1.headers["location"] == "/admin/quizzes"
+
+    page = client.get("/admin/quizzes/new", follow_redirects=False)
+    assert page.status_code == 303
+    assert page.headers["location"] == "/admin/quizzes"
 
     step1 = client.post(
-        "/admin/quizzes/new/step-1",
+        "/admin/quizzes/new",
         data={"title": "Sprint 3 Quiz", "description": "Guided flow"},
         follow_redirects=False,
     )
@@ -105,7 +109,7 @@ def test_draft_save_fails_without_questions(tmp_path: Path, monkeypatch) -> None
 
     client.post("/login", data={"user": "user1"})
     client.post(
-        "/admin/quizzes/new/step-1",
+        "/admin/quizzes/new",
         data={"title": "No question quiz", "description": ""},
     )
 
@@ -162,7 +166,7 @@ def test_admin_step2_and_save_validation_branches(tmp_path: Path, monkeypatch) -
     client.post("/login", data={"user": "user1"})
 
     client.post(
-        "/admin/quizzes/new/step-1",
+        "/admin/quizzes/new",
         data={"title": "Validation Quiz", "description": ""},
     )
 
@@ -172,7 +176,7 @@ def test_admin_step2_and_save_validation_branches(tmp_path: Path, monkeypatch) -
         follow_redirects=False,
     )
     assert back.status_code == 303
-    assert back.headers["location"] == "/admin/quizzes/new/step-1"
+    assert back.headers["location"] == "/admin/quizzes"
 
     no_text = client.post(
         "/admin/quizzes/new/step-2",
@@ -301,7 +305,7 @@ def test_admin_detail_duplicate_and_error_paths(tmp_path: Path, monkeypatch) -> 
         follow_redirects=False,
     )
     assert duplicate.status_code == 303
-    assert duplicate.headers["location"] == "/admin/quizzes/new/step-1"
+    assert duplicate.headers["location"] == "/admin/quizzes"
 
     from quiz_engine.routers import admin as admin_router
 

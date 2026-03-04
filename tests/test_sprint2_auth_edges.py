@@ -86,9 +86,9 @@ def test_admin_new_page_and_invalid_submit(tmp_path: Path, monkeypatch) -> None:
 
     client.post("/login", data={"user": "user1"})
 
-    page = client.get("/admin/quizzes/new")
-    assert page.status_code == 200
-    assert "Create quiz" in page.text
+    page = client.get("/admin/quizzes/new", follow_redirects=False)
+    assert page.status_code == 303
+    assert page.headers["location"] == "/admin/quizzes"
 
     invalid = client.post(
         "/admin/quizzes/new",

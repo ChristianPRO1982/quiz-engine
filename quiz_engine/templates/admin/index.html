@@ -13,10 +13,12 @@
         <strong>My quizzes</strong>
         <span>Browse and open quiz details.</span>
       </a>
-      <a class="qe-admin-tile" href="/admin/quizzes/new/step-1">
-        <strong>Create a new quiz</strong>
-        <span>Start the guided authoring flow.</span>
-      </a>
+      <form method="post" action="/admin/quizzes" class="qe-admin-tile-form">
+        <button class="qe-admin-tile qe-admin-tile--button" type="submit">
+          <strong>Create a new quiz</strong>
+          <span>Open the same creation panel as New quiz.</span>
+        </button>
+      </form>
     </div>
     {% if can_scan_plugins %}
       <hr />

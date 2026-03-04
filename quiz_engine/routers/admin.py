@@ -148,20 +148,12 @@ async def quiz_delete(request: Request, quiz_id: int) -> Response:
 
 
 @router.get("/admin/quizzes/new", response_class=HTMLResponse)
-async def quizzes_new_entry(request: Request) -> HTMLResponse:
+async def quizzes_new_entry(request: Request) -> Response:
     auth_user, redirect = _require_html_user(request)
     if redirect is not None:
         return redirect
 
-    return _templates(request).TemplateResponse(
-        request,
-        "admin/quizzes_new_step1.html",
-        {
-            "current_user": auth_user,
-            "draft": draft_service.get_draft(request),
-            "error": None,
-        },
-    )
+    return RedirectResponse(url="/admin/quizzes", status_code=303)
 
 
 @router.post("/admin/quizzes/new", response_model=None)
@@ -241,20 +233,12 @@ async def quizzes_new_legacy_submit(request: Request) -> Response:
 
 
 @router.get("/admin/quizzes/new/step-1", response_class=HTMLResponse)
-async def quizzes_new_step1_page(request: Request) -> HTMLResponse:
+async def quizzes_new_step1_page(request: Request) -> Response:
     auth_user, redirect = _require_html_user(request)
     if redirect is not None:
         return redirect
 
-    return _templates(request).TemplateResponse(
-        request,
-        "admin/quizzes_new_step1.html",
-        {
-            "current_user": auth_user,
-            "draft": draft_service.get_draft(request),
-            "error": None,
-        },
-    )
+    return RedirectResponse(url="/admin/quizzes", status_code=303)
 
 
 @router.post("/admin/quizzes/new/step-1", response_model=None)
@@ -309,7 +293,7 @@ async def quizzes_new_step2_submit(request: Request) -> Response:
     action = str(form.get("action", "add")).strip()
 
     if action == "back":
-        return RedirectResponse(url="/admin/quizzes/new/step-1", status_code=303)
+        return RedirectResponse(url="/admin/quizzes", status_code=303)
 
     if action == "review":
         return RedirectResponse(url="/admin/quizzes/new/review", status_code=303)
@@ -467,7 +451,7 @@ async def quiz_duplicate(request: Request, quiz_id: int) -> Response:
         payload = {}
 
     draft_service.duplicate_from_payload(request, payload)
-    return RedirectResponse(url="/admin/quizzes/new/step-1", status_code=303)
+    return RedirectResponse(url="/admin/quizzes", status_code=303)
 
 
 def _scan_summary_from_query(request: Request) -> dict[str, int | str] | None:
