@@ -49,7 +49,11 @@ class PluginManifest:
     display_name: str
     schema_version: str
     description: str | None = None
+    plugin_type: str | None = None
     capabilities: dict[str, Any] | None = None
+    stage_config_schema: dict[str, Any] | None = None
+    default_stage_config: dict[str, Any] | None = None
+    editor_hints: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         _require_non_empty_str(self.plugin_id, "plugin_id")
@@ -60,8 +64,16 @@ class PluginManifest:
             raise ValueError("schema_version must be 'v0'.")
         if self.description is not None and not isinstance(self.description, str):
             raise ValueError("description must be a string or None.")
+        if self.plugin_type is not None:
+            _require_non_empty_str(self.plugin_type, "plugin_type")
         if self.capabilities is not None:
             _ensure_json_dict(self.capabilities, "capabilities")
+        if self.stage_config_schema is not None:
+            _ensure_json_dict(self.stage_config_schema, "stage_config_schema")
+        if self.default_stage_config is not None:
+            _ensure_json_dict(self.default_stage_config, "default_stage_config")
+        if self.editor_hints is not None:
+            _ensure_json_dict(self.editor_hints, "editor_hints")
 
     def to_transport_dict(self) -> dict[str, Any]:
         data = {
@@ -71,7 +83,11 @@ class PluginManifest:
             "schema_version": self.schema_version,
         }
         _optional_field(data, "description", self.description)
+        _optional_field(data, "plugin_type", self.plugin_type)
         _optional_field(data, "capabilities", self.capabilities)
+        _optional_field(data, "stage_config_schema", self.stage_config_schema)
+        _optional_field(data, "default_stage_config", self.default_stage_config)
+        _optional_field(data, "editor_hints", self.editor_hints)
         return data
 
     @classmethod
@@ -82,7 +98,11 @@ class PluginManifest:
             display_name=data["display_name"],
             schema_version=data["schema_version"],
             description=data.get("description"),
+            plugin_type=data.get("plugin_type"),
             capabilities=data.get("capabilities"),
+            stage_config_schema=data.get("stage_config_schema"),
+            default_stage_config=data.get("default_stage_config"),
+            editor_hints=data.get("editor_hints"),
         )
 
 

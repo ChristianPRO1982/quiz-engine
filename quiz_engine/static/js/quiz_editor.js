@@ -72,6 +72,20 @@
     return text || fallback;
   };
 
+  const isPlainObject = (value) =>
+    Boolean(value) && typeof value === "object" && !Array.isArray(value);
+
+  const cloneJsonObject = (value, fallback = {}) => {
+    if (!isPlainObject(value)) {
+      return { ...fallback };
+    }
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (error) {
+      return { ...fallback };
+    }
+  };
+
   const buildQuestionId = () => {
     if (window.crypto && typeof window.crypto.randomUUID === "function") {
       return window.crypto.randomUUID();
@@ -79,83 +93,90 @@
     return `question-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
   };
 
+  const typeOptions = typeOptionsInput
+    .filter((option) => option && typeof option === "object")
+    .map((option) => ({
+      type: readText(option.type),
+      label: readText(option.label || option.type),
+      description: readText(option.description) || null,
+      pluginType: readText(option.plugin_type) || null,
+      stageConfigSchema: isPlainObject(option.stage_config_schema)
+        ? cloneJsonObject(option.stage_config_schema)
+        : null,
+      defaultStageConfig: isPlainObject(option.default_stage_config)
+        ? cloneJsonObject(option.default_stage_config)
+        : {},
+      editorHints: isPlainObject(option.editor_hints)
+        ? cloneJsonObject(option.editor_hints)
+        : null,
+    }))
+    .filter((option) => option.type);
+  if (!typeOptions.some((option) => option.type === "slide")) {
+    typeOptions.unshift({
+      type: "slide",
+      label: "Slide",
+      description: null,
+      pluginType: "info",
+      stageConfigSchema: null,
+      defaultStageConfig: {},
+      editorHints: null,
+    });
+  }
+
+  const questionTypeOptionsByType = new Map(
+    typeOptions.map((option) => [option.type, option])
+  );
+  const defaultQuestionType = typeOptions.length ? typeOptions[0].type : "question";
+
+  const getQuestionTypeOption = (questionType) =>
+    questionTypeOptionsByType.get(questionType) || null;
+
+  const getDefaultTitlePrefix = (questionType) => {
+    const option = getQuestionTypeOption(questionType);
+    if (
+      option &&
+      option.editorHints &&
+      typeof option.editorHints.default_title_prefix === "string"
+    ) {
+      return readText(option.editorHints.default_title_prefix, option.label);
+    }
+    if (option && option.label) {
+      return option.label;
+    }
+    return "Question";
+  };
+
   const defaultQuestionSpec = (questionType) => {
-    if (questionType === "slide") {
-      return {
-        schema_version: "v0",
-        type: "slide",
-        content: {
-          title: "",
-          body: "",
-          body_format: "markdown",
-          media: {
-            type: "none",
-            src: null,
-          },
-        },
-      };
+    const option = getQuestionTypeOption(questionType);
+    if (option && isPlainObject(option.defaultStageConfig)) {
+      return cloneJsonObject(option.defaultStageConfig);
     }
     return {};
   };
 
-  const normalizeSlideSpec = (rawSpec, fallbackTitle) => {
-    const sourceSpec =
-      rawSpec && typeof rawSpec === "object" && !Array.isArray(rawSpec) ? rawSpec : {};
-    const sourceContent =
-      sourceSpec.content &&
-      typeof sourceSpec.content === "object" &&
-      !Array.isArray(sourceSpec.content)
-        ? sourceSpec.content
-        : {};
-    const sourceMedia =
-      sourceContent.media &&
-      typeof sourceContent.media === "object" &&
-      !Array.isArray(sourceContent.media)
-        ? sourceContent.media
-        : {};
-
-    const mediaSrc = readText(sourceMedia.src);
-    const media =
-      readText(sourceMedia.type, "none") === "image" && mediaSrc
-        ? { type: "image", src: mediaSrc }
-        : { type: "none", src: null };
-    const bodyFormat = readText(sourceContent.body_format, "markdown").toLowerCase();
-
-    return {
-      schema_version: "v0",
-      type: "slide",
-      content: {
-        title: readText(sourceContent.title, fallbackTitle),
-        body: String(sourceContent.body || ""),
-        body_format: bodyFormat === "text" ? "text" : "markdown",
-        media,
-      },
-    };
-  };
-
-  const ensureSlideSpec = (question) => {
-    question.spec = normalizeSlideSpec(question.spec, question.title);
-    return question.spec;
+  const normalizeQuestionSpec = (value, questionType) => {
+    if (isPlainObject(value)) {
+      return cloneJsonObject(value);
+    }
+    return defaultQuestionSpec(questionType);
   };
 
   const normalizeQuestion = (rawQuestion, index) => {
-    const source =
-      rawQuestion && typeof rawQuestion === "object" ? rawQuestion : {};
-    const questionType = readText(source.type || source.plugin_id, "slide");
+    const source = isPlainObject(rawQuestion) ? rawQuestion : {};
+    const questionType = readText(
+      source.type || source.plugin_id,
+      defaultQuestionType
+    );
     const questionId = readText(
       source.question_id || source.stage_id,
       `question-${index + 1}`
     );
 
-    let spec = {};
-    if (source.spec && typeof source.spec === "object" && !Array.isArray(source.spec)) {
-      spec = source.spec;
-    } else if (
-      source.plugin_spec &&
-      typeof source.plugin_spec === "object" &&
-      !Array.isArray(source.plugin_spec)
-    ) {
-      spec = source.plugin_spec;
+    let rawSpec = null;
+    if (isPlainObject(source.spec)) {
+      rawSpec = source.spec;
+    } else if (isPlainObject(source.plugin_spec)) {
+      rawSpec = source.plugin_spec;
     } else {
       const text = readText(source.text);
       const choices = Array.isArray(source.choices)
@@ -164,23 +185,13 @@
             .filter((choiceText) => choiceText)
         : [];
       if (text || choices.length) {
-        spec = { text, choices };
+        rawSpec = { text, choices };
       }
     }
+    const spec = normalizeQuestionSpec(rawSpec, questionType);
 
-    let title = readText(source.title || source.text);
-    if (!title && spec && typeof spec === "object") {
-      const content = spec.content;
-      if (content && typeof content === "object") {
-        title = readText(content.title);
-      }
-    }
-    if (!title) {
-      title = questionType === "slide" ? `Slide ${index + 1}` : `Question ${index + 1}`;
-    }
-    if (questionType === "slide") {
-      spec = normalizeSlideSpec(spec, title);
-    }
+    const fallbackTitle = `${getDefaultTitlePrefix(questionType)} ${index + 1}`;
+    const title = readText(source.title || source.text, fallbackTitle);
 
     return {
       question_id: questionId,
@@ -204,18 +215,6 @@
       return { ...question, question_id: nextId };
     });
   };
-
-  const typeOptions = typeOptionsInput
-    .filter((option) => option && typeof option === "object")
-    .map((option) => ({
-      type: readText(option.type),
-      label: readText(option.label || option.type),
-      description: readText(option.description) || null,
-    }))
-    .filter((option) => option.type);
-  if (!typeOptions.some((option) => option.type === "slide")) {
-    typeOptions.unshift({ type: "slide", label: "Slide", description: null });
-  }
 
   const state = {
     quizId: Number(quizPayload.quiz_id || quizPayload.id || 0),
@@ -248,19 +247,7 @@
       question_id: question.question_id,
       type: question.type,
       title: readText(question.title, "Untitled question"),
-      spec: (() => {
-        if (question.type === "slide") {
-          return normalizeSlideSpec(
-            question.spec,
-            readText(question.title, "Untitled question")
-          );
-        }
-        return question.spec &&
-          typeof question.spec === "object" &&
-          !Array.isArray(question.spec)
-          ? question.spec
-          : {};
-      })(),
+      spec: normalizeQuestionSpec(question.spec, question.type),
     })),
   });
 
@@ -508,10 +495,6 @@
     titleField.value = question.title;
     titleField.addEventListener("input", () => {
       question.title = readText(titleField.value, "Untitled question");
-      if (question.type === "slide") {
-        const slideSpec = ensureSlideSpec(question);
-        slideSpec.content.title = question.title;
-      }
       titleButton.textContent = `${index + 1}. ${question.title}`;
       setDirty(true);
     });
@@ -527,53 +510,55 @@
     });
 
     panel.appendChild(titleLabel);
-    if (question.type === "slide") {
-      const slideSpec = ensureSlideSpec(question);
-      slideSpec.content.title = question.title;
+    const questionTypeOption = getQuestionTypeOption(question.type);
+    if (questionTypeOption && questionTypeOption.description) {
+      const typeDescription = document.createElement("p");
+      typeDescription.className = "qe-muted-text";
+      typeDescription.textContent = questionTypeOption.description;
+      panel.appendChild(typeDescription);
+    }
 
-      const bodyLabel = document.createElement("label");
-      bodyLabel.className = "qe-question__field";
-      bodyLabel.textContent = "Slide body (Markdown)";
-      const bodyField = document.createElement("textarea");
-      bodyField.className = "qe-question__body-markdown";
-      bodyField.rows = 8;
-      bodyField.value = String(slideSpec.content.body || "");
-      bodyField.addEventListener("input", () => {
-        slideSpec.content.body = bodyField.value;
-        slideSpec.content.body_format = "markdown";
-        setDirty(true);
-      });
-      bodyLabel.appendChild(bodyField);
-
-      const helper = document.createElement("p");
-      helper.className = "qe-muted-text";
-      helper.textContent = "Markdown supported.";
-
-      panel.appendChild(bodyLabel);
-      panel.appendChild(helper);
-    } else {
-      const specLabel = document.createElement("label");
-      specLabel.className = "qe-question__field";
-      specLabel.textContent = "Question spec (JSON)";
-      const specField = document.createElement("textarea");
-      specField.rows = 6;
-      specField.value = JSON.stringify(question.spec || {}, null, 2);
-      specField.addEventListener("change", () => {
-        try {
-          const parsed = JSON.parse(specField.value || "{}");
-          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-            throw new Error("spec must be a JSON object");
-          }
-          question.spec = parsed;
-          setError("");
-          setDirty(true);
-        } catch (error) {
-          setError("Spec must be valid JSON object.");
-          specField.value = JSON.stringify(question.spec || {}, null, 2);
+    const specLabel = document.createElement("label");
+    specLabel.className = "qe-question__field";
+    specLabel.textContent = "Configuration (JSON)";
+    const specField = document.createElement("textarea");
+    specField.rows = 8;
+    specField.value = JSON.stringify(
+      normalizeQuestionSpec(question.spec, question.type),
+      null,
+      2
+    );
+    specField.addEventListener("change", () => {
+      try {
+        const parsed = JSON.parse(specField.value || "{}");
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          throw new Error("spec must be a JSON object");
         }
-      });
-      specLabel.appendChild(specField);
-      panel.appendChild(specLabel);
+        question.spec = parsed;
+        setError("");
+        setDirty(true);
+      } catch (error) {
+        setError("Configuration must be a valid JSON object.");
+        specField.value = JSON.stringify(
+          normalizeQuestionSpec(question.spec, question.type),
+          null,
+          2
+        );
+      }
+    });
+    specLabel.appendChild(specField);
+    panel.appendChild(specLabel);
+
+    if (
+      questionTypeOption &&
+      questionTypeOption.stageConfigSchema &&
+      typeof questionTypeOption.stageConfigSchema === "object"
+    ) {
+      const schemaHelper = document.createElement("p");
+      schemaHelper.className = "qe-muted-text";
+      schemaHelper.textContent =
+        "This plugin provides a configuration schema. Keep JSON aligned with it.";
+      panel.appendChild(schemaHelper);
     }
     panel.appendChild(deleteButton);
 
@@ -609,7 +594,7 @@
   };
 
   const addQuestion = (questionType) => {
-    const sourceType = readText(questionType, "slide");
+    const sourceType = readText(questionType, defaultQuestionType);
     const activeIndex = state.activeQuestionId
       ? getQuestionIndexById(state.activeQuestionId)
       : -1;
@@ -618,15 +603,11 @@
     const newQuestion = {
       question_id: buildQuestionId(),
       type: sourceType,
-      title:
-        sourceType === "slide"
-          ? `Slide ${state.draft.questions.length + 1}`
-          : `Question ${state.draft.questions.length + 1}`,
+      title: `${getDefaultTitlePrefix(sourceType)} ${
+        state.draft.questions.length + 1
+      }`,
       spec: defaultQuestionSpec(sourceType),
     };
-    if (sourceType === "slide") {
-      newQuestion.spec.content.title = newQuestion.title;
-    }
 
     state.draft.questions.splice(insertAt, 0, newQuestion);
     state.activeQuestionId = newQuestion.question_id;

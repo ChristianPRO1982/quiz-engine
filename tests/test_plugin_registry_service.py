@@ -100,6 +100,8 @@ def test_list_question_types_returns_slide_when_registry_missing() -> None:
     assert len(options) == 1
     assert options[0].type == "slide"
     assert options[0].label == "Slide"
+    assert options[0].plugin_type == "info"
+    assert options[0].default_stage_config == {}
 
 
 def test_list_question_types_adds_slide_and_sorts_when_missing() -> None:
@@ -149,6 +151,30 @@ def test_list_question_types_keeps_existing_slide_without_duplicate() -> None:
 
     slide_count = len([option for option in options if option.type == "slide"])
     assert slide_count == 1
+
+
+def test_list_question_types_exposes_plugin_authoring_metadata() -> None:
+    manifests = [
+        PluginManifest(
+            plugin_id="alpha",
+            plugin_version="1.0.0",
+            display_name="Alpha",
+            schema_version="v0",
+            plugin_type="quiz",
+            stage_config_schema={"type": "object"},
+            default_stage_config={"prompt": "Hello"},
+            editor_hints={"default_title_prefix": "Alpha"},
+        )
+    ]
+    request = _request_with_registry(_FakeRegistry(manifests))
+
+    options = PluginRegistryService().list_question_types(request)
+    alpha = next(option for option in options if option.type == "alpha")
+
+    assert alpha.plugin_type == "quiz"
+    assert alpha.stage_config_schema == {"type": "object"}
+    assert alpha.default_stage_config == {"prompt": "Hello"}
+    assert alpha.editor_hints == {"default_title_prefix": "Alpha"}
 
 
 def test_build_preview_view_model_uses_plugin_runtime_for_slide() -> None:

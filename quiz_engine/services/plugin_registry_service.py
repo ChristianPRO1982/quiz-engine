@@ -15,20 +15,59 @@ class PluginRegistryService:
     def list_question_types(self, request: Request) -> list[QuestionTypeOption]:
         registry = getattr(request.app.state, "plugin_registry", None)
         if registry is None:
-            return [QuestionTypeOption(type="slide", label="Slide")]
+            return [
+                QuestionTypeOption(
+                    type="slide",
+                    label="Slide",
+                    plugin_type="info",
+                    default_stage_config={},
+                )
+            ]
 
         options: list[QuestionTypeOption] = []
         for manifest in registry.list_manifests():
+            capabilities = (
+                manifest.capabilities
+                if isinstance(manifest.capabilities, dict)
+                else {}
+            )
+            plugin_type = getattr(manifest, "plugin_type", None) or capabilities.get(
+                "general_type"
+            )
+            stage_config_schema = getattr(manifest, "stage_config_schema", None)
+            default_stage_config = getattr(manifest, "default_stage_config", None)
+            editor_hints = getattr(manifest, "editor_hints", None)
             options.append(
                 QuestionTypeOption(
                     type=manifest.plugin_id,
                     label=manifest.display_name,
                     description=manifest.description,
+                    plugin_type=plugin_type if isinstance(plugin_type, str) else None,
+                    stage_config_schema=(
+                        stage_config_schema
+                        if isinstance(stage_config_schema, dict)
+                        else None
+                    ),
+                    default_stage_config=(
+                        default_stage_config
+                        if isinstance(default_stage_config, dict)
+                        else {}
+                    ),
+                    editor_hints=(
+                        editor_hints if isinstance(editor_hints, dict) else None
+                    ),
                 )
             )
 
         if not any(option.type == "slide" for option in options):
-            options.append(QuestionTypeOption(type="slide", label="Slide"))
+            options.append(
+                QuestionTypeOption(
+                    type="slide",
+                    label="Slide",
+                    plugin_type="info",
+                    default_stage_config={},
+                )
+            )
 
         options.sort(key=lambda option: (option.label.lower(), option.type.lower()))
         return options

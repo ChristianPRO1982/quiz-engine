@@ -96,6 +96,35 @@ class QuestionTypeOption(BaseModel):
     type: str = Field(min_length=1)
     label: str = Field(min_length=1)
     description: str | None = None
+    plugin_type: str | None = None
+    stage_config_schema: dict[str, Any] | None = None
+    default_stage_config: dict[str, Any] | None = None
+    editor_hints: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _normalize(self) -> QuestionTypeOption:
+        self.type = _clean_text(self.type)
+        self.label = _clean_text(self.label)
+        if not self.type:
+            raise ValueError("type is required")
+        if not self.label:
+            raise ValueError("label is required")
+
+        if self.description is not None:
+            self.description = _clean_text(self.description) or None
+        if self.plugin_type is not None:
+            self.plugin_type = _clean_text(self.plugin_type) or None
+        if self.stage_config_schema is not None and not isinstance(
+            self.stage_config_schema, dict
+        ):
+            raise ValueError("stage_config_schema must be an object")
+        if self.default_stage_config is not None and not isinstance(
+            self.default_stage_config, dict
+        ):
+            raise ValueError("default_stage_config must be an object")
+        if self.editor_hints is not None and not isinstance(self.editor_hints, dict):
+            raise ValueError("editor_hints must be an object")
+        return self
 
 
 def normalize_editor_payload(
