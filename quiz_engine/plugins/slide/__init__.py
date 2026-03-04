@@ -28,7 +28,7 @@ class SlidePlugin(IPlugin):
     def __init__(self) -> None:
         self._manifest = PluginManifest(
             plugin_id=SLIDE_PLUGIN_ID,
-            plugin_version="1.1.0",
+            plugin_version="1.2.0",
             display_name="Slide",
             schema_version="v0",
             description="Informational slide stage (title, markdown body, image).",
@@ -61,48 +61,24 @@ class SlidePlugin(IPlugin):
                     "content": {
                         "type": "object",
                         "required": ["title", "body"],
-                        "title": "Content",
+                        "title": "Slide",
                         "properties": {
                             "title": {
                                 "type": "string",
-                                "title": "Title",
-                                "description": "Main heading shown to players.",
+                                "title": "Titre",
                                 "default": "New slide",
                             },
                             "body": {
                                 "type": "string",
-                                "title": "Body",
-                                "description": "Main slide content.",
+                                "title": "Texte",
                                 "x-ui-widget": "markdown",
                                 "default": "Describe your content here.",
                             },
-                            "body_format": {
+                            "media_text": {
                                 "type": "string",
-                                "title": "Body format",
-                                "enum": ["text", "markdown"],
-                                "default": "markdown",
-                            },
-                            "media": {
-                                "type": "object",
                                 "title": "Media",
-                                "properties": {
-                                    "type": {
-                                        "type": "string",
-                                        "title": "Media type",
-                                        "enum": ["none", "image"],
-                                        "default": "none",
-                                    },
-                                    "src": {
-                                        "type": ["string", "null"],
-                                        "title": "Media URL",
-                                        "description": (
-                                            "Image URL. Leave empty when media "
-                                            "type is 'none'."
-                                        ),
-                                        "default": None,
-                                    },
-                                },
-                                "default": {"type": "none", "src": None},
+                                "description": "Not used yet by runtime.",
+                                "default": "",
                             },
                         },
                     },
@@ -115,7 +91,7 @@ class SlidePlugin(IPlugin):
                     "title": "New slide",
                     "body": "Describe your content here.",
                     "body_format": "markdown",
-                    "media": {"type": "none", "src": None},
+                    "media_text": "",
                 },
             },
             editor_hints={"default_title_prefix": "Slide"},

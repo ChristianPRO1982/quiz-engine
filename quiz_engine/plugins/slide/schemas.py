@@ -14,7 +14,14 @@ _ALLOWED_ROOT_KEYS = {
     "image_url",
     "content",
 }
-_ALLOWED_CONTENT_KEYS = {"title", "body", "body_format", "media", "image_url"}
+_ALLOWED_CONTENT_KEYS = {
+    "title",
+    "body",
+    "body_format",
+    "media",
+    "image_url",
+    "media_text",
+}
 _ALLOWED_MEDIA_KEYS = {"type", "src"}
 
 

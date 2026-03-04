@@ -57,6 +57,25 @@ def test_validate_slide_plugin_spec_accepts_explicit_body_format_markdown() -> N
     assert validated["content"]["body_format"] == "markdown"
 
 
+def test_slide_spec_accepts_media_text_hint_ignored_by_runtime() -> None:
+    spec = {
+        "schema_version": "v1",
+        "content": {
+            "title": "Slide",
+            "body": "Body",
+            "body_format": "markdown",
+            "media_text": "https://example.org/image.png",
+        },
+    }
+
+    validated = validate_slide_plugin_spec(spec)
+    payload = build_slide_frame_payload(spec)
+
+    assert validated["content"]["title"] == "Slide"
+    assert "media_text" not in validated["content"]
+    assert "media" not in payload
+
+
 def test_validate_slide_plugin_spec_rejects_unknown_body_format() -> None:
     spec = _valid_spec()
     spec["body_format"] = "html"
