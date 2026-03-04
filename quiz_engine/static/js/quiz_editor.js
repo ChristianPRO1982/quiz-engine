@@ -86,6 +86,31 @@
     }
   };
 
+  const copyTextToClipboard = async (text) => {
+    const payload = String(text || "");
+    if (
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText === "function"
+    ) {
+      await navigator.clipboard.writeText(payload);
+      return;
+    }
+
+    const fallback = document.createElement("textarea");
+    fallback.value = payload;
+    fallback.setAttribute("readonly", "readonly");
+    fallback.style.position = "fixed";
+    fallback.style.opacity = "0";
+    document.body.appendChild(fallback);
+    fallback.focus();
+    fallback.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(fallback);
+    if (!copied) {
+      throw new Error("copy failed");
+    }
+  };
+
   const buildQuestionId = () => {
     if (window.crypto && typeof window.crypto.randomUUID === "function") {
       return window.crypto.randomUUID();
@@ -901,7 +926,27 @@
     specLabel.textContent = "Configuration (JSON)";
     const specField = document.createElement("textarea");
     specField.rows = 8;
+    specField.spellcheck = false;
     specField.value = JSON.stringify(question.spec, null, 2);
+    const specCopyButton = document.createElement("button");
+    specCopyButton.type = "button";
+    specCopyButton.className = "qe-json-copy-btn";
+    specCopyButton.textContent = "Copy";
+    specCopyButton.addEventListener("click", async () => {
+      try {
+        await copyTextToClipboard(specField.value);
+        specCopyButton.textContent = "Copied";
+        window.setTimeout(() => {
+          specCopyButton.textContent = "Copy";
+        }, 1200);
+      } catch (error) {
+        setError("Unable to copy JSON.");
+      }
+    });
+    const specWrap = document.createElement("div");
+    specWrap.className = "qe-json-field-wrap";
+    specWrap.appendChild(specCopyButton);
+    specWrap.appendChild(specField);
     let shouldRerenderAfterJsonChange = false;
     const applySpecUpdate = (nextSpec, options = {}) => {
       question.spec = normalizeQuestionSpec(nextSpec, question.type);
@@ -913,6 +958,10 @@
       }
     };
     specField.addEventListener("change", () => {
+      if (specField.readOnly) {
+        specField.value = JSON.stringify(question.spec, null, 2);
+        return;
+      }
       try {
         const parsed = JSON.parse(specField.value || "{}");
         if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
@@ -924,7 +973,7 @@
         specField.value = JSON.stringify(question.spec, null, 2);
       }
     });
-    specLabel.appendChild(specField);
+    specLabel.appendChild(specWrap);
 
     const schemaObject =
       questionTypeOption &&
@@ -942,6 +991,8 @@
       if (schemaForm) {
         panel.appendChild(schemaForm);
         shouldRerenderAfterJsonChange = true;
+        specField.readOnly = true;
+        specField.classList.add("qe-json-readonly");
 
         const advanced = document.createElement("details");
         advanced.className = "qe-schema-json-details";

@@ -692,6 +692,39 @@ a:hover {
   padding: 0.65rem;
 }
 
+.qe-json-field-wrap {
+  position: relative;
+}
+
+.qe-json-field-wrap > textarea {
+  padding-top: 2rem;
+}
+
+.qe-json-readonly {
+  background: var(--qe-surface-2);
+}
+
+.qe-json-copy-btn {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  z-index: 1;
+  border: 1px solid var(--qe-border);
+  border-radius: var(--qe-radius-action);
+  background: var(--qe-surface);
+  color: var(--qe-muted);
+  font: inherit;
+  font-size: 0.76rem;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+  cursor: pointer;
+}
+
+.qe-json-copy-btn:hover {
+  border-color: var(--qe-primary);
+  color: var(--qe-fg);
+}
+
 .qe-question__body-markdown {
   min-height: 10rem;
 }

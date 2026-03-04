@@ -14,6 +14,8 @@ def test_editor_js_uses_plugin_driven_json_authoring_without_slide_hardcode() ->
     assert 'new Set(["schema_version", "type", "plugin"])' in source
     assert 'new Set(["mode", "points", "time_limit_s"])' in source
     assert "qe-schema-inline-grid" in source
+    assert "qe-json-copy-btn" in source
+    assert "specField.readOnly = true" in source
     assert "defaultStageConfig" in source
     assert "stageConfigSchema" in source
     assert 'question.type === "slide"' not in source
