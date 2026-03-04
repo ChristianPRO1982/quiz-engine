@@ -134,6 +134,19 @@ async def quizzes_create_and_edit(request: Request) -> Response:
     return RedirectResponse(url=f"/admin/quizzes/{quiz.id}", status_code=303)
 
 
+@router.post("/admin/quizzes/{quiz_id}/delete", response_model=None)
+async def quiz_delete(request: Request, quiz_id: int) -> Response:
+    auth_user, redirect = _require_html_user(request)
+    if redirect is not None:
+        return redirect
+
+    with get_session() as session:
+        db_user = ensure_user_record(session, auth_user)
+        quiz_service.delete_quiz(session, user_id=db_user.id, quiz_id=quiz_id)
+
+    return RedirectResponse(url="/admin/quizzes", status_code=303)
+
+
 @router.get("/admin/quizzes/new", response_class=HTMLResponse)
 async def quizzes_new_entry(request: Request) -> HTMLResponse:
     auth_user, redirect = _require_html_user(request)

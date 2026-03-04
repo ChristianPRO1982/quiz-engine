@@ -5,12 +5,15 @@ from __future__ import annotations
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 import quiz_engine.models  # noqa: F401
 from quiz_engine.app import create_app
 from quiz_engine.db.base import Base
 from quiz_engine.db.engine import get_engine
 from quiz_engine.db.session import _sessionmaker, get_session
+from quiz_engine.models.quiz import Quiz
+from quiz_engine.models.session import Session as SessionModel
 from quiz_engine.models.user import User
 
 
@@ -104,7 +107,60 @@ def test_quiz_create_list_detail_with_auth_gating(tmp_path: Path, monkeypatch) -
     admin_list = client.get("/admin/quizzes")
     assert admin_list.status_code == 200
     assert "Sample Quiz" in admin_list.text
+    assert f"/admin/quizzes/{quiz_id}/delete" in admin_list.text
+    assert "Delete this quiz permanently?" in admin_list.text
 
     admin_detail = client.get(f"/admin/quizzes/{quiz_id}")
     assert admin_detail.status_code == 200
     assert "Question text" in admin_detail.text
+    assert f"/admin/quizzes/{quiz_id}/delete" in admin_detail.text
+    assert "Delete this quiz permanently?" in admin_detail.text
+
+
+def test_quiz_delete_removes_quiz_and_sessions(tmp_path: Path, monkeypatch) -> None:
+    _setup_db(tmp_path, monkeypatch)
+    client = TestClient(create_app())
+    client.post("/login", data={"user": "user1"})
+
+    create = client.post(
+        "/api/quizzes",
+        json={
+            "schema_version": "v1",
+            "title": "To delete",
+            "description": "must disappear",
+            "questions": [
+                {
+                    "type": "qcm_single",
+                    "text": "Question text",
+                    "choices": ["A", "B", "C"],
+                }
+            ],
+        },
+    )
+    assert create.status_code == 201
+    quiz_id = create.json()["id"]
+
+    start_session = client.post(
+        f"/host/quizzes/{quiz_id}/start",
+        follow_redirects=False,
+    )
+    assert start_session.status_code == 303
+
+    deleted = client.delete(f"/api/quizzes/{quiz_id}")
+    assert deleted.status_code == 204
+
+    deleted_detail = client.get(f"/api/quizzes/{quiz_id}")
+    assert deleted_detail.status_code == 404
+
+    listing = client.get("/api/quizzes")
+    assert listing.status_code == 200
+    assert listing.json() == []
+
+    with get_session() as session:
+        assert session.get(Quiz, quiz_id) is None
+        linked_sessions = list(
+            session.execute(
+                select(SessionModel).where(SessionModel.quiz_id == quiz_id)
+            ).scalars()
+        )
+        assert linked_sessions == []

@@ -37,3 +37,12 @@ class QuizService:
                 status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found"
             )
         return quiz
+
+    def delete_quiz(self, session: Session, *, user_id: int, quiz_id: int) -> None:
+        deleted = self._repository.delete_by_id_for_user(
+            session, quiz_id=quiz_id, user_id=user_id
+        )
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Quiz not found"
+            )

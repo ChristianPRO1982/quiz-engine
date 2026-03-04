@@ -11,6 +11,7 @@ from quiz_engine.app import create_app
 from quiz_engine.db.base import Base
 from quiz_engine.db.engine import get_engine
 from quiz_engine.db.session import _sessionmaker, get_session
+from quiz_engine.models.quiz import Quiz
 from quiz_engine.models.user import User
 
 
@@ -161,3 +162,24 @@ def test_editor_template_contains_required_controls(
     assert "qe-editor-add-question" in page.text
     assert "qe-question-type-modal" in page.text
     assert "qe-editor-delete-modal" in page.text
+    assert f"{created.headers['location']}/delete" in page.text
+
+
+def test_admin_delete_route_removes_quiz_and_redirects(
+    tmp_path: Path, monkeypatch
+) -> None:
+    _setup_db(tmp_path, monkeypatch)
+    client = TestClient(create_app())
+    client.post("/login", data={"user": "user1"})
+
+    created = client.post("/admin/quizzes", follow_redirects=False)
+    quiz_path = created.headers["location"]
+    quiz_id = int(quiz_path.rsplit("/", 1)[-1])
+
+    deleted = client.post(f"/admin/quizzes/{quiz_id}/delete", follow_redirects=False)
+
+    assert deleted.status_code == 303
+    assert deleted.headers["location"] == "/admin/quizzes"
+
+    with get_session() as session:
+        assert session.get(Quiz, quiz_id) is None

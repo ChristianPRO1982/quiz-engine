@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from quiz_engine.models.quiz import Quiz
+from quiz_engine.models.session import Player
+from quiz_engine.models.session import Session as SessionModel
+from quiz_engine.models.stage_event import StageEvent
+from quiz_engine.models.stage_outcome import StageOutcomeRecord
 
 
 class QuizRepository:
@@ -61,3 +65,35 @@ class QuizRepository:
         session.commit()
         session.refresh(quiz)
         return quiz
+
+    def delete_by_id_for_user(
+        self,
+        session: Session,
+        *,
+        quiz_id: int,
+        user_id: int,
+    ) -> bool:
+        quiz = self.get_by_id_for_user(session, quiz_id=quiz_id, user_id=user_id)
+        if quiz is None:
+            return False
+
+        session_ids = list(
+            session.execute(
+                select(SessionModel.id).where(SessionModel.quiz_id == quiz_id)
+            ).scalars()
+        )
+        if session_ids:
+            session.execute(
+                delete(StageEvent).where(StageEvent.session_id.in_(session_ids))
+            )
+            session.execute(
+                delete(StageOutcomeRecord).where(
+                    StageOutcomeRecord.session_id.in_(session_ids)
+                )
+            )
+            session.execute(delete(Player).where(Player.session_id.in_(session_ids)))
+            session.execute(delete(SessionModel).where(SessionModel.id.in_(session_ids)))
+
+        session.delete(quiz)
+        session.commit()
+        return True

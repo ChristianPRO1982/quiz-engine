@@ -20,6 +20,13 @@
               <form method="post" action="/host/quizzes/{{ quiz.id }}/start">
                 <button class="qe-btn" type="submit">Start session</button>
               </form>
+              <form
+                method="post"
+                action="/admin/quizzes/{{ quiz.id }}/delete"
+                onsubmit="return confirm('Delete this quiz permanently? This will remove all related data.');"
+              >
+                <button class="qe-btn qe-btn--danger" type="submit">Delete</button>
+              </form>
             </div>
           </li>
         {% endfor %}

@@ -292,6 +292,15 @@ a:hover {
   border-color: var(--qe-primary);
 }
 
+.qe-btn--danger {
+  border-color: var(--qe-danger);
+  color: var(--qe-danger);
+}
+
+.qe-btn--danger:hover {
+  background: var(--qe-wrong-bg);
+}
+
 .qe-results {
   display: flex;
   flex-direction: column;

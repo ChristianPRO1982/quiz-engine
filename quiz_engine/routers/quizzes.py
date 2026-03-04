@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, status
+from fastapi.responses import Response
 
 from auth.deps import require_current_user
 from quiz_engine.db.session import get_session
@@ -95,3 +96,14 @@ async def quiz_update_api(
             payload=payload,
         )
     return detail
+
+
+@router.delete("/api/quizzes/{quiz_id}", response_model=None, status_code=204)
+async def quiz_delete_api(request: Request, quiz_id: int) -> Response:
+    auth_user = require_current_user(request)
+
+    with get_session() as session:
+        db_user = ensure_user_record(session, auth_user)
+        quiz_service.delete_quiz(session, user_id=db_user.id, quiz_id=quiz_id)
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
