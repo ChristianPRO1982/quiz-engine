@@ -125,9 +125,7 @@ def extract_correct_choice_ids(plugin_spec: dict[str, Any]) -> set[str]:
             if choice.get("weight", 0) > 0
         }
     return {
-        choice["id"]
-        for choice in plugin_spec["choices"]
-        if choice.get("is_correct")
+        choice["id"] for choice in plugin_spec["choices"] if choice.get("is_correct")
     }
 
 

@@ -70,12 +70,8 @@ def load_mcq_config(config_path: Path | None = None) -> MCQConfig:
 
     _validate_ratio(bots_vote_early_ratio, "mcq.bots.bots_vote_early_ratio")
     _validate_ratio(early_time_window_ratio, "mcq.bots.early_time_window_ratio")
-    _validate_ratio(
-        bots_good_answer_ratio_nice, "mcq.bots.bots_good_answer_ratio_nice"
-    )
-    _validate_ratio(
-        bots_good_answer_ratio_evil, "mcq.bots.bots_good_answer_ratio_evil"
-    )
+    _validate_ratio(bots_good_answer_ratio_nice, "mcq.bots.bots_good_answer_ratio_nice")
+    _validate_ratio(bots_good_answer_ratio_evil, "mcq.bots.bots_good_answer_ratio_evil")
 
     if min_bots < 0:
         raise ValueError("mcq.bots.min_bots must be >= 0.")

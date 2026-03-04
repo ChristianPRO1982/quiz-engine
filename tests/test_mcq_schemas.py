@@ -65,4 +65,3 @@ def test_validate_mcq_plugin_spec_rejects_out_of_range_points() -> None:
 
     with pytest.raises(ValueError):
         validate_mcq_plugin_spec(spec, config=config)
-
