@@ -500,6 +500,24 @@ a:hover {
   font: inherit;
 }
 
+.qe-question__field--toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--qe-space-2);
+}
+
+.qe-question__field--toggle input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  min-height: 15px;
+  margin: 0;
+  padding: 0;
+  border-radius: 0.2rem;
+  justify-self: auto;
+}
+
 .qe-interaction input,
 .qe-interaction textarea {
   border: 1px solid var(--qe-border);
@@ -617,6 +635,24 @@ a:hover {
 .qe-schema-form {
   display: grid;
   gap: var(--qe-space-3);
+}
+
+.qe-schema-inline-grid {
+  display: grid;
+  gap: var(--qe-space-2);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 700px) {
+  .qe-schema-inline-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 980px) {
+  .qe-schema-inline-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .qe-schema-group {

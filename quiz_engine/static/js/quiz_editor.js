@@ -274,15 +274,25 @@
     }
 
     const maxSchemaDepth = 6;
-    const unsupportedPaths = [];
 
     const hiddenRootKeys = new Set(["schema_version", "type", "plugin"]);
+    const inlineRootKeys = new Set(["mode", "points", "time_limit_s"]);
     const container = document.createElement("section");
     container.className = "qe-schema-form";
+    let rootInlineRow = null;
+
+    const getRootInlineRow = () => {
+      if (rootInlineRow) {
+        return rootInlineRow;
+      }
+      rootInlineRow = document.createElement("div");
+      rootInlineRow.className = "qe-schema-inline-grid";
+      container.appendChild(rootInlineRow);
+      return rootInlineRow;
+    };
 
     const renderObjectProperties = ({ schemaNode, path, target, depth }) => {
       if (depth > maxSchemaDepth) {
-        unsupportedPaths.push(path.join(".") || "(root)");
         return;
       }
       const properties = readSchemaProperties(schemaNode);
@@ -303,9 +313,7 @@
         }
         const childSchema = isPlainObject(rawChildSchema) ? rawChildSchema : null;
         const childPath = [...path, key];
-        const childPathText = childPath.join(".");
         if (!childSchema) {
-          unsupportedPaths.push(childPathText);
           return;
         }
 
@@ -318,6 +326,16 @@
         const isRequired = requiredSet.has(key);
 
         if (childType === "object") {
+          if (path.length === 0 && key === "content") {
+            renderObjectProperties({
+              schemaNode: childSchema,
+              path: childPath,
+              target,
+              depth: depth + 1,
+            });
+            return;
+          }
+
           const group = document.createElement("section");
           group.className = "qe-schema-group";
 
@@ -358,7 +376,6 @@
               )
             : [];
           if (!enumValues.length) {
-            unsupportedPaths.push(childPathText);
             return;
           }
 
@@ -477,6 +494,11 @@
           });
           field.appendChild(input);
         } else if (childType === "boolean") {
+          field.classList.add("qe-question__field--toggle");
+          field.textContent = "";
+          const labelText = document.createElement("span");
+          labelText.textContent = isRequired ? `${childLabel} *` : childLabel;
+
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.checked =
@@ -489,9 +511,9 @@
             );
             applySpecUpdate(nextSpec);
           });
+          field.appendChild(labelText);
           field.appendChild(checkbox);
         } else {
-          unsupportedPaths.push(childPathText);
           return;
         }
 
@@ -502,22 +524,15 @@
           field.appendChild(description);
         }
 
-        target.appendChild(field);
+        if (path.length === 0 && inlineRootKeys.has(key)) {
+          getRootInlineRow().appendChild(field);
+        } else {
+          target.appendChild(field);
+        }
       });
     };
 
     renderObjectProperties({ schemaNode: schema, path: [], target: container, depth: 0 });
-
-    if (unsupportedPaths.length > 0) {
-      const preview = unsupportedPaths.slice(0, 4).join(", ");
-      const suffix = unsupportedPaths.length > 4 ? ", ..." : "";
-      const note = document.createElement("p");
-      note.className = "qe-muted-text";
-      note.textContent =
-        `Some schema fields are not auto-rendered (${preview}${suffix}). ` +
-        "Use Advanced JSON for full control.";
-      container.appendChild(note);
-    }
 
     return container;
   };

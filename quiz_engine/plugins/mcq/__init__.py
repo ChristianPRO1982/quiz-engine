@@ -47,13 +47,9 @@ class MCQPlugin(IPlugin):
         self._config = config or load_mcq_config()
         self._manifest = PluginManifest(
             plugin_id=MCQ_PLUGIN_ID,
-            plugin_version="1.1.0",
+            plugin_version="1.2.0",
             display_name="MCQ",
             schema_version="v0",
-            description=(
-                "Multiple-choice quiz stage with oneclick, multianswer and "
-                "influence modes."
-            ),
             plugin_type="quiz",
             capabilities={
                 "general_type": "quiz",
@@ -87,40 +83,27 @@ class MCQPlugin(IPlugin):
                     },
                     "content": {
                         "type": "object",
-                        "required": ["title", "body"],
+                        "required": ["body"],
                         "title": "Content",
                         "properties": {
-                            "title": {
-                                "type": "string",
-                                "title": "Title",
-                                "default": "New MCQ question",
-                            },
                             "body": {
                                 "type": "string",
                                 "title": "Body",
-                                "description": "Question prompt shown to players.",
                                 "x-ui-widget": "markdown",
                                 "default": "Write your question here.",
                             },
-                            "body_format": {
-                                "type": "string",
-                                "title": "Body format",
-                                "enum": ["text", "markdown"],
-                                "default": "markdown",
-                            },
                         },
+                    },
+                    "examination": {
+                        "type": "boolean",
+                        "title": "Examination mode",
+                        "default": False,
                     },
                     "mode": {
                         "type": "string",
                         "title": "Mode",
                         "enum": list(self._config.enabled_modes),
                         "default": self._config.enabled_modes[0],
-                    },
-                    "time_limit_s": {
-                        "type": "integer",
-                        "title": "Time limit (seconds)",
-                        "enum": list(self._config.allowed_time_limits_s),
-                        "default": self._config.default_time_limit_s,
                     },
                     "points": {
                         "type": "integer",
@@ -129,10 +112,11 @@ class MCQPlugin(IPlugin):
                         "maximum": self._config.max_points,
                         "default": self._config.default_points,
                     },
-                    "examination": {
-                        "type": "boolean",
-                        "title": "Examination mode",
-                        "default": False,
+                    "time_limit_s": {
+                        "type": "integer",
+                        "title": "Time limit (seconds)",
+                        "enum": list(self._config.allowed_time_limits_s),
+                        "default": self._config.default_time_limit_s,
                     },
                     "choices": {
                         "type": "array",
@@ -154,9 +138,7 @@ class MCQPlugin(IPlugin):
                 "type": "quiz",
                 "plugin": "mcq",
                 "content": {
-                    "title": "New MCQ question",
                     "body": "Write your question here.",
-                    "body_format": "markdown",
                 },
                 "mode": "oneclick",
                 "time_limit_s": self._config.default_time_limit_s,
@@ -178,9 +160,15 @@ class MCQPlugin(IPlugin):
             raise ValueError(
                 f"MCQ plugin cannot create runtime for plugin_id={stage.plugin_id!r}."
             )
+        stage_title = None
+        if isinstance(stage.metadata, dict):
+            raw_title = stage.metadata.get("title")
+            if isinstance(raw_title, str):
+                stage_title = raw_title
         validated_spec = validate_mcq_plugin_spec(
             stage.plugin_spec,
             config=self._config,
+            stage_title=stage_title,
         )
         return MCQStageRuntime(
             session_id=session_id,

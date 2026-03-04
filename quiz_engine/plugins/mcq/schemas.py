@@ -27,6 +27,8 @@ _ALLOWED_CHOICE_KEYS = {"id", "label", "is_correct", "weight"}
 def validate_mcq_plugin_spec(
     plugin_spec: dict[str, Any],
     config: MCQConfig,
+    *,
+    stage_title: str | None = None,
 ) -> dict[str, Any]:
     if not isinstance(plugin_spec, dict):
         raise ValueError("mcq plugin_spec must be an object.")
@@ -60,7 +62,11 @@ def validate_mcq_plugin_spec(
     title_raw = source.get("title")
     if title_raw is None and source_is_content:
         title_raw = plugin_spec.get("title")
-    title = _require_text(title_raw, "mcq title")
+    title = _normalize_optional_text(title_raw, "mcq title")
+    if title is None:
+        title = _normalize_optional_text(stage_title, "mcq stage_title")
+    if title is None:
+        raise ValueError("mcq title is required.")
 
     prompt_raw = source.get("body") if source_is_content else source.get("prompt")
     if prompt_raw is None and source_is_content:
@@ -113,11 +119,14 @@ def build_mcq_frame_payload(
     plugin_spec: dict[str, Any],
     *,
     config: MCQConfig,
+    stage_title: str | None = None,
     player_count: int,
     phase: str = "ANSWERING",
     prestart_countdown_s: int | None = None,
 ) -> dict[str, Any]:
-    validated = validate_mcq_plugin_spec(plugin_spec, config=config)
+    validated = validate_mcq_plugin_spec(
+        plugin_spec, config=config, stage_title=stage_title
+    )
     return {
         "plugin": "mcq",
         "phase": phase,
@@ -266,6 +275,15 @@ def _require_text(value: Any, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field_name} must be a non-empty string.")
     return value.strip()
+
+
+def _normalize_optional_text(value: Any, field_name: str) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} must be a string when provided.")
+    text = value.strip()
+    return text or None
 
 
 def _require_int(value: Any, field_name: str) -> int:

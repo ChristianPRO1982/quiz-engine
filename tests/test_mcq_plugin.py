@@ -136,6 +136,22 @@ def test_mcq_plugin_creates_runtime_and_emits_view_model() -> None:
     assert frame.sent_at == now
 
 
+def test_mcq_runtime_uses_stage_metadata_title_when_spec_title_missing() -> None:
+    plugin = MCQPlugin()
+    spec = _oneclick_spec()
+    spec.pop("title")
+    spec["content"] = {"body": "Body only"}
+    stage = _mcq_stage(plugin_spec=spec)
+    stage.metadata = {"title": "Question title"}
+    runtime = plugin.create_runtime("session-1", stage)
+
+    now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    frames = runtime.on_stage_open(_context(stage, now=now, player_ids=["p1"]))
+
+    assert frames is not None
+    assert frames[0].payload["title"] == "Question title"
+
+
 def test_mcq_runtime_scores_oneclick_with_time_factor() -> None:
     plugin = MCQPlugin()
     stage = _mcq_stage(plugin_spec=_oneclick_spec())

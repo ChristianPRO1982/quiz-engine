@@ -55,6 +55,22 @@ def test_validate_mcq_plugin_spec_accepts_content_wrapper_markdown() -> None:
     assert validated["content"]["body_format"] == "markdown"
 
 
+def test_validate_mcq_plugin_spec_uses_stage_title_when_title_missing() -> None:
+    config = load_mcq_config()
+    spec = _base_oneclick_spec()
+    spec.pop("title")
+    spec["content"] = {
+        "body": "Prompt only",
+    }
+
+    validated = validate_mcq_plugin_spec(
+        spec, config=config, stage_title="Question title"
+    )
+
+    assert validated["title"] == "Question title"
+    assert validated["prompt"] == "Prompt only"
+
+
 def test_validate_mcq_plugin_spec_rejects_disabled_mode() -> None:
     config = load_mcq_config()
     spec = _base_oneclick_spec()
