@@ -67,3 +67,4 @@ def test_admin_landing_links_are_present(tmp_path: Path, monkeypatch) -> None:
     assert page.status_code == 200
     assert "My quizzes" in page.text
     assert "Create a new quiz" in page.text
+    assert 'method="post" action="/admin/quizzes"' in page.text
