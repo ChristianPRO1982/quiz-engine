@@ -105,6 +105,7 @@ class PluginRegistryService:
                 stage_kind=plugin_id,
                 engine_prompt={},
                 plugin_spec=plugin_spec,
+                metadata={"title": stage_title},
             )
             runtime = plugin.create_runtime("preview-session", stage)
             context = StageContext(

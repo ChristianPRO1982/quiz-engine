@@ -28,7 +28,7 @@ class SlidePlugin(IPlugin):
     def __init__(self) -> None:
         self._manifest = PluginManifest(
             plugin_id=SLIDE_PLUGIN_ID,
-            plugin_version="1.2.0",
+            plugin_version="1.3.0",
             display_name="Slide",
             schema_version="v0",
             description="Informational slide stage (title, markdown body, image).",
@@ -60,14 +60,9 @@ class SlidePlugin(IPlugin):
                     },
                     "content": {
                         "type": "object",
-                        "required": ["title", "body"],
+                        "required": ["body"],
                         "title": "Slide",
                         "properties": {
-                            "title": {
-                                "type": "string",
-                                "title": "Titre",
-                                "default": "New slide",
-                            },
                             "body": {
                                 "type": "string",
                                 "title": "Texte",
@@ -88,7 +83,6 @@ class SlidePlugin(IPlugin):
                 "schema_version": "v1",
                 "type": "slide",
                 "content": {
-                    "title": "New slide",
                     "body": "Describe your content here.",
                     "body_format": "markdown",
                     "media_text": "",
@@ -107,7 +101,14 @@ class SlidePlugin(IPlugin):
             )
 
         validated_spec = validate_slide_plugin_spec(stage.plugin_spec)
-        frame_payload = build_slide_frame_payload(validated_spec)
+        stage_title = None
+        if isinstance(stage.metadata, dict):
+            title_value = stage.metadata.get("title")
+            if isinstance(title_value, str):
+                stage_title = title_value
+        frame_payload = build_slide_frame_payload(
+            validated_spec, stage_title=stage_title
+        )
         return SlideStageRuntime(
             session_id=session_id,
             stage=stage,

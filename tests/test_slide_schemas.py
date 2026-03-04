@@ -28,6 +28,23 @@ def test_validate_slide_plugin_spec_accepts_minimal_payload() -> None:
     assert validated["schema_version"] == "v1"
 
 
+def test_validate_slide_plugin_spec_accepts_missing_title() -> None:
+    spec = {
+        "schema_version": "v1",
+        "content": {
+            "body": "Body only",
+            "body_format": "markdown",
+        },
+    }
+
+    validated = validate_slide_plugin_spec(spec)
+    payload = build_slide_frame_payload(spec, stage_title="Question title")
+
+    assert "title" not in validated["content"]
+    assert validated["content"]["body"] == "Body only"
+    assert payload["title"] == "Question title"
+
+
 def test_build_slide_frame_payload_keeps_media_when_present() -> None:
     spec = _valid_spec()
     spec["media"] = {"type": "image", "src": "https://img"}

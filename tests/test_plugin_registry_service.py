@@ -187,12 +187,12 @@ def test_build_preview_view_model_uses_plugin_runtime_for_slide() -> None:
         stage_index=0,
         stage_id="slide-1",
         plugin_id="slide",
-        stage_title="Welcome",
+        stage_title="Question title",
         plugin_spec={
             "schema_version": "v0",
             "type": "slide",
             "content": {
-                "title": "Welcome",
+                "title": "Legacy spec title",
                 "body": "Body",
                 "body_format": "markdown",
                 "media": {"type": "none", "src": None},
@@ -202,7 +202,7 @@ def test_build_preview_view_model_uses_plugin_runtime_for_slide() -> None:
 
     assert view_model["kind"] == "plugin_frame"
     assert view_model["is_placeholder"] is False
-    assert view_model["payload"]["title"] == "Welcome"
+    assert view_model["payload"]["title"] == "Question title"
     assert view_model["payload"]["body"] == "Body"
     assert view_model["payload"]["body_format"] == "markdown"
 

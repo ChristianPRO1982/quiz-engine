@@ -51,28 +51,35 @@ def validate_slide_plugin_spec(plugin_spec: dict[str, Any]) -> dict[str, Any]:
         )
         source = raw_content
 
-    title = _require_non_empty_text(source.get("title"), "slide title")
+    title = _normalize_optional_text(source.get("title"))
+    if title is None and source is not plugin_spec:
+        title = _normalize_optional_text(plugin_spec.get("title"))
     body = _require_non_empty_text(source.get("body"), "slide body")
     body_format = _normalize_body_format(source.get("body_format"))
     media = _normalize_media(source=source, root=plugin_spec)
 
-    content: dict[str, Any] = {
-        "title": title,
-        "body": body,
-        "body_format": body_format,
-    }
+    content: dict[str, Any] = {"body": body, "body_format": body_format}
+    if title is not None:
+        content["title"] = title
     if media is not None:
         content["media"] = media
 
     return {"schema_version": schema_version, "content": content}
 
 
-def build_slide_frame_payload(plugin_spec: dict[str, Any]) -> dict[str, Any]:
+def build_slide_frame_payload(
+    plugin_spec: dict[str, Any], *, stage_title: str | None = None
+) -> dict[str, Any]:
     """Build VIEW_MODEL payload from raw or normalized slide plugin_spec."""
     validated = validate_slide_plugin_spec(plugin_spec)
     content = validated["content"]
+    title = (
+        _normalize_optional_text(stage_title)
+        or _normalize_optional_text(content.get("title"))
+        or "Slide"
+    )
     payload: dict[str, Any] = {
-        "title": content["title"],
+        "title": title,
         "body": content["body"],
         "body_format": content["body_format"],
     }
@@ -113,6 +120,15 @@ def _require_non_empty_text(value: Any, field_name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{field_name} must be a non-empty string.")
     return value.strip()
+
+
+def _normalize_optional_text(value: Any) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("slide title must be a string when provided.")
+    text = value.strip()
+    return text or None
 
 
 def _normalize_body_format(value: Any) -> str:

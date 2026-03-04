@@ -74,7 +74,7 @@
         : null;
     const bodyFormat = readText(content.body_format, "text").toLowerCase();
     const payload = {
-      title: readText(content.title, title),
+      title: readText(title, readText(content.title, "Stage")),
       body: readText(content.body),
       body_format: bodyFormat === "markdown" ? "markdown" : "text",
     };

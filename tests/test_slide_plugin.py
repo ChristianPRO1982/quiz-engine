@@ -149,6 +149,29 @@ def test_slide_runtime_accepts_v1_content_wrapper_shape() -> None:
     assert frames[0].payload["title"] == "Wrapped"
 
 
+def test_slide_runtime_prefers_stage_metadata_title() -> None:
+    plugin = SlidePlugin()
+    stage = StageDefinition(
+        stage_id="stage-meta-title",
+        stage_index=0,
+        plugin_id="slide",
+        stage_kind="slide",
+        engine_prompt={},
+        plugin_spec={
+            "schema_version": "v1",
+            "content": {"title": "Spec title", "body": "Body"},
+        },
+        metadata={"title": "Question title"},
+    )
+    runtime = plugin.create_runtime("session-1", stage)
+    now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+
+    frames = runtime.on_stage_open(_context(stage, now))
+
+    assert frames is not None
+    assert frames[0].payload["title"] == "Question title"
+
+
 def test_slide_runtime_build_outcome_returns_no_score() -> None:
     plugin = SlidePlugin()
     stage = _slide_stage()
