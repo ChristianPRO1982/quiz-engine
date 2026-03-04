@@ -73,6 +73,8 @@ Plugins are responsible for:
 - Determinism
 - Stage resolution
 - Producing ScoreEntry
+- Defining stage authoring contract metadata
+  (`stage_config_schema`, `default_stage_config`)
 
 Plugins must:
 
@@ -154,6 +156,8 @@ The following must never occur:
 - Float-based scoring anywhere
 - Duplicate runtime schemas
 - Alternative WebSocket envelopes
+- Plugin-specific hardcoded authoring behavior inside engine/editor
+  (for example `if question.type == "slide"`)
 
 All runtime communication must follow:
 

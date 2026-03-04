@@ -24,6 +24,7 @@ The manifest describes:
 - General plugin type
 - Capabilities
 - Stage configuration schema
+- Default stage configuration for authoring
 
 The manifest does not contain runtime logic.
 
@@ -46,13 +47,36 @@ The manifest does not contain runtime logic.
     "uses_seed": "boolean",
     "supports_intermediate_updates": "boolean"
   },
-  "stage_config_schema": "object"
+  "stage_config_schema": "object",
+  "default_stage_config": "object",
+  "editor_hints": "object | null"
 }
 ```
 
 ---
 
-# 3. plugin_type Semantics
+# 3. Authoring Semantics (Plugin-Smart)
+
+`stage_config_schema` and `default_stage_config` define
+how authoring creates and edits a stage.
+
+Rules:
+
+- Engine authoring flow MUST initialize a new stage config
+  from `default_stage_config`.
+- `default_stage_config` MUST be structurally valid
+  against `stage_config_schema`.
+- Engine and editor MUST treat stage config as plugin-owned data.
+- Engine and editor MUST NOT hardcode plugin behavior branches
+  (for example `if question.type == "slide"`).
+- `editor_hints` is optional metadata for UX rendering only.
+  It must not alter runtime semantics.
+
+The persisted stage config remains an opaque plugin payload.
+
+---
+
+# 4. plugin_type Semantics
 
 `plugin_type` is required and must be one of:
 
@@ -71,7 +95,7 @@ It does not define scoring behavior by itself.
 
 ---
 
-# 4. Compatibility
+# 5. Compatibility
 
 Engine may load legacy manifests (`v0`/`v1`) for backward compatibility.
 
@@ -81,9 +105,15 @@ When scanning plugins for catalog synchronization:
 - Unknown or missing type must be treated as invalid plugin metadata
   for catalog publication
 
+For legacy manifests missing `default_stage_config`:
+
+- authoring may use an empty object `{}` as fallback
+- editor should expose generic JSON editing
+- plugin-specific hardcoded behavior in engine/editor remains forbidden
+
 ---
 
-# 5. Stability Rules
+# 6. Stability Rules
 
 Once published:
 
@@ -93,11 +123,10 @@ Once published:
 
 ---
 
-# 6. Non-Goals
+# 7. Non-Goals
 
 Manifest is NOT:
 
 - A runtime definition
 - A scoring definition
 - A UI layout definition
-

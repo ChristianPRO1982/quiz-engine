@@ -134,6 +134,8 @@ Plugins must:
 - Use integer-only scoring
 - Use provided seed
 - Declare catalog plugin type (`info`, `quiz`, `scoreboard`, `form`)
+- Declare authoring config contract via manifest
+  (`stage_config_schema`, `default_stage_config`)
 
 Plugins must not:
 
@@ -165,6 +167,8 @@ Codex must never:
 - Redesign StageOutcome
 - Introduce alternative WS envelopes
 - Mix plugin logic into engine
+- Hardcode plugin-specific authoring logic in engine/editor
+  (for example `if question.type == "slide"`)
 
 ---
 
