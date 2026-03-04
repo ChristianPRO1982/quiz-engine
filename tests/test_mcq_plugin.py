@@ -2,15 +2,28 @@
 
 from __future__ import annotations
 
+import random
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from quiz_engine.contracts.runtime_models import (
+    PlayerEvent,
     PlayerIdentity,
     StageContext,
     StageDefinition,
     StageTrace,
 )
-from quiz_engine.plugins.mcq import MCQPlugin, MCQStageRuntime
+from quiz_engine.plugins.mcq import (
+    MCQPlugin,
+    MCQStageRuntime,
+    _derive_runtime_seed,
+    _draw_bot_choice,
+    _extract_prestart_countdown_s,
+    _extract_single_choice_id,
+    _resolve_multianswer_selection,
+)
+from quiz_engine.plugins.mcq.config import MCQConfig
 from quiz_engine.runtime.stage_runner import StageRunner
 
 
@@ -336,3 +349,270 @@ def test_mcq_runtime_host_end_marks_runtime_finished() -> None:
     assert runtime.is_finished(trace) is False
     runtime.on_host_action({"type": "MCQ_HOST_END"}, trace)
     assert runtime.is_finished(trace) is True
+
+
+def test_mcq_create_runtime_rejects_wrong_plugin_id() -> None:
+    plugin = MCQPlugin()
+    bad_stage = StageDefinition(
+        stage_id="stage-1",
+        stage_index=0,
+        plugin_id="slide",
+        stage_kind="slide",
+        engine_prompt={},
+        plugin_spec={"schema_version": "v1", "plugin": "mcq", "mode": "oneclick"},
+    )
+    with pytest.raises(ValueError, match="cannot create runtime"):
+        plugin.create_runtime("session-1", bad_stage)
+
+
+def test_mcq_runtime_ignores_unknown_player_event_types() -> None:
+    plugin = MCQPlugin()
+    stage = _mcq_stage(plugin_spec=_oneclick_spec())
+    runtime = plugin.create_runtime("session-1", stage)
+    trace = StageTrace(
+        session_id="session-1",
+        stage_id=stage.stage_id,
+        stage_index=stage.stage_index,
+        started_at=datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    event = PlayerEvent(
+        event_id="e-ignored",
+        session_id="session-1",
+        stage_id=stage.stage_id,
+        stage_index=stage.stage_index,
+        player_id="p1",
+        type="IGNORED",
+        server_received_at=datetime(2024, 1, 1, 12, 0, 1, tzinfo=UTC),
+        payload={},
+    )
+    assert runtime.on_player_event(event, trace) is None
+
+
+def test_mcq_runtime_internal_state_machine_branches() -> None:
+    plugin = MCQPlugin()
+    stage = _mcq_stage(plugin_spec=_oneclick_spec())
+    runtime = plugin.create_runtime("session-1", stage)
+
+    started = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    events = [
+        PlayerEvent(
+            event_id="e0",
+            session_id="session-1",
+            stage_id=stage.stage_id,
+            stage_index=stage.stage_index,
+            player_id="p1",
+            type="OTHER",
+            server_received_at=started,
+            payload={},
+        ),
+        PlayerEvent(
+            event_id="e1",
+            session_id="session-1",
+            stage_id=stage.stage_id,
+            stage_index=stage.stage_index,
+            player_id="p1",
+            type="MCQ_PLAYER_SUBMIT",
+            server_received_at=started,
+            payload={},
+        ),
+        PlayerEvent(
+            event_id="e2",
+            session_id="session-1",
+            stage_id=stage.stage_id,
+            stage_index=stage.stage_index,
+            player_id="p1",
+            type="MCQ_PLAYER_SELECT",
+            server_received_at=started,
+            payload={"choice_id": "unknown"},
+        ),
+        PlayerEvent(
+            event_id="e3",
+            session_id="session-1",
+            stage_id=stage.stage_id,
+            stage_index=stage.stage_index,
+            player_id="p1",
+            type="MCQ_PLAYER_SELECT",
+            server_received_at=started,
+            payload={"choice_id": "b"},
+        ),
+        PlayerEvent(
+            event_id="e4",
+            session_id="session-1",
+            stage_id=stage.stage_id,
+            stage_index=stage.stage_index,
+            player_id="p1",
+            type="MCQ_PLAYER_SELECT",
+            server_received_at=started,
+            payload={"choice_id": "a"},
+        ),
+    ]
+    trace = StageTrace(
+        session_id="session-1",
+        stage_id=stage.stage_id,
+        stage_index=stage.stage_index,
+        started_at=started,
+        events=events,
+    )
+
+    states = runtime._compute_player_states(trace)  # noqa: SLF001
+    assert states["p1"].submitted_choice_ids == {"b"}
+
+
+def test_mcq_compute_final_score_edge_paths() -> None:
+    runtime = MCQStageRuntime(
+        session_id="session-1",
+        stage=_mcq_stage(plugin_spec=_oneclick_spec()),
+        plugin_spec=_oneclick_spec(),
+        config=MCQPlugin()._config,  # noqa: SLF001
+    )
+    started_at = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+
+    assert (
+        runtime._compute_final_score(  # noqa: SLF001
+            points=10,
+            mode_value=1,
+            submitted_at=started_at,
+            started_at=started_at,
+            time_limit_s=0,
+        )
+        == 10
+    )
+    assert (
+        runtime._compute_final_score(  # noqa: SLF001
+            points=10,
+            mode_value=1,
+            submitted_at=None,
+            started_at=started_at,
+            time_limit_s=30,
+        )
+        == 0
+    )
+
+
+def test_mcq_helper_functions_cover_remaining_branches() -> None:
+    assert _extract_prestart_countdown_s(None) is None
+    assert _extract_prestart_countdown_s({"prestart_countdown_s": "x"}) is None
+    assert _extract_prestart_countdown_s({"prestart_countdown_s": -1}) is None
+    assert _extract_prestart_countdown_s({"prestart_countdown_s": 3}) == 3
+
+    assert _extract_single_choice_id({}, choice_ids={"a"}) is None
+    assert _extract_single_choice_id({"choice_id": "x"}, choice_ids={"a"}) is None
+    assert _extract_single_choice_id({"choice_id": " a "}, choice_ids={"a"}) == "a"
+
+    current = {"a"}
+    assert (
+        _resolve_multianswer_selection(
+            payload={"choice_id": 1},
+            current_selection=current,
+            valid_choice_ids={"a", "b"},
+        )
+        is None
+    )
+    assert (
+        _resolve_multianswer_selection(
+            payload={"choice_id": "x"},
+            current_selection=current,
+            valid_choice_ids={"a", "b"},
+        )
+        is None
+    )
+    assert _resolve_multianswer_selection(
+        payload={"choice_id": "b", "selected": True},
+        current_selection=current,
+        valid_choice_ids={"a", "b"},
+    ) == {"a", "b"}
+    assert _resolve_multianswer_selection(
+        payload={"choice_id": "a", "selected": False},
+        current_selection={"a", "b"},
+        valid_choice_ids={"a", "b"},
+    ) == {"b"}
+    assert (
+        _resolve_multianswer_selection(
+            payload={"choice_id": "a"},
+            current_selection={"a"},
+            valid_choice_ids={"a", "b"},
+        )
+        == set()
+    )
+    assert _resolve_multianswer_selection(
+        payload={"choice_ids": ["a", " ", "z", "b"]},
+        current_selection=set(),
+        valid_choice_ids={"a", "b"},
+    ) == {"a", "b"}
+
+
+def test_mcq_seed_and_bot_draw_helpers() -> None:
+    stage = _mcq_stage(plugin_spec=_oneclick_spec())
+    stage.random_seed = None
+    derived = _derive_runtime_seed(stage, "session-1")
+    assert isinstance(derived, int)
+    assert derived > 0
+
+    rng = random.Random(0)
+    config = MCQConfig(
+        default_time_limit_s=30,
+        allowed_time_limits_s=(0, 30),
+        default_points=1000,
+        min_points=10,
+        max_points=10000,
+        default_player_choice_view="compact",
+        allow_player_toggle_choice_view=True,
+        enabled_modes=(
+            "oneclick",
+            "influence_bots",
+            "influence_bots_nice",
+            "influence_bots_evil",
+        ),
+        min_bots=0,
+        bots_vote_early_ratio=0.8,
+        early_time_window_ratio=0.2,
+        bots_good_answer_ratio_nice=1.0,
+        bots_good_answer_ratio_evil=0.0,
+    )
+    assert _draw_bot_choice(
+        rng=rng,
+        mode="influence_bots",
+        choice_ids=["a", "b"],
+        correct_ids=["b"],
+        incorrect_ids=["a"],
+        config=config,
+    ) in {"a", "b"}
+    assert (
+        _draw_bot_choice(
+            rng=rng,
+            mode="influence_bots_evil",
+            choice_ids=["only"],
+            correct_ids=[],
+            incorrect_ids=[],
+            config=config,
+        )
+        == "only"
+    )
+
+
+def test_mcq_simulate_bot_votes_returns_zero_when_no_players_and_no_min_bots() -> None:
+    config = MCQConfig(
+        default_time_limit_s=30,
+        allowed_time_limits_s=(30,),
+        default_points=1000,
+        min_points=10,
+        max_points=10000,
+        default_player_choice_view="compact",
+        allow_player_toggle_choice_view=True,
+        enabled_modes=("influence_bots",),
+        min_bots=0,
+        bots_vote_early_ratio=0.8,
+        early_time_window_ratio=0.2,
+        bots_good_answer_ratio_nice=0.8,
+        bots_good_answer_ratio_evil=0.2,
+    )
+    spec = _oneclick_spec()
+    spec["mode"] = "influence_bots"
+    runtime = MCQStageRuntime(
+        session_id="session-1",
+        stage=_mcq_stage(plugin_spec=spec),
+        plugin_spec=spec,
+        config=config,
+    )
+    result = runtime._simulate_bot_votes(player_count=0)  # noqa: SLF001
+    assert result == {"bot_count": 0, "distribution": {"a": 0, "b": 0}}

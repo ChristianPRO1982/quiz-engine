@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from importlib import import_module
+from types import SimpleNamespace
 
 import pytest
 
@@ -15,7 +16,13 @@ from quiz_engine.contracts.runtime_models import (
     StageTrace,
 )
 from quiz_engine.plugins.interfaces import IPlugin, IStageRuntime
-from quiz_engine.plugins.registry import PluginRegistry, build_default_registry
+from quiz_engine.plugins.registry import (
+    PluginRegistry,
+    _iter_plugin_module_names,
+    _load_plugin_from_module_name,
+    build_default_registry,
+    discover_available_plugins,
+)
 
 
 class DummyStageRuntime(IStageRuntime):
@@ -131,3 +138,107 @@ def test_default_registry_falls_back_to_sandbox_slide_when_import_fails(
     assert plugin.get_manifest().plugin_id == "slide"
     assert plugin.get_manifest().capabilities is not None
     assert plugin.get_manifest().capabilities.get("sandbox_mode") is True
+
+
+def test_discover_available_plugins_reports_duplicate_plugin_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class _DuplicatePlugin(DummyPlugin):
+        pass
+
+    monkeypatch.setattr(
+        registry_module,
+        "_iter_plugin_module_names",
+        lambda: ["mod_a", "mod_b"],
+    )
+    monkeypatch.setattr(
+        registry_module,
+        "_load_plugin_from_module_name",
+        lambda _module, _errors: _DuplicatePlugin(),
+    )
+
+    result = discover_available_plugins()
+    assert len(result.plugins) == 1
+    assert len(result.errors) == 1
+    assert "Duplicate plugin_id discovered" in result.errors[0]
+
+
+def test_iter_plugin_module_names_skips_private_and_internal(monkeypatch) -> None:
+    monkeypatch.setattr(
+        registry_module,
+        "iter_modules",
+        lambda _path: [
+            SimpleNamespace(name="_private"),
+            SimpleNamespace(name="registry"),
+            SimpleNamespace(name="slide"),
+            SimpleNamespace(name="mcq"),
+        ],
+    )
+    names = _iter_plugin_module_names()
+    assert names == ["mcq", "slide"]
+
+
+def test_load_plugin_from_module_name_handles_missing_plugin_class(monkeypatch) -> None:
+    errors: list[str] = []
+    module = SimpleNamespace(__name__="quiz_engine.plugins.empty")
+    monkeypatch.setattr(registry_module, "import_module", lambda _path: module)
+
+    loaded = _load_plugin_from_module_name("empty", errors)
+    assert loaded is None
+    assert errors == []
+
+
+def test_load_plugin_from_module_name_handles_instantiation_error(monkeypatch) -> None:
+    def _init(self) -> None:  # noqa: ANN001
+        raise RuntimeError("boom")
+
+    def _manifest(self) -> PluginManifest:  # noqa: ANN001
+        return PluginManifest(
+            plugin_id="broken",
+            plugin_version="1.0.0",
+            display_name="Broken",
+            schema_version="v0",
+        )
+
+    def _runtime(self, session_id: str, stage: StageDefinition) -> IStageRuntime:  # noqa: ANN001
+        raise NotImplementedError
+
+    broken_plugin = type(
+        "BrokenPlugin",
+        (IPlugin,),
+        {
+            "__init__": _init,
+            "get_manifest": _manifest,
+            "create_runtime": _runtime,
+        },
+    )
+    broken_plugin.__module__ = "quiz_engine.plugins.broken"
+
+    module = SimpleNamespace(
+        __name__="quiz_engine.plugins.broken",
+        BrokenPlugin=broken_plugin,
+    )
+    monkeypatch.setattr(registry_module, "import_module", lambda _path: module)
+
+    errors: list[str] = []
+    loaded = _load_plugin_from_module_name("broken", errors)
+    assert loaded is None
+    assert len(errors) == 1
+    assert "Failed to instantiate quiz_engine.plugins.broken.BrokenPlugin" in errors[0]
+
+
+def test_dummy_runtime_methods_are_exercised_for_coverage() -> None:
+    runtime = DummyStageRuntime("session-1", _stage_definition())
+    assert runtime.on_stage_open(None) is None
+    assert runtime.on_player_event(None, None) is None
+    assert runtime.on_host_action(None, None) is None
+    assert runtime.is_finished(None) is True
+    outcome = runtime.build_outcome(
+        StageTrace(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            started_at=datetime.now(UTC),
+        )
+    )
+    assert outcome.plugin_id == "dummy.plugin"

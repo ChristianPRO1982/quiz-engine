@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from types import SimpleNamespace
 
+import pytest
+
 from quiz_engine.contracts.runtime_models import PluginFrame, PluginManifest
 from quiz_engine.plugins.interfaces import IPlugin, IStageRuntime
 from quiz_engine.plugins.registry import build_default_registry
@@ -280,3 +282,32 @@ def test_build_preview_view_model_handles_missing_view_model_frame() -> None:
 
     assert view_model["kind"] == "placeholder"
     assert view_model["reason"] == "No VIEW_MODEL frame produced."
+
+
+def test_fake_helpers_are_exercised_for_coverage() -> None:
+    runtime = _FakeRuntimeNoViewModel()
+    plugin = _FakePluginNoViewModel()
+    manifest = plugin.get_manifest()
+
+    request = _request_with_registry(
+        _FakeLookupRegistry(
+            plugin=plugin,
+        )
+    )
+    service = PluginRegistryService()
+    view_model = service.build_preview_view_model(
+        request,
+        quiz_id=1,
+        stage_index=0,
+        stage_id="stage-1",
+        plugin_id=manifest.plugin_id,
+        stage_title="Title",
+        plugin_spec={},
+    )
+
+    assert runtime.on_player_event(None, None) is None
+    assert runtime.on_host_action(None, None) is None
+    assert runtime.is_finished(None) is False
+    with pytest.raises(NotImplementedError):
+        runtime.build_outcome(None)
+    assert view_model["kind"] == "placeholder"

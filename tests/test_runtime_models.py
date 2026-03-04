@@ -277,3 +277,164 @@ def test_transport_roundtrip(builder) -> None:
     data = model.to_transport_dict()
     restored = model.__class__.from_transport_dict(data)
     assert restored == model
+
+
+def test_plugin_manifest_rejects_invalid_optional_fields() -> None:
+    with pytest.raises(ValueError, match="must be a non-empty string"):
+        PluginManifest(
+            plugin_id="",
+            plugin_version="1.0.0",
+            display_name="Quiz",
+            schema_version="v0",
+        )
+    with pytest.raises(ValueError, match="schema_version must be 'v0'"):
+        PluginManifest(
+            plugin_id="p",
+            plugin_version="1.0.0",
+            display_name="Quiz",
+            schema_version="v1",
+        )
+    with pytest.raises(ValueError, match="description must be a string"):
+        PluginManifest(
+            plugin_id="p",
+            plugin_version="1.0.0",
+            display_name="Quiz",
+            schema_version="v0",
+            description=123,  # type: ignore[arg-type]
+        )
+
+
+def test_stage_context_rejects_invalid_stage_and_players() -> None:
+    with pytest.raises(ValueError, match="stage must be a StageDefinition"):
+        StageContext(
+            session_id="session-1",
+            quiz_id="quiz-1",
+            stage="bad",  # type: ignore[arg-type]
+            server_now=_utc_now(),
+            players=[],
+        )
+
+    with pytest.raises(ValueError, match="players must be a list"):
+        StageContext(
+            session_id="session-1",
+            quiz_id="quiz-1",
+            stage=_stage_definition(),
+            server_now=_utc_now(),
+            players="bad",  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(ValueError, match="players must contain PlayerIdentity"):
+        StageContext(
+            session_id="session-1",
+            quiz_id="quiz-1",
+            stage=_stage_definition(),
+            server_now=_utc_now(),
+            players=[object()],  # type: ignore[list-item]
+        )
+
+
+def test_stage_trace_rejects_invalid_events_and_engine_events() -> None:
+    with pytest.raises(ValueError, match="events must be a list"):
+        StageTrace(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            started_at=_utc_now(),
+            events="bad",  # type: ignore[arg-type]
+        )
+
+    with pytest.raises(ValueError, match="events must contain PlayerEvent"):
+        StageTrace(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            started_at=_utc_now(),
+            events=[object()],  # type: ignore[list-item]
+        )
+
+    with pytest.raises(ValueError, match="event stage_index mismatch"):
+        event = _player_event()
+        event.stage_index = 1
+        StageTrace(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            started_at=_utc_now(),
+            events=[event],
+        )
+
+    with pytest.raises(ValueError, match="engine_events must be a list"):
+        StageTrace(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            started_at=_utc_now(),
+            engine_events={"bad": True},  # type: ignore[arg-type]
+        )
+    with pytest.raises(ValueError, match="engine_events entry must be a dict"):
+        StageTrace(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            started_at=_utc_now(),
+            engine_events=[1],  # type: ignore[list-item]
+        )
+
+
+def test_score_delta_and_grade_delta_reject_invalid_types() -> None:
+    with pytest.raises(ValueError, match="delta_score must be a number"):
+        ScoreDelta(player_id="p1", delta_score=True)
+    with pytest.raises(ValueError, match="reason must be a string"):
+        ScoreDelta(player_id="p1", delta_score=1.0, reason=1)  # type: ignore[arg-type]
+
+    with pytest.raises(ValueError, match="value must be a number"):
+        GradeDelta(player_id="p1", value=True)
+    with pytest.raises(ValueError, match="max_value must be a number"):
+        GradeDelta(player_id="p1", value=1.0, max_value="x")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="scale must be a string"):
+        GradeDelta(player_id="p1", value=1.0, scale=1)  # type: ignore[arg-type]
+
+
+def test_stage_outcome_rejects_invalid_delta_collections() -> None:
+    with pytest.raises(ValueError, match="score_deltas must be a list"):
+        StageOutcome(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            plugin_id="plugin.quiz",
+            completed_at=_utc_now(),
+            score_deltas="bad",  # type: ignore[arg-type]
+        )
+    with pytest.raises(
+        ValueError,
+        match="score_deltas must contain ScoreDelta objects",
+    ):
+        StageOutcome(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            plugin_id="plugin.quiz",
+            completed_at=_utc_now(),
+            score_deltas=[object()],  # type: ignore[list-item]
+        )
+    with pytest.raises(ValueError, match="grade_deltas must be a list"):
+        StageOutcome(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            plugin_id="plugin.quiz",
+            completed_at=_utc_now(),
+            grade_deltas="bad",  # type: ignore[arg-type]
+        )
+    with pytest.raises(
+        ValueError,
+        match="grade_deltas must contain GradeDelta objects",
+    ):
+        StageOutcome(
+            session_id="session-1",
+            stage_id="stage-1",
+            stage_index=0,
+            plugin_id="plugin.quiz",
+            completed_at=_utc_now(),
+            grade_deltas=[object()],  # type: ignore[list-item]
+        )

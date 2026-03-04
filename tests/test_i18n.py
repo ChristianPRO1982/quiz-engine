@@ -61,6 +61,7 @@ def test_normalize_and_select_locale() -> None:
     assert i18n.select_locale(None) == i18n.DEFAULT_LOCALE
     assert i18n.select_locale("fr-CA,fr;q=0.9") == "fr"
     assert i18n.select_locale("zz", preferred="fr") == "fr"
+    assert i18n.select_locale("zz;q=0.9") == i18n.DEFAULT_LOCALE
 
 
 def test_translation_uses_po_catalog(tmp_path: Path, monkeypatch) -> None:
@@ -97,3 +98,38 @@ def test_translation_handles_missing_mo(tmp_path: Path, monkeypatch) -> None:
     translator = i18n.get_translator("en")
 
     assert isinstance(translator, gettext.NullTranslations)
+
+
+def test_dict_translations_ngettext_uses_fallback() -> None:
+    translator = i18n.DictTranslations({})
+    translator.add_fallback(gettext.NullTranslations())
+    assert translator.ngettext("one", "many", 1) == "one"
+    assert translator.ngettext("one", "many", 2) == "many"
+
+
+def test_translation_combines_po_and_mo_sources(tmp_path: Path, monkeypatch) -> None:
+    po_path = _configure_locales(tmp_path, monkeypatch)
+    po_path.write_text(
+        "\n".join(
+            [
+                'msgid "from.po"',
+                'msgstr "PO value"',
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    mo_path = i18n.LOCALES_PATH / "en" / "LC_MESSAGES" / "messages.mo"
+    mo_path.parent.mkdir(parents=True, exist_ok=True)
+    mo_path.write_bytes(b"dummy")
+
+    class _MoTranslator(gettext.NullTranslations):
+        def gettext(self, message: str) -> str:
+            return "MO value" if message == "from.mo" else message
+
+    monkeypatch.setattr(i18n.gettext, "translation", lambda *_a, **_k: _MoTranslator())
+    i18n._translation.cache_clear()
+
+    translator = i18n.get_translator("en")
+    assert translator.gettext("from.po") == "PO value"
+    assert translator.gettext("from.mo") == "MO value"

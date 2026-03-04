@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import pytest
 
 from quiz_engine.contracts.runtime_models import (
+    PlayerEvent,
     PlayerIdentity,
     StageContext,
     StageDefinition,
@@ -81,6 +82,20 @@ def test_slide_plugin_rejects_invalid_spec() -> None:
 
     with pytest.raises(ValueError):
         plugin.create_runtime("session-1", bad_stage)
+
+
+def test_slide_plugin_rejects_runtime_creation_for_wrong_plugin_id() -> None:
+    plugin = SlidePlugin()
+    stage = StageDefinition(
+        stage_id="stage-1",
+        stage_index=0,
+        plugin_id="mcq",
+        stage_kind="question",
+        engine_prompt={},
+        plugin_spec={},
+    )
+    with pytest.raises(ValueError, match="cannot create runtime"):
+        plugin.create_runtime("session-1", stage)
 
 
 def test_slide_runtime_on_stage_open_emits_single_view_model_frame() -> None:
@@ -192,6 +207,30 @@ def test_slide_runtime_build_outcome_returns_no_score() -> None:
     assert outcome.render_summary is None
     assert outcome.plugin_state_out is None
     assert outcome.completed_at == ended_at
+
+
+def test_slide_runtime_ignores_player_and_host_actions() -> None:
+    plugin = SlidePlugin()
+    stage = _slide_stage()
+    runtime = plugin.create_runtime("session-1", stage)
+    trace = StageTrace(
+        session_id="session-1",
+        stage_id=stage.stage_id,
+        stage_index=stage.stage_index,
+        started_at=datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC),
+    )
+    event = PlayerEvent(
+        event_id="e1",
+        session_id="session-1",
+        stage_id=stage.stage_id,
+        stage_index=stage.stage_index,
+        player_id="player-1",
+        type="CLICK",
+        server_received_at=datetime(2024, 1, 1, 12, 0, 1, tzinfo=UTC),
+        payload={},
+    )
+    assert runtime.on_player_event(event=event, trace=trace) is None
+    assert runtime.on_host_action(action={"type": "noop"}, trace=trace) is None
 
 
 def test_slide_stage_opens_broadcasts_and_closes_with_engine_flow() -> None:
