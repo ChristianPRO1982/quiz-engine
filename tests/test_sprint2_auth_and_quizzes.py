@@ -108,13 +108,15 @@ def test_quiz_create_list_detail_with_auth_gating(tmp_path: Path, monkeypatch) -
     assert admin_list.status_code == 200
     assert "Sample Quiz" in admin_list.text
     assert f"/admin/quizzes/{quiz_id}/delete" in admin_list.text
-    assert "Delete this quiz permanently?" in admin_list.text
+    assert 'data-qe-confirm-delete="quiz"' in admin_list.text
+    assert "qe-quiz-delete-modal" in admin_list.text
 
     admin_detail = client.get(f"/admin/quizzes/{quiz_id}")
     assert admin_detail.status_code == 200
     assert "Question text" in admin_detail.text
     assert f"/admin/quizzes/{quiz_id}/delete" in admin_detail.text
-    assert "Delete this quiz permanently?" in admin_detail.text
+    assert 'data-qe-confirm-delete="quiz"' in admin_detail.text
+    assert "qe-quiz-delete-modal" in admin_detail.text
 
 
 def test_quiz_delete_removes_quiz_and_sessions(tmp_path: Path, monkeypatch) -> None:

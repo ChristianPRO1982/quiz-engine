@@ -23,7 +23,8 @@
               <form
                 method="post"
                 action="/admin/quizzes/{{ quiz.id }}/delete"
-                onsubmit="return confirm('Delete this quiz permanently? This will remove all related data.');"
+                data-qe-confirm-delete="quiz"
+                data-quiz-title="{{ quiz.payload.title or 'Untitled quiz' }}"
               >
                 <button class="qe-btn qe-btn--danger" type="submit">Delete</button>
               </form>
@@ -40,4 +41,6 @@
       </div>
     {% endif %}
   </section>
+  {% include "partials/quiz_delete_confirm_modal.html" %}
+  <script src="/static/js/quiz_delete_confirm.js"></script>
 {% endblock %}
