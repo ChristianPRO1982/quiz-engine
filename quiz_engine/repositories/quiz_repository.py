@@ -92,7 +92,9 @@ class QuizRepository:
                 )
             )
             session.execute(delete(Player).where(Player.session_id.in_(session_ids)))
-            session.execute(delete(SessionModel).where(SessionModel.id.in_(session_ids)))
+            session.execute(
+                delete(SessionModel).where(SessionModel.id.in_(session_ids))
+            )
 
         session.delete(quiz)
         session.commit()
