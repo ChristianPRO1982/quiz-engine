@@ -36,6 +36,25 @@ def test_validate_mcq_plugin_spec_accepts_minimal_valid_payload() -> None:
     assert len(validated["choices"]) == 2
 
 
+def test_validate_mcq_plugin_spec_accepts_content_wrapper_markdown() -> None:
+    config = load_mcq_config()
+    spec = _base_oneclick_spec()
+    spec.pop("title")
+    spec.pop("prompt")
+    spec["content"] = {
+        "title": "Capitales",
+        "body": "Quelle est la capitale de la France ?",
+        "body_format": "markdown",
+    }
+
+    validated = validate_mcq_plugin_spec(spec, config=config)
+
+    assert validated["title"] == "Capitales"
+    assert validated["prompt"] == "Quelle est la capitale de la France ?"
+    assert validated["body_format"] == "markdown"
+    assert validated["content"]["body_format"] == "markdown"
+
+
 def test_validate_mcq_plugin_spec_rejects_disabled_mode() -> None:
     config = load_mcq_config()
     spec = _base_oneclick_spec()

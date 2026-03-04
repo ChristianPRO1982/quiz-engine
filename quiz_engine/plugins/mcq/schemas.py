@@ -12,12 +12,15 @@ _ALLOWED_ROOT_KEYS = {
     "plugin",
     "title",
     "prompt",
+    "body_format",
+    "content",
     "mode",
     "time_limit_s",
     "points",
     "examination",
     "choices",
 }
+_ALLOWED_CONTENT_KEYS = {"title", "body", "body_format"}
 _ALLOWED_CHOICE_KEYS = {"id", "label", "is_correct", "weight"}
 
 
@@ -43,8 +46,27 @@ def validate_mcq_plugin_spec(
             f"Enabled modes: {', '.join(config.enabled_modes)}."
         )
 
-    title = _require_text(plugin_spec.get("title"), "mcq title")
-    prompt = _require_text(plugin_spec.get("prompt"), "mcq prompt")
+    source = plugin_spec
+    raw_content = plugin_spec.get("content")
+    if raw_content is not None:
+        if not isinstance(raw_content, dict):
+            raise ValueError("mcq content must be an object when provided.")
+        _require_only_known_keys(
+            raw_content, allowed=_ALLOWED_CONTENT_KEYS, field_name="mcq content"
+        )
+        source = raw_content
+    source_is_content = source is not plugin_spec
+
+    title_raw = source.get("title")
+    if title_raw is None and source_is_content:
+        title_raw = plugin_spec.get("title")
+    title = _require_text(title_raw, "mcq title")
+
+    prompt_raw = source.get("body") if source_is_content else source.get("prompt")
+    if prompt_raw is None and source_is_content:
+        prompt_raw = plugin_spec.get("prompt")
+    prompt = _require_text(prompt_raw, "mcq prompt")
+    body_format = _normalize_body_format(source.get("body_format"))
 
     time_limit_s = plugin_spec.get("time_limit_s", config.default_time_limit_s)
     time_limit_s = _require_int(time_limit_s, "mcq time_limit_s")
@@ -72,6 +94,12 @@ def validate_mcq_plugin_spec(
         "plugin": "mcq",
         "title": title,
         "prompt": prompt,
+        "body_format": body_format,
+        "content": {
+            "title": title,
+            "body": prompt,
+            "body_format": body_format,
+        },
         "mode": mode,
         "time_limit_s": time_limit_s,
         "points": points,
@@ -210,6 +238,17 @@ def _validate_plugin(value: Any) -> None:
     normalized = value.strip().lower()
     if normalized != "mcq":
         raise ValueError("mcq plugin must be 'mcq' when provided.")
+
+
+def _normalize_body_format(value: Any) -> str:
+    if value is None:
+        return "markdown"
+    if not isinstance(value, str):
+        raise ValueError("mcq body_format must be a string when provided.")
+    normalized = value.strip().lower()
+    if normalized not in {"text", "markdown"}:
+        raise ValueError("mcq body_format must be 'text' or 'markdown'.")
+    return normalized
 
 
 def _require_only_known_keys(

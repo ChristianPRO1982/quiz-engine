@@ -47,13 +47,14 @@ class MCQPlugin(IPlugin):
         self._config = config or load_mcq_config()
         self._manifest = PluginManifest(
             plugin_id=MCQ_PLUGIN_ID,
-            plugin_version="1.0.0",
+            plugin_version="1.1.0",
             display_name="MCQ",
             schema_version="v0",
             description=(
                 "Multiple-choice quiz stage with oneclick, multianswer and "
                 "influence modes."
             ),
+            plugin_type="quiz",
             capabilities={
                 "general_type": "quiz",
                 "produces_scoring": True,
@@ -65,6 +66,108 @@ class MCQPlugin(IPlugin):
                 "supports_host_actions": True,
                 "supports_no_score": False,
             },
+            stage_config_schema={
+                "type": "object",
+                "required": ["schema_version", "plugin", "mode", "content", "choices"],
+                "properties": {
+                    "schema_version": {
+                        "type": "string",
+                        "enum": ["v1"],
+                        "title": "Schema version",
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["quiz"],
+                        "title": "Type",
+                    },
+                    "plugin": {
+                        "type": "string",
+                        "enum": ["mcq"],
+                        "title": "Plugin",
+                    },
+                    "content": {
+                        "type": "object",
+                        "required": ["title", "body"],
+                        "title": "Content",
+                        "properties": {
+                            "title": {
+                                "type": "string",
+                                "title": "Title",
+                                "default": "New MCQ question",
+                            },
+                            "body": {
+                                "type": "string",
+                                "title": "Body",
+                                "description": "Question prompt shown to players.",
+                                "x-ui-widget": "markdown",
+                                "default": "Write your question here.",
+                            },
+                            "body_format": {
+                                "type": "string",
+                                "title": "Body format",
+                                "enum": ["text", "markdown"],
+                                "default": "markdown",
+                            },
+                        },
+                    },
+                    "mode": {
+                        "type": "string",
+                        "title": "Mode",
+                        "enum": list(self._config.enabled_modes),
+                        "default": self._config.enabled_modes[0],
+                    },
+                    "time_limit_s": {
+                        "type": "integer",
+                        "title": "Time limit (seconds)",
+                        "enum": list(self._config.allowed_time_limits_s),
+                        "default": self._config.default_time_limit_s,
+                    },
+                    "points": {
+                        "type": "integer",
+                        "title": "Points",
+                        "minimum": self._config.min_points,
+                        "maximum": self._config.max_points,
+                        "default": self._config.default_points,
+                    },
+                    "examination": {
+                        "type": "boolean",
+                        "title": "Examination mode",
+                        "default": False,
+                    },
+                    "choices": {
+                        "type": "array",
+                        "title": "Choices",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {"type": "string"},
+                                "label": {"type": "string"},
+                                "is_correct": {"type": "boolean"},
+                                "weight": {"type": "integer"},
+                            },
+                        },
+                    },
+                },
+            },
+            default_stage_config={
+                "schema_version": "v1",
+                "type": "quiz",
+                "plugin": "mcq",
+                "content": {
+                    "title": "New MCQ question",
+                    "body": "Write your question here.",
+                    "body_format": "markdown",
+                },
+                "mode": "oneclick",
+                "time_limit_s": self._config.default_time_limit_s,
+                "points": self._config.default_points,
+                "examination": False,
+                "choices": [
+                    {"id": "a", "label": "Choice A", "is_correct": True},
+                    {"id": "b", "label": "Choice B", "is_correct": False},
+                ],
+            },
+            editor_hints={"default_title_prefix": "Question"},
         )
 
     def get_manifest(self) -> PluginManifest:
