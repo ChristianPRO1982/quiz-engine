@@ -161,6 +161,368 @@
     return defaultQuestionSpec(questionType);
   };
 
+  const formatSchemaFieldLabel = (rawKey) => {
+    const source = readText(rawKey, "field");
+    const normalized = source
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!normalized) {
+      return "Field";
+    }
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
+
+  const readSchemaType = (schemaNode) => {
+    if (!isPlainObject(schemaNode)) {
+      return null;
+    }
+    if (Array.isArray(schemaNode.enum) && schemaNode.enum.length > 0) {
+      return "enum";
+    }
+    if (typeof schemaNode.type === "string") {
+      return readText(schemaNode.type).toLowerCase();
+    }
+    if (Array.isArray(schemaNode.type)) {
+      const compatible = schemaNode.type.find(
+        (candidate) =>
+          typeof candidate === "string" && candidate.trim().toLowerCase() !== "null"
+      );
+      if (typeof compatible === "string") {
+        return compatible.trim().toLowerCase();
+      }
+    }
+    if (isPlainObject(schemaNode.properties)) {
+      return "object";
+    }
+    return null;
+  };
+
+  const readSchemaFormatHint = (schemaNode) => {
+    if (!isPlainObject(schemaNode)) {
+      return "";
+    }
+    const raw =
+      schemaNode["x-ui-widget"] ||
+      schemaNode["ui:widget"] ||
+      schemaNode.widget ||
+      schemaNode.format;
+    return readText(raw).toLowerCase();
+  };
+
+  const readSchemaProperties = (schemaNode) => {
+    if (!isPlainObject(schemaNode) || !isPlainObject(schemaNode.properties)) {
+      return null;
+    }
+    return schemaNode.properties;
+  };
+
+  const readSpecValueAtPath = (spec, path) => {
+    if (!isPlainObject(spec)) {
+      return undefined;
+    }
+    let cursor = spec;
+    for (const segment of path) {
+      if (!isPlainObject(cursor) || !(segment in cursor)) {
+        return undefined;
+      }
+      cursor = cursor[segment];
+    }
+    return cursor;
+  };
+
+  const writeSpecValueAtPath = (spec, path, value) => {
+    const nextSpec = cloneJsonObject(spec, {});
+    if (!Array.isArray(path) || path.length === 0) {
+      return nextSpec;
+    }
+    let cursor = nextSpec;
+    for (let index = 0; index < path.length - 1; index += 1) {
+      const segment = path[index];
+      const nextValue = cursor[segment];
+      cursor[segment] = isPlainObject(nextValue) ? cloneJsonObject(nextValue) : {};
+      cursor = cursor[segment];
+    }
+    cursor[path[path.length - 1]] = value;
+    return nextSpec;
+  };
+
+  const readSchemaDefaultValue = (schemaNode) => {
+    if (!isPlainObject(schemaNode) || !("default" in schemaNode)) {
+      return undefined;
+    }
+    try {
+      return JSON.parse(JSON.stringify(schemaNode.default));
+    } catch (error) {
+      return undefined;
+    }
+  };
+
+  const isRenderableSchemaRoot = (schemaNode) => {
+    const schemaType = readSchemaType(schemaNode);
+    return schemaType === "object" && Boolean(readSchemaProperties(schemaNode));
+  };
+
+  const createSchemaAutoForm = ({
+    question,
+    schema,
+    applySpecUpdate,
+    setErrorMessage,
+  }) => {
+    if (!isRenderableSchemaRoot(schema)) {
+      return null;
+    }
+
+    const maxSchemaDepth = 6;
+    const unsupportedPaths = [];
+
+    const container = document.createElement("section");
+    container.className = "qe-schema-form";
+
+    const heading = document.createElement("p");
+    heading.className = "qe-muted-text";
+    heading.textContent =
+      "Configuration fields (auto-generated from plugin schema).";
+    container.appendChild(heading);
+
+    const renderObjectProperties = ({ schemaNode, path, target, depth }) => {
+      if (depth > maxSchemaDepth) {
+        unsupportedPaths.push(path.join(".") || "(root)");
+        return;
+      }
+      const properties = readSchemaProperties(schemaNode);
+      if (!properties) {
+        return;
+      }
+      const requiredSet = new Set(
+        Array.isArray(schemaNode.required)
+          ? schemaNode.required.filter(
+              (item) => typeof item === "string" && item.trim()
+            )
+          : []
+      );
+
+      Object.entries(properties).forEach(([key, rawChildSchema]) => {
+        const childSchema = isPlainObject(rawChildSchema) ? rawChildSchema : null;
+        const childPath = [...path, key];
+        const childPathText = childPath.join(".");
+        if (!childSchema) {
+          unsupportedPaths.push(childPathText);
+          return;
+        }
+
+        const childType = readSchemaType(childSchema);
+        const childLabel = readText(
+          childSchema.title,
+          formatSchemaFieldLabel(key)
+        );
+        const childDescription = readText(childSchema.description);
+        const isRequired = requiredSet.has(key);
+
+        if (childType === "object") {
+          const fieldset = document.createElement("fieldset");
+          fieldset.className = "qe-schema-group";
+
+          const legend = document.createElement("legend");
+          legend.textContent = isRequired ? `${childLabel} *` : childLabel;
+          fieldset.appendChild(legend);
+
+          if (childDescription) {
+            const description = document.createElement("p");
+            description.className = "qe-muted-text";
+            description.textContent = childDescription;
+            fieldset.appendChild(description);
+          }
+
+          renderObjectProperties({
+            schemaNode: childSchema,
+            path: childPath,
+            target: fieldset,
+            depth: depth + 1,
+          });
+          target.appendChild(fieldset);
+          return;
+        }
+
+        const currentValue = readSpecValueAtPath(question.spec, childPath);
+        const schemaDefault = readSchemaDefaultValue(childSchema);
+        const fallbackValue =
+          currentValue !== undefined ? currentValue : schemaDefault;
+        const field = document.createElement("label");
+        field.className = "qe-question__field";
+        field.textContent = isRequired ? `${childLabel} *` : childLabel;
+
+        if (childType === "enum") {
+          const enumValues = Array.isArray(childSchema.enum)
+            ? childSchema.enum.filter((candidate) =>
+                ["string", "number", "boolean"].includes(typeof candidate)
+              )
+            : [];
+          if (!enumValues.length) {
+            unsupportedPaths.push(childPathText);
+            return;
+          }
+
+          const select = document.createElement("select");
+          enumValues.forEach((optionValue, optionIndex) => {
+            const optionEl = document.createElement("option");
+            optionEl.value = String(optionIndex);
+            optionEl.textContent = String(optionValue);
+            select.appendChild(optionEl);
+          });
+
+          const selectedIndex = enumValues.findIndex(
+            (candidate) => candidate === fallbackValue
+          );
+          if (selectedIndex >= 0) {
+            select.value = String(selectedIndex);
+          } else {
+            select.value = "0";
+          }
+
+          select.addEventListener("change", () => {
+            const parsedIndex = Number(select.value);
+            if (
+              !Number.isInteger(parsedIndex) ||
+              parsedIndex < 0 ||
+              parsedIndex >= enumValues.length
+            ) {
+              setErrorMessage("Invalid enum value selected.");
+              return;
+            }
+            const nextSpec = writeSpecValueAtPath(
+              question.spec,
+              childPath,
+              enumValues[parsedIndex]
+            );
+            applySpecUpdate(nextSpec);
+          });
+          field.appendChild(select);
+        } else if (childType === "string") {
+          const formatHint = readSchemaFormatHint(childSchema);
+          const useTextarea =
+            formatHint === "textarea" ||
+            formatHint === "multiline" ||
+            formatHint === "markdown" ||
+            formatHint === "md";
+          const input = useTextarea
+            ? document.createElement("textarea")
+            : document.createElement("input");
+          if (!useTextarea) {
+            input.type =
+              formatHint === "email"
+                ? "email"
+                : formatHint === "uri" || formatHint === "url"
+                  ? "url"
+                  : "text";
+          } else {
+            input.rows = 4;
+          }
+          input.value = typeof fallbackValue === "string" ? fallbackValue : "";
+          input.addEventListener("input", () => {
+            const nextSpec = writeSpecValueAtPath(
+              question.spec,
+              childPath,
+              String(input.value || "")
+            );
+            applySpecUpdate(nextSpec);
+          });
+          field.appendChild(input);
+        } else if (childType === "integer" || childType === "number") {
+          const input = document.createElement("input");
+          input.type = "number";
+          input.step = childType === "integer" ? "1" : "any";
+          if (typeof childSchema.minimum === "number") {
+            input.min = String(childSchema.minimum);
+          }
+          if (typeof childSchema.maximum === "number") {
+            input.max = String(childSchema.maximum);
+          }
+          input.value =
+            typeof fallbackValue === "number" && Number.isFinite(fallbackValue)
+              ? String(fallbackValue)
+              : "";
+
+          const resetFromSpec = () => {
+            const current = readSpecValueAtPath(question.spec, childPath);
+            input.value =
+              typeof current === "number" && Number.isFinite(current)
+                ? String(current)
+                : "";
+          };
+
+          input.addEventListener("change", () => {
+            const raw = String(input.value || "").trim();
+            if (!raw) {
+              setErrorMessage("Numeric field cannot be empty.");
+              resetFromSpec();
+              return;
+            }
+            const parsed = Number(raw);
+            if (!Number.isFinite(parsed)) {
+              setErrorMessage("Numeric field must contain a finite number.");
+              resetFromSpec();
+              return;
+            }
+            if (childType === "integer" && !Number.isInteger(parsed)) {
+              setErrorMessage("Integer field must contain an integer.");
+              resetFromSpec();
+              return;
+            }
+            const nextSpec = writeSpecValueAtPath(
+              question.spec,
+              childPath,
+              childType === "integer" ? Math.trunc(parsed) : parsed
+            );
+            applySpecUpdate(nextSpec);
+          });
+          field.appendChild(input);
+        } else if (childType === "boolean") {
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked =
+            typeof fallbackValue === "boolean" ? fallbackValue : false;
+          checkbox.addEventListener("change", () => {
+            const nextSpec = writeSpecValueAtPath(
+              question.spec,
+              childPath,
+              Boolean(checkbox.checked)
+            );
+            applySpecUpdate(nextSpec);
+          });
+          field.appendChild(checkbox);
+        } else {
+          unsupportedPaths.push(childPathText);
+          return;
+        }
+
+        if (childDescription) {
+          const description = document.createElement("p");
+          description.className = "qe-muted-text";
+          description.textContent = childDescription;
+          field.appendChild(description);
+        }
+
+        target.appendChild(field);
+      });
+    };
+
+    renderObjectProperties({ schemaNode: schema, path: [], target: container, depth: 0 });
+
+    if (unsupportedPaths.length > 0) {
+      const preview = unsupportedPaths.slice(0, 4).join(", ");
+      const suffix = unsupportedPaths.length > 4 ? ", ..." : "";
+      const note = document.createElement("p");
+      note.className = "qe-muted-text";
+      note.textContent =
+        `Some schema fields are not auto-rendered (${preview}${suffix}). ` +
+        "Use Advanced JSON for full control.";
+      container.appendChild(note);
+    }
+
+    return container;
+  };
+
   const normalizeQuestion = (rawQuestion, index) => {
     const source = isPlainObject(rawQuestion) ? rawQuestion : {};
     const questionType = readText(
@@ -518,36 +880,73 @@
       panel.appendChild(typeDescription);
     }
 
+    question.spec = normalizeQuestionSpec(question.spec, question.type);
+
     const specLabel = document.createElement("label");
     specLabel.className = "qe-question__field";
     specLabel.textContent = "Configuration (JSON)";
     const specField = document.createElement("textarea");
     specField.rows = 8;
-    specField.value = JSON.stringify(
-      normalizeQuestionSpec(question.spec, question.type),
-      null,
-      2
-    );
+    specField.value = JSON.stringify(question.spec, null, 2);
+    let shouldRerenderAfterJsonChange = false;
+    const applySpecUpdate = (nextSpec, options = {}) => {
+      question.spec = normalizeQuestionSpec(nextSpec, question.type);
+      specField.value = JSON.stringify(question.spec, null, 2);
+      setError("");
+      setDirty(true);
+      if (options.rerender) {
+        renderQuestions({ preserveScroll: true });
+      }
+    };
     specField.addEventListener("change", () => {
       try {
         const parsed = JSON.parse(specField.value || "{}");
         if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
           throw new Error("spec must be a JSON object");
         }
-        question.spec = parsed;
-        setError("");
-        setDirty(true);
+        applySpecUpdate(parsed, { rerender: shouldRerenderAfterJsonChange });
       } catch (error) {
         setError("Configuration must be a valid JSON object.");
-        specField.value = JSON.stringify(
-          normalizeQuestionSpec(question.spec, question.type),
-          null,
-          2
-        );
+        specField.value = JSON.stringify(question.spec, null, 2);
       }
     });
     specLabel.appendChild(specField);
-    panel.appendChild(specLabel);
+
+    const schemaObject =
+      questionTypeOption &&
+      questionTypeOption.stageConfigSchema &&
+      typeof questionTypeOption.stageConfigSchema === "object"
+        ? questionTypeOption.stageConfigSchema
+        : null;
+    if (schemaObject) {
+      const schemaForm = createSchemaAutoForm({
+        question,
+        schema: schemaObject,
+        applySpecUpdate,
+        setErrorMessage: setError,
+      });
+      if (schemaForm) {
+        panel.appendChild(schemaForm);
+        shouldRerenderAfterJsonChange = true;
+
+        const advanced = document.createElement("details");
+        advanced.className = "qe-schema-json-details";
+        const advancedSummary = document.createElement("summary");
+        advancedSummary.textContent = "Advanced JSON";
+        advanced.appendChild(advancedSummary);
+        advanced.appendChild(specLabel);
+        panel.appendChild(advanced);
+      } else {
+        panel.appendChild(specLabel);
+        const schemaFallback = document.createElement("p");
+        schemaFallback.className = "qe-muted-text";
+        schemaFallback.textContent =
+          "This plugin provides a schema. Auto-form is not available for this shape yet.";
+        panel.appendChild(schemaFallback);
+      }
+    } else {
+      panel.appendChild(specLabel);
+    }
 
     if (
       questionTypeOption &&
@@ -557,7 +956,7 @@
       const schemaHelper = document.createElement("p");
       schemaHelper.className = "qe-muted-text";
       schemaHelper.textContent =
-        "This plugin provides a configuration schema. Keep JSON aligned with it.";
+        "Schema drives this editor, but plugin runtime remains the source of truth.";
       panel.appendChild(schemaHelper);
     }
     panel.appendChild(deleteButton);

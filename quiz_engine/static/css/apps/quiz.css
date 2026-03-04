@@ -614,6 +614,38 @@ a:hover {
   color: var(--qe-muted);
 }
 
+.qe-schema-form {
+  display: grid;
+  gap: var(--qe-space-3);
+}
+
+.qe-schema-group {
+  border: 1px solid var(--qe-border);
+  border-radius: var(--qe-radius-action);
+  padding: 0.65rem 0.75rem;
+  display: grid;
+  gap: var(--qe-space-2);
+}
+
+.qe-schema-group legend {
+  padding: 0 0.2rem;
+  color: var(--qe-muted);
+}
+
+.qe-schema-json-details {
+  border: 1px solid var(--qe-border);
+  border-radius: var(--qe-radius-action);
+  padding: 0.55rem 0.65rem;
+  display: grid;
+  gap: var(--qe-space-2);
+}
+
+.qe-schema-json-details > summary {
+  cursor: pointer;
+  color: var(--qe-muted);
+  user-select: none;
+}
+
 .qe-question__body-markdown {
   min-height: 10rem;
 }
