@@ -276,14 +276,9 @@
     const maxSchemaDepth = 6;
     const unsupportedPaths = [];
 
+    const hiddenRootKeys = new Set(["schema_version", "type", "plugin"]);
     const container = document.createElement("section");
     container.className = "qe-schema-form";
-
-    const heading = document.createElement("p");
-    heading.className = "qe-muted-text";
-    heading.textContent =
-      "Configuration fields (auto-generated from plugin schema).";
-    container.appendChild(heading);
 
     const renderObjectProperties = ({ schemaNode, path, target, depth }) => {
       if (depth > maxSchemaDepth) {
@@ -303,6 +298,9 @@
       );
 
       Object.entries(properties).forEach(([key, rawChildSchema]) => {
+        if (path.length === 0 && hiddenRootKeys.has(key)) {
+          return;
+        }
         const childSchema = isPlainObject(rawChildSchema) ? rawChildSchema : null;
         const childPath = [...path, key];
         const childPathText = childPath.join(".");
@@ -320,27 +318,28 @@
         const isRequired = requiredSet.has(key);
 
         if (childType === "object") {
-          const fieldset = document.createElement("fieldset");
-          fieldset.className = "qe-schema-group";
+          const group = document.createElement("section");
+          group.className = "qe-schema-group";
 
-          const legend = document.createElement("legend");
-          legend.textContent = isRequired ? `${childLabel} *` : childLabel;
-          fieldset.appendChild(legend);
+          const groupTitle = document.createElement("h4");
+          groupTitle.className = "qe-schema-group__title";
+          groupTitle.textContent = isRequired ? `${childLabel} *` : childLabel;
+          group.appendChild(groupTitle);
 
           if (childDescription) {
             const description = document.createElement("p");
             description.className = "qe-muted-text";
             description.textContent = childDescription;
-            fieldset.appendChild(description);
+            group.appendChild(description);
           }
 
           renderObjectProperties({
             schemaNode: childSchema,
             path: childPath,
-            target: fieldset,
+            target: group,
             depth: depth + 1,
           });
-          target.appendChild(fieldset);
+          target.appendChild(group);
           return;
         }
 
@@ -948,17 +947,6 @@
       panel.appendChild(specLabel);
     }
 
-    if (
-      questionTypeOption &&
-      questionTypeOption.stageConfigSchema &&
-      typeof questionTypeOption.stageConfigSchema === "object"
-    ) {
-      const schemaHelper = document.createElement("p");
-      schemaHelper.className = "qe-muted-text";
-      schemaHelper.textContent =
-        "Schema drives this editor, but plugin runtime remains the source of truth.";
-      panel.appendChild(schemaHelper);
-    }
     panel.appendChild(deleteButton);
 
     card.appendChild(panel);

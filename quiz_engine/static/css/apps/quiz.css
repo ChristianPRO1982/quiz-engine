@@ -620,16 +620,17 @@ a:hover {
 }
 
 .qe-schema-group {
-  border: 1px solid var(--qe-border);
-  border-radius: var(--qe-radius-action);
-  padding: 0.65rem 0.75rem;
+  border-left: 2px solid color-mix(in srgb, var(--qe-primary) 45%, transparent);
+  padding: 0.25rem 0 0.25rem 0.75rem;
   display: grid;
   gap: var(--qe-space-2);
 }
 
-.qe-schema-group legend {
-  padding: 0 0.2rem;
+.qe-schema-group__title {
+  margin: 0;
+  font-size: 0.95rem;
   color: var(--qe-muted);
+  font-weight: 600;
 }
 
 .qe-schema-json-details {

@@ -10,8 +10,8 @@ def test_editor_js_uses_plugin_driven_json_authoring_without_slide_hardcode() ->
 
     assert "Configuration (JSON)" in source
     assert "createSchemaAutoForm" in source
-    assert "auto-generated from plugin schema" in source
     assert "Advanced JSON" in source
+    assert 'new Set(["schema_version", "type", "plugin"])' in source
     assert "defaultStageConfig" in source
     assert "stageConfigSchema" in source
     assert 'question.type === "slide"' not in source
