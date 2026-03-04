@@ -671,16 +671,25 @@ a:hover {
 
 .qe-schema-json-details {
   border: 1px solid var(--qe-border);
-  border-radius: var(--qe-radius-action);
-  padding: 0.55rem 0.65rem;
-  display: grid;
-  gap: var(--qe-space-2);
+  border-radius: var(--qe-radius-field);
+  background: var(--qe-surface);
+  overflow: hidden;
 }
 
 .qe-schema-json-details > summary {
   cursor: pointer;
   color: var(--qe-muted);
   user-select: none;
+  padding: 0.55rem 0.65rem;
+}
+
+.qe-schema-json-details[open] > summary {
+  border-bottom: 1px solid var(--qe-border);
+}
+
+.qe-schema-json-details > .qe-question__field {
+  margin: 0;
+  padding: 0.65rem;
 }
 
 .qe-question__body-markdown {
