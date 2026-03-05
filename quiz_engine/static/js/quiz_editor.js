@@ -1314,7 +1314,7 @@
     titleLabel.appendChild(titleField);
 
     const deleteButton = document.createElement("button");
-    deleteButton.className = "qe-btn";
+    deleteButton.className = "qe-btn qe-btn--danger";
     deleteButton.type = "button";
     deleteButton.textContent = "Delete question";
     deleteButton.addEventListener("click", () => {
