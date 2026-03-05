@@ -301,10 +301,12 @@
     const maxSchemaDepth = 6;
 
     const hiddenRootKeys = new Set(["schema_version", "type", "plugin"]);
-    const inlineRootKeys = new Set(["mode", "points", "time_limit_s"]);
+    const inlineRootKeyOrder = ["mode", "points", "time_limit_s", "examination"];
+    const inlineRootKeys = new Set(inlineRootKeyOrder);
     const container = document.createElement("section");
     container.className = "qe-schema-form";
     let rootInlineRow = null;
+    const pendingInlineFields = new Map();
 
     const getRootInlineRow = () => {
       if (rootInlineRow) {
@@ -550,7 +552,15 @@
         }
 
         if (path.length === 0 && inlineRootKeys.has(key)) {
-          getRootInlineRow().appendChild(field);
+          pendingInlineFields.set(key, field);
+          const row = getRootInlineRow();
+          row.textContent = "";
+          inlineRootKeyOrder.forEach((orderedKey) => {
+            const inlineField = pendingInlineFields.get(orderedKey);
+            if (inlineField) {
+              row.appendChild(inlineField);
+            }
+          });
         } else {
           target.appendChild(field);
         }
