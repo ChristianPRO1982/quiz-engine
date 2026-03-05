@@ -301,8 +301,9 @@
     const maxSchemaDepth = 6;
 
     const hiddenRootKeys = new Set(["schema_version", "type", "plugin"]);
+    const inlineRootKeys = new Set(["mode", "points", "time_limit_s"]);
     const inlineRootKeyOrder = ["mode", "points", "time_limit_s", "examination"];
-    const inlineRootKeys = new Set(inlineRootKeyOrder);
+    inlineRootKeys.add("examination");
     const container = document.createElement("section");
     container.className = "qe-schema-form";
     let rootInlineRow = null;

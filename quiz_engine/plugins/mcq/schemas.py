@@ -92,7 +92,7 @@ def validate_mcq_plugin_spec(
         raise ValueError("mcq examination must be a boolean.")
     examination = raw_examination
 
-    choices = _normalize_choices(plugin_spec.get("choices"), mode=mode)
+    choices = _normalize_choices(plugin_spec.get("choices"), mode=mode, config=config)
 
     payload: dict[str, Any] = {
         "schema_version": "v1",
@@ -142,6 +142,11 @@ def build_mcq_frame_payload(
             "default": config.default_player_choice_view,
             "allow_toggle": config.allow_player_toggle_choice_view,
         },
+        "choice_grid_columns": {
+            "smartphone": config.choice_columns_smartphone,
+            "tablet": config.choice_columns_tablet,
+            "desktop": config.choice_columns_desktop,
+        },
         "choices": [
             {
                 "id": choice["id"],
@@ -173,11 +178,16 @@ def extract_choice_weights(plugin_spec: dict[str, Any]) -> dict[str, int]:
     return {choice["id"]: int(choice["weight"]) for choice in plugin_spec["choices"]}
 
 
-def _normalize_choices(raw_value: Any, *, mode: str) -> list[dict[str, Any]]:
+def _normalize_choices(
+    raw_value: Any, *, mode: str, config: MCQConfig
+) -> list[dict[str, Any]]:
     if not isinstance(raw_value, list):
         raise ValueError("mcq choices must be a list.")
-    if len(raw_value) < 2:
-        raise ValueError("mcq choices must contain at least 2 choices.")
+    if len(raw_value) < config.min_choices or len(raw_value) > config.max_choices:
+        raise ValueError(
+            "mcq choices count must be within "
+            f"[{config.min_choices}, {config.max_choices}]."
+        )
 
     normalized: list[dict[str, Any]] = []
     seen_ids: set[str] = set()

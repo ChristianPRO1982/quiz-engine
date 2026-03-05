@@ -27,6 +27,12 @@ allowed_time_limits_s = 0,15,30
 default_points = 1000
 min_points = 10
 max_points = 2000
+default_choices_count = 4
+min_choices = 1
+max_choices = 20
+choice_columns_smartphone = 2
+choice_columns_tablet = 4
+choice_columns_desktop = 6
 default_player_choice_view = compact
 allow_player_toggle_choice_view = true
 
@@ -49,6 +55,12 @@ def test_load_mcq_config_accepts_valid_ini(tmp_path: Path) -> None:
     assert config.default_time_limit_s == 30
     assert config.allowed_time_limits_s == (0, 15, 30)
     assert config.enabled_modes == ("oneclick", "multianswer")
+    assert config.default_choices_count == 4
+    assert config.min_choices == 1
+    assert config.max_choices == 20
+    assert config.choice_columns_smartphone == 2
+    assert config.choice_columns_tablet == 4
+    assert config.choice_columns_desktop == 6
 
 
 def test_load_mcq_config_rejects_missing_file(tmp_path: Path) -> None:
@@ -115,6 +127,26 @@ def test_load_mcq_config_rejects_missing_sections(
             "default_player_choice_view = compact",
             "default_player_choice_view = full",
             "must be 'compact' or 'label'",
+        ),
+        (
+            "min_choices = 1",
+            "min_choices = 0",
+            "mcq.min_choices must be >= 1.",
+        ),
+        (
+            "max_choices = 20",
+            "max_choices = 0",
+            "mcq.min_choices must be <= mcq.max_choices.",
+        ),
+        (
+            "default_choices_count = 4",
+            "default_choices_count = 21",
+            "mcq.default_choices_count must be within",
+        ),
+        (
+            "choice_columns_tablet = 4",
+            "choice_columns_tablet = 0",
+            "mcq.choice_columns_tablet must be >= 1.",
         ),
         (
             "bots_good_answer_ratio_evil = 0.2",

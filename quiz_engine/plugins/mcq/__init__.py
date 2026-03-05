@@ -121,6 +121,8 @@ class MCQPlugin(IPlugin):
                     "choices": {
                         "type": "array",
                         "title": "Choices",
+                        "minItems": self._config.min_choices,
+                        "maxItems": self._config.max_choices,
                         "items": {
                             "type": "object",
                             "properties": {
@@ -140,14 +142,14 @@ class MCQPlugin(IPlugin):
                 "content": {
                     "body": "Write your question here.",
                 },
-                "mode": "oneclick",
+                "mode": self._config.enabled_modes[0],
                 "time_limit_s": self._config.default_time_limit_s,
                 "points": self._config.default_points,
                 "examination": False,
-                "choices": [
-                    {"id": "a", "label": "Choice A", "is_correct": True},
-                    {"id": "b", "label": "Choice B", "is_correct": False},
-                ],
+                "choices": _build_default_choices(
+                    count=self._config.default_choices_count,
+                    mode=self._config.enabled_modes[0],
+                ),
             },
             editor_hints={"default_title_prefix": "Question"},
         )
@@ -565,6 +567,21 @@ def _draw_bot_choice(
 
 def _empty_distribution(choices: list[dict[str, Any]]) -> dict[str, int]:
     return {choice["id"]: 0 for choice in choices}
+
+
+def _build_default_choices(*, count: int, mode: str) -> list[dict[str, Any]]:
+    choices: list[dict[str, Any]] = []
+    for index in range(count):
+        choice = {
+            "id": f"choice_{index + 1}",
+            "label": f"Choice {index + 1}",
+        }
+        if mode == "multianswer":
+            choice["weight"] = 1 if index == 0 else 0
+        else:
+            choice["is_correct"] = index == 0
+        choices.append(choice)
+    return choices
 
 
 __all__ = ["MCQPlugin", "MCQStageRuntime", "MCQ_PLUGIN_ID"]

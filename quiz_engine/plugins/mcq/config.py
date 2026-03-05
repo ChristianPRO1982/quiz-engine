@@ -16,6 +16,12 @@ class MCQConfig:
     default_points: int
     min_points: int
     max_points: int
+    default_choices_count: int
+    min_choices: int
+    max_choices: int
+    choice_columns_smartphone: int
+    choice_columns_tablet: int
+    choice_columns_desktop: int
     default_player_choice_view: str
     allow_player_toggle_choice_view: bool
     enabled_modes: tuple[str, ...]
@@ -48,6 +54,12 @@ def load_mcq_config(config_path: Path | None = None) -> MCQConfig:
     default_points = parser.getint("mcq", "default_points")
     min_points = parser.getint("mcq", "min_points")
     max_points = parser.getint("mcq", "max_points")
+    default_choices_count = parser.getint("mcq", "default_choices_count")
+    min_choices = parser.getint("mcq", "min_choices")
+    max_choices = parser.getint("mcq", "max_choices")
+    choice_columns_smartphone = parser.getint("mcq", "choice_columns_smartphone")
+    choice_columns_tablet = parser.getint("mcq", "choice_columns_tablet")
+    choice_columns_desktop = parser.getint("mcq", "choice_columns_desktop")
     default_player_choice_view = parser.get("mcq", "default_player_choice_view").strip()
     allow_player_toggle_choice_view = parser.getboolean(
         "mcq", "allow_player_toggle_choice_view"
@@ -87,6 +99,21 @@ def load_mcq_config(config_path: Path | None = None) -> MCQConfig:
         raise ValueError(
             "mcq.default_points must be within [mcq.min_points, mcq.max_points]."
         )
+    if min_choices < 1:
+        raise ValueError("mcq.min_choices must be >= 1.")
+    if min_choices > max_choices:
+        raise ValueError("mcq.min_choices must be <= mcq.max_choices.")
+    if not (min_choices <= default_choices_count <= max_choices):
+        raise ValueError(
+            "mcq.default_choices_count must be within "
+            "[mcq.min_choices, mcq.max_choices]."
+        )
+    if choice_columns_smartphone < 1:
+        raise ValueError("mcq.choice_columns_smartphone must be >= 1.")
+    if choice_columns_tablet < 1:
+        raise ValueError("mcq.choice_columns_tablet must be >= 1.")
+    if choice_columns_desktop < 1:
+        raise ValueError("mcq.choice_columns_desktop must be >= 1.")
     if default_player_choice_view not in {"compact", "label"}:
         raise ValueError("mcq.default_player_choice_view must be 'compact' or 'label'.")
 
@@ -96,6 +123,12 @@ def load_mcq_config(config_path: Path | None = None) -> MCQConfig:
         default_points=default_points,
         min_points=min_points,
         max_points=max_points,
+        default_choices_count=default_choices_count,
+        min_choices=min_choices,
+        max_choices=max_choices,
+        choice_columns_smartphone=choice_columns_smartphone,
+        choice_columns_tablet=choice_columns_tablet,
+        choice_columns_desktop=choice_columns_desktop,
         default_player_choice_view=default_player_choice_view,
         allow_player_toggle_choice_view=allow_player_toggle_choice_view,
         enabled_modes=enabled_modes,

@@ -192,8 +192,11 @@ def test_validate_mcq_plugin_spec_rejects_invalid_choices_variants() -> None:
         validate_mcq_plugin_spec(spec, config=config)
 
     spec = _base_oneclick_spec()
-    spec["choices"] = [{"id": "a", "label": "A", "is_correct": True}]
-    with pytest.raises(ValueError, match="at least 2 choices"):
+    spec["choices"] = [
+        {"id": f"c{idx}", "label": f"Choice {idx}", "is_correct": idx == 1}
+        for idx in range(1, 22)
+    ]
+    with pytest.raises(ValueError, match="count must be within"):
         validate_mcq_plugin_spec(spec, config=config)
 
     spec = _base_oneclick_spec()
@@ -287,3 +290,8 @@ def test_extract_helpers_and_build_payload_cover_remaining_branches() -> None:
         player_count=3,
     )
     assert frame["player_choice_view"] == {"default": "compact", "allow_toggle": True}
+    assert frame["choice_grid_columns"] == {
+        "smartphone": 2,
+        "tablet": 4,
+        "desktop": 6,
+    }

@@ -30,6 +30,14 @@ default_points = 1000
 min_points = 10
 max_points = 100000
 
+default_choices_count = 4
+min_choices = 1
+max_choices = 20
+
+choice_columns_smartphone = 2
+choice_columns_tablet = 4
+choice_columns_desktop = 6
+
 default_player_choice_view = compact
 allow_player_toggle_choice_view = true
 
@@ -48,6 +56,14 @@ bots_good_answer_ratio_evil = 0.20
 
 * `enabled_modes` MUST control which modes are selectable in authoring.
 * `min_points` MUST be `10`.
+* `default_choices_count` MUST be within `[min_choices, max_choices]`.
+* `min_choices` MUST be `>= 1`.
+* At question creation, `default_choices_count` answer fields MUST be pre-created.
+* Authoring MUST allow add/remove answers only within `[min_choices, max_choices]`.
+* Compact-grid columns are plugin-configurable via:
+  * `choice_columns_smartphone`
+  * `choice_columns_tablet`
+  * `choice_columns_desktop`
 * Disabled modes MUST NOT be available for new questions.
 * Existing questions using a disabled mode MUST become read-only.
 * `time_limit_s = 0` means no automatic end; host MUST terminate the question.
@@ -87,7 +103,7 @@ Each MCQ question MUST follow:
 * `mode` MUST exist in `enabled_modes`.
 * `points` MUST be within `[min_points, max_points]`.
 * `time_limit_s` MUST be in `allowed_time_limits_s`.
-* At least 2 choices MUST exist.
+* Choices count MUST be within `[min_choices, max_choices]`.
 * For `multianswer`:
 
   * `weight` MUST be present.
@@ -259,6 +275,8 @@ The authoring UI MUST allow full creation/editing of MCQ questions.
 
 * Add / remove / reorder
 * Each choice MUST have stable `id`
+* At creation, authoring MUST initialize `default_choices_count` choices
+* Add/remove MUST be constrained by `[min_choices, max_choices]`
 * Mode rules:
 
   * If `multianswer`: show `weight`, hide `is_correct`
@@ -341,9 +359,9 @@ Two display modes:
 #### Compact (default)
 
 * Buttons show index only
-* Smartphone: 3 columns
-* Tablet: 6 columns
-* Desktop: 9–12 columns
+* Smartphone columns = `choice_columns_smartphone` (default: `2`)
+* Tablet columns = `choice_columns_tablet` (default: `4`)
+* Desktop columns = `choice_columns_desktop` (default: `6`)
 * Prompt MAY be visually minimized
 * Answer grid MUST dominate layout
 
