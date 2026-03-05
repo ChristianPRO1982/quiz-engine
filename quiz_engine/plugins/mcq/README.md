@@ -27,7 +27,7 @@ default_time_limit_s = 30
 allowed_time_limits_s = 0,15,30,60,120
 
 default_points = 1000
-min_points = 0
+min_points = 10
 max_points = 100000
 
 default_player_choice_view = compact
@@ -47,6 +47,7 @@ bots_good_answer_ratio_evil = 0.20
 ### 2.1 Configuration Rules
 
 * `enabled_modes` MUST control which modes are selectable in authoring.
+* `min_points` MUST be `10`.
 * Disabled modes MUST NOT be available for new questions.
 * Existing questions using a disabled mode MUST become read-only.
 * `time_limit_s = 0` means no automatic end; host MUST terminate the question.
@@ -148,6 +149,7 @@ Constraints:
 * At start: `time_factor = 1`
 * At end of timer: `time_factor` approaches 0
 * If `time_limit_s = 0`, then `time_factor = 1`
+* Player earned points MUST always be integers in `Z` (negative, `0`, or positive), never decimal values.
 * Scores MAY be negative
 
 ---
