@@ -1,33 +1,33 @@
 {% extends "base.html" %}
-{% block title %}Create Quiz - Step 1{% endblock %}
+{% block title %}{{ _("admin.new_step1.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
     <p class="qe-meta">
-      <span>Create quiz</span>
-      <span class="qe-pill">Step 1/3</span>
+      <span>{{ _("admin.new.meta.create_quiz") }}</span>
+      <span class="qe-pill">{{ _("admin.new_step1.step") }}</span>
     </p>
-    <h1 class="qe-title">Quiz metadata</h1>
-    <p class="qe-hint">Define the title and optional description.</p>
+    <h1 class="qe-title">{{ _("admin.new_step1.heading") }}</h1>
+    <p class="qe-hint">{{ _("admin.new_step1.hint") }}</p>
     {% if error %}
       <p class="qe-error">{{ error }}</p>
     {% endif %}
     <form method="post" action="/admin/quizzes/new" class="qe-form-grid">
       <label>
-        <span>Title</span>
+        <span>{{ _("common.title") }}</span>
         <input type="text" name="title" value="{{ draft.title }}" required />
       </label>
       <label>
-        <span>Description</span>
+        <span>{{ _("common.description") }}</span>
         <input
           type="text"
           name="description"
           value="{{ draft.description }}"
-          placeholder="Optional"
+          placeholder="{{ _('common.optional') }}"
         />
       </label>
       <div class="qe-actions">
-        <a class="qe-btn" href="/admin/quizzes">Cancel</a>
-        <button class="qe-btn qe-btn--primary" type="submit">Continue</button>
+        <a class="qe-btn" href="/admin/quizzes">{{ _("common.cancel") }}</a>
+        <button class="qe-btn qe-btn--primary" type="submit">{{ _("common.continue") }}</button>
       </div>
     </form>
   </section>

@@ -9,6 +9,40 @@
     return;
   }
 
+  const t = (key, fallback, vars = {}) => {
+    const datasetValueKey =
+      key === "quiz_delete_confirm.with_title"
+        ? "msgWithTitle"
+        : key === "quiz_delete_confirm.without_title"
+          ? "msgWithoutTitle"
+          : null;
+    if (datasetValueKey && typeof modal.dataset[datasetValueKey] === "string") {
+      return String(modal.dataset[datasetValueKey]).replace(
+        /\{(\w+)\}/g,
+        (match, token) =>
+          Object.prototype.hasOwnProperty.call(vars, token)
+            ? String(vars[token])
+            : match
+      );
+    }
+    if (!window.qeI18n || typeof window.qeI18n.t !== "function") {
+      return String(fallback || key).replace(/\{(\w+)\}/g, (match, token) =>
+        Object.prototype.hasOwnProperty.call(vars, token)
+          ? String(vars[token])
+          : match
+      );
+    }
+    const translated = window.qeI18n.t(key, vars);
+    if (translated !== key) {
+      return translated;
+    }
+    return String(fallback || key).replace(/\{(\w+)\}/g, (match, token) =>
+      Object.prototype.hasOwnProperty.call(vars, token)
+        ? String(vars[token])
+        : match
+    );
+  };
+
   const dialogShow = (dialog) => {
     if (typeof dialog.showModal === "function") {
       dialog.showModal();
@@ -39,8 +73,15 @@
       pendingForm = form;
       const quizTitle = readText(form.dataset.quizTitle);
       messageEl.textContent = quizTitle
-        ? `Delete "${quizTitle}" permanently? This action cannot be undone.`
-        : "Delete this quiz permanently? This action cannot be undone.";
+        ? t(
+            "quiz_delete_confirm.with_title",
+            'Delete "{title}" permanently? This action cannot be undone.',
+            { title: quizTitle }
+          )
+        : t(
+            "quiz_delete_confirm.without_title",
+            "Delete this quiz permanently? This action cannot be undone."
+          );
       dialogShow(modal);
     });
   });

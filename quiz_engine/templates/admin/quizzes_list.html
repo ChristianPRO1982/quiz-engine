@@ -1,32 +1,34 @@
 {% extends "base.html" %}
-{% block title %}My Quizzes{% endblock %}
+{% block title %}{{ _("admin.quizzes.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
     <p class="qe-meta">
-      <span>Quiz Builder</span>
+      <span>{{ _("admin.quizzes.meta.builder") }}</span>
       <form method="post" action="/admin/quizzes">
-        <button class="qe-btn qe-btn--primary" type="submit">New quiz</button>
+        <button class="qe-btn qe-btn--primary" type="submit">{{ _("admin.quizzes.new_quiz") }}</button>
       </form>
     </p>
-    <h1 class="qe-title">My quizzes</h1>
+    <h1 class="qe-title">{{ _("admin.quizzes.heading") }}</h1>
     {% if quizzes %}
       <ul class="qe-list qe-list--cards">
         {% for quiz in quizzes %}
           <li class="qe-list-item">
-            <a href="/admin/quizzes/{{ quiz.id }}">{{ quiz.payload.title or "Untitled quiz" }}</a>
-            <p class="qe-hint">{{ quiz.payload.description or "No description" }}</p>
-            <span class="qe-muted-text">Schema {{ quiz.schema_version }}</span>
+            <a href="/admin/quizzes/{{ quiz.id }}"
+              >{{ quiz.payload.title or _("admin.quizzes.untitled") }}</a
+            >
+            <p class="qe-hint">{{ quiz.payload.description or _("admin.quizzes.no_description") }}</p>
+            <span class="qe-muted-text">{{ _("admin.quizzes.schema") }} {{ quiz.schema_version }}</span>
             <div class="qe-actions qe-actions--start">
               <form method="post" action="/host/quizzes/{{ quiz.id }}/start">
-                <button class="qe-btn" type="submit">Start session</button>
+                <button class="qe-btn" type="submit">{{ _("admin.quizzes.start_session") }}</button>
               </form>
               <form
                 method="post"
                 action="/admin/quizzes/{{ quiz.id }}/delete"
                 data-qe-confirm-delete="quiz"
-                data-quiz-title="{{ quiz.payload.title or 'Untitled quiz' }}"
+                data-quiz-title="{{ quiz.payload.title or _('admin.quizzes.untitled') }}"
               >
-                <button class="qe-btn qe-btn--danger" type="submit">Delete</button>
+                <button class="qe-btn qe-btn--danger" type="submit">{{ _("common.delete") }}</button>
               </form>
             </div>
           </li>
@@ -34,9 +36,11 @@
       </ul>
     {% else %}
       <div class="qe-empty-state">
-        <p class="qe-hint">No quiz yet. Start by creating your first one.</p>
+        <p class="qe-hint">{{ _("admin.quizzes.empty") }}</p>
         <form method="post" action="/admin/quizzes">
-          <button class="qe-btn qe-btn--primary" type="submit">Create new quiz</button>
+          <button class="qe-btn qe-btn--primary" type="submit">
+            {{ _("admin.quizzes.create_first") }}
+          </button>
         </form>
       </div>
     {% endif %}

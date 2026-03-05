@@ -1,10 +1,19 @@
-<dialog id="qe-quiz-delete-modal" class="qe-modal">
+<dialog
+  id="qe-quiz-delete-modal"
+  class="qe-modal"
+  data-msg-with-title="{{ _('quiz_delete_confirm.with_title') }}"
+  data-msg-without-title="{{ _('quiz_delete_confirm.without_title') }}"
+>
   <form method="dialog" class="qe-modal__panel qe-modal__panel--confirm">
-    <h2>Delete quiz?</h2>
-    <p id="qe-quiz-delete-message">This action cannot be undone.</p>
+    <h2>{{ _("quiz_delete_modal.title") }}</h2>
+    <p id="qe-quiz-delete-message">{{ _("quiz_delete_modal.default_message") }}</p>
     <menu class="qe-actions">
-      <button class="qe-btn" id="qe-quiz-delete-cancel" type="button">Cancel</button>
-      <button class="qe-btn qe-btn--danger" id="qe-quiz-delete-confirm" type="button">Delete</button>
+      <button class="qe-btn" id="qe-quiz-delete-cancel" type="button">
+        {{ _("common.cancel") }}
+      </button>
+      <button class="qe-btn qe-btn--danger" id="qe-quiz-delete-confirm" type="button">
+        {{ _("common.delete") }}
+      </button>
     </menu>
   </form>
 </dialog>

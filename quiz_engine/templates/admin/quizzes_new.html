@@ -1,39 +1,39 @@
 {% extends "base.html" %}
-{% block title %}Create Quiz{% endblock %}
+{% block title %}{{ _("admin.new.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
-    <h1 class="qe-title">Create quiz</h1>
-    <p class="qe-hint">MVP form: one single-choice question.</p>
+    <h1 class="qe-title">{{ _("admin.new.heading") }}</h1>
+    <p class="qe-hint">{{ _("admin.new.hint") }}</p>
     {% if error %}
       <p class="qe-error">{{ error }}</p>
     {% endif %}
     <form method="post" action="/admin/quizzes/new" class="qe-form-grid">
       <label>
-        <span>Title</span>
+        <span>{{ _("common.title") }}</span>
         <input type="text" name="title" required />
       </label>
       <label>
-        <span>Description</span>
+        <span>{{ _("common.description") }}</span>
         <input type="text" name="description" />
       </label>
       <label>
-        <span>Question</span>
+        <span>{{ _("common.question") }}</span>
         <input type="text" name="question" required />
       </label>
       <label>
-        <span>Choice 1</span>
+        <span>{{ _("admin.new.choice_1") }}</span>
         <input type="text" name="choice1" required />
       </label>
       <label>
-        <span>Choice 2</span>
+        <span>{{ _("admin.new.choice_2") }}</span>
         <input type="text" name="choice2" required />
       </label>
       <label>
-        <span>Choice 3</span>
+        <span>{{ _("admin.new.choice_3") }}</span>
         <input type="text" name="choice3" required />
       </label>
       <div class="qe-actions qe-actions--start">
-        <button class="qe-btn qe-btn--primary" type="submit">Create</button>
+        <button class="qe-btn qe-btn--primary" type="submit">{{ _("common.create") }}</button>
       </div>
     </form>
   </section>

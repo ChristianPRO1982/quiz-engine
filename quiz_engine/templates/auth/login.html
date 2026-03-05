@@ -1,10 +1,10 @@
 {% extends "base.html" %}
-{% block title %}Login{% endblock %}
+{% block title %}{{ _("auth.login.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
-    <h1 class="qe-title">Connect</h1>
+    <h1 class="qe-title">{{ _("auth.login.heading") }}</h1>
     {% if auth_mode == "dev" %}
-      <p class="qe-hint">Select a development user.</p>
+      <p class="qe-hint">{{ _("auth.login.dev_hint") }}</p>
       <div class="qe-actions qe-actions--start">
         {% for key in dev_users %}
           <form method="post" action="/login">
@@ -14,7 +14,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <p class="qe-hint">Hub auth mode placeholder.</p>
+      <p class="qe-hint">{{ _("auth.login.hub_placeholder") }}</p>
     {% endif %}
   </section>
 {% endblock %}

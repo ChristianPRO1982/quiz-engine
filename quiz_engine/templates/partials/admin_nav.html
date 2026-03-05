@@ -1,10 +1,12 @@
-<nav class="qe-admin-nav" aria-label="Admin navigation">
-  <a class="qe-admin-nav__link" href="/admin">Admin</a>
-  <a class="qe-admin-nav__link" href="/admin/quizzes">Quizzes</a>
+<nav class="qe-admin-nav" aria-label="{{ _('admin_nav.aria.navigation') }}">
+  <a class="qe-admin-nav__link" href="/admin">{{ _("admin_nav.link.admin") }}</a>
+  <a class="qe-admin-nav__link" href="/admin/quizzes">{{ _("admin_nav.link.quizzes") }}</a>
   <form class="qe-admin-nav__form" method="post" action="/admin/quizzes">
-    <button class="qe-admin-nav__link qe-admin-nav__link--button" type="submit">New quiz</button>
+    <button class="qe-admin-nav__link qe-admin-nav__link--button" type="submit">
+      {{ _("admin_nav.button.new_quiz") }}
+    </button>
   </form>
   <span class="qe-admin-nav__link qe-admin-nav__link--disabled" aria-disabled="true"
-    >Sessions (soon)</span
+    >{{ _("admin_nav.sessions_soon") }}</span
   >
 </nav>

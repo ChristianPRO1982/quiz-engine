@@ -1,10 +1,17 @@
 <dialog id="qe-question-type-modal" class="qe-modal">
   <form method="dialog" class="qe-modal__panel">
     <div class="qe-modal__head">
-      <h2>Pick a question type</h2>
-      <button class="qe-btn" id="qe-question-type-close" type="button">Close</button>
+      <h2>{{ _("question_type_modal.title") }}</h2>
+      <button class="qe-btn" id="qe-question-type-close" type="button">
+        {{ _("common.close") }}
+      </button>
     </div>
-    <p class="qe-hint">One click adds the question after the selected row.</p>
-    <div id="qe-question-type-list" class="qe-type-picker" role="listbox" aria-label="Question types"></div>
+    <p class="qe-hint">{{ _("question_type_modal.hint") }}</p>
+    <div
+      id="qe-question-type-list"
+      class="qe-type-picker"
+      role="listbox"
+      aria-label="{{ _('question_type_modal.aria.list') }}"
+    ></div>
   </form>
 </dialog>

@@ -124,4 +124,13 @@ def _translation(locale: str) -> gettext.NullTranslations:
 
 
 def get_translator(locale: str) -> gettext.NullTranslations:
+    # Tests may monkeypatch locale paths; always refresh before serving a translator.
+    _translation.cache_clear()
     return _translation(locale)
+
+
+@lru_cache
+def get_catalog(locale: str) -> dict[str, str]:
+    normalized = _normalize_locale(locale) or DEFAULT_LOCALE
+    po_path = Path(str(PO_PATH).format(locale=normalized))
+    return _load_po_catalog(po_path)

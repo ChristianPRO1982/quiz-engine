@@ -1,5 +1,33 @@
 const bootstrapNode = document.getElementById("qe-host-bootstrap");
 const bootstrap = bootstrapNode ? JSON.parse(bootstrapNode.textContent) : {};
+const bootstrapTranslations =
+  bootstrap &&
+  typeof bootstrap.translations === "object" &&
+  !Array.isArray(bootstrap.translations)
+    ? bootstrap.translations
+    : {};
+const interpolate = (text, vars = {}) =>
+  String(text || "").replace(/\{(\w+)\}/g, (match, key) =>
+    Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : match
+  );
+const t = (key, fallback, vars = {}) => {
+  const globalT =
+    window.qeI18n && typeof window.qeI18n.t === "function" ? window.qeI18n.t : null;
+  const fromGlobal = globalT ? globalT(key, vars) : key;
+  const fromBootstrap = Object.prototype.hasOwnProperty.call(
+    bootstrapTranslations,
+    key
+  )
+    ? bootstrapTranslations[key]
+    : null;
+  const source =
+    typeof fromBootstrap === "string" && fromBootstrap
+      ? fromBootstrap
+      : fromGlobal !== key
+        ? fromGlobal
+        : fallback;
+  return interpolate(source || key, vars);
+};
 
 const sessionCode = bootstrap.session_code;
 const playersEl = document.getElementById("qe-host-players");
@@ -21,7 +49,7 @@ const renderPlayers = (players) => {
   playersEl.innerHTML = "";
   if (!players.length) {
     const item = document.createElement("li");
-    item.textContent = "No players yet.";
+    item.textContent = t("host_session.no_players", "No players yet.");
     playersEl.appendChild(item);
     return;
   }
@@ -36,18 +64,22 @@ const renderPlayers = (players) => {
 const renderFrame = (framePayload) => {
   if (window.qeSlideRenderer && typeof window.qeSlideRenderer.renderFrame === "function") {
     window.qeSlideRenderer.renderFrame(frameEl, framePayload, {
-      fallbackTitle: "Stage",
+      fallbackTitle: t("host_session.stage", "Stage"),
       showPlaceholderNote: true,
     });
     return;
   }
-  frameEl.textContent = "Renderer unavailable.";
+  frameEl.textContent = t("host_session.renderer_unavailable", "Renderer unavailable.");
 };
 
 const onMessage = (message) => {
   switch (message.type) {
     case "SESSION_CREATED":
-      setStatus(`Session ready (${message.payload.session_code}).`);
+      setStatus(
+        t("host_session.session_ready", "Session ready ({code}).", {
+          code: message.payload.session_code,
+        })
+      );
       break;
     case "LOBBY_SNAPSHOT":
       renderPlayers(message.payload.players || []);
@@ -59,24 +91,36 @@ const onMessage = (message) => {
       }
       break;
     case "PLAYER_JOINED":
-      setStatus(`${message.payload.nickname} joined.`);
+      setStatus(
+        t("host_session.player_joined", "{nickname} joined.", {
+          nickname: message.payload.nickname,
+        })
+      );
       break;
     case "PLAYER_LEFT":
-      setStatus("A player left.");
+      setStatus(t("host_session.player_left", "A player left."));
       break;
     case "SESSION_STATE_CHANGED":
       stateEl.textContent = message.payload.session_state;
-      setStatus(`State changed: ${message.payload.session_state}.`);
+      setStatus(
+        t("host_session.state_changed", "State changed: {state}.", {
+          state: message.payload.session_state,
+        })
+      );
       break;
     case "STAGE_CHANGED":
       stageEl.textContent = `${message.payload.stage_id} (${message.payload.stage_index})`;
-      setStatus("Stage changed.");
+      setStatus(t("host_session.stage_changed", "Stage changed."));
       break;
     case "PLUGIN_FRAME":
       renderFrame(message.payload);
       break;
     case "ERROR":
-      setStatus(`Error: ${message.payload.message}`);
+      setStatus(
+        t("host_session.error", "Error: {message}", {
+          message: message.payload.message,
+        })
+      );
       break;
     default:
       break;
@@ -88,11 +132,11 @@ const connect = () => {
     sessionCode,
     role: "host",
     onOpen: () => {
-      setStatus("Connected.");
+      setStatus(t("host_session.connected", "Connected."));
       client.send("CONNECT", { role: "host" });
     },
     onClose: () => {
-      setStatus("Disconnected.");
+      setStatus(t("host_session.disconnected", "Disconnected."));
     },
     onMessage,
   });

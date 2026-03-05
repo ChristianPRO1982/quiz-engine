@@ -218,3 +218,723 @@ msgstr "We keep your quiz history and scores for future sessions."
 
 msgid "consent.email.v1.body"
 msgstr "We may email you results and session links."
+
+msgid "admin.editor.add_question"
+msgstr "Add question"
+
+msgid "admin.editor.back_to_list"
+msgstr "Back to list"
+
+msgid "admin.editor.delete_question_title"
+msgstr "Delete question?"
+
+msgid "admin.editor.delete_quiz"
+msgstr "Delete quiz"
+
+msgid "admin.editor.empty_questions"
+msgstr "No questions in this quiz."
+
+msgid "admin.editor.heading"
+msgstr "Quiz editor"
+
+msgid "admin.editor.hint"
+msgstr "Edit questions, reorder with drag handle, then save manually."
+
+msgid "admin.editor.page_title"
+msgstr "Quiz Editor"
+
+msgid "admin.editor.preview"
+msgstr "Preview"
+
+msgid "admin.editor.questions"
+msgstr "Questions"
+
+msgid "admin.editor.quiz_title"
+msgstr "Quiz title"
+
+msgid "admin.editor.schema"
+msgstr "Schema"
+
+msgid "admin.editor.start_session"
+msgstr "Start session"
+
+msgid "admin.editor.status.saved"
+msgstr "Saved"
+
+msgid "admin.editor.validation.message"
+msgstr "Cannot save because some question rules are not respected. Please fix them first."
+
+msgid "admin.editor.validation.title"
+msgstr "Unable to save"
+
+msgid "admin.index.heading"
+msgstr "Admin dashboard"
+
+msgid "admin.index.hint"
+msgstr "Choose what you want to manage."
+
+msgid "admin.index.meta.admin"
+msgstr "Admin"
+
+msgid "admin.index.page_title"
+msgstr "Admin"
+
+msgid "admin.index.plugins.added"
+msgstr "added"
+
+msgid "admin.index.plugins.empty"
+msgstr "No plugins registered in catalog yet."
+
+msgid "admin.index.plugins.errors"
+msgstr "errors"
+
+msgid "admin.index.plugins.hint"
+msgstr "Scan plugins from the runtime package and sync the catalog database table."
+
+msgid "admin.index.plugins.removed"
+msgstr "removed"
+
+msgid "admin.index.plugins.scan_button"
+msgstr "Scan plugins"
+
+msgid "admin.index.plugins.scan_status"
+msgstr "Scan status"
+
+msgid "admin.index.plugins.title"
+msgstr "Plugin catalog"
+
+msgid "admin.index.plugins.updated"
+msgstr "updated"
+
+msgid "admin.index.tile.create_quiz_desc"
+msgstr "Open the same creation panel as New quiz."
+
+msgid "admin.index.tile.create_quiz_title"
+msgstr "Create a new quiz"
+
+msgid "admin.index.tile.my_quizzes_desc"
+msgstr "Browse and open quiz details."
+
+msgid "admin.index.tile.my_quizzes_title"
+msgstr "My quizzes"
+
+msgid "admin.new.choice_1"
+msgstr "Choice 1"
+
+msgid "admin.new.choice_2"
+msgstr "Choice 2"
+
+msgid "admin.new.choice_3"
+msgstr "Choice 3"
+
+msgid "admin.new.choice_4"
+msgstr "Choice 4"
+
+msgid "admin.new.heading"
+msgstr "Create quiz"
+
+msgid "admin.new.hint"
+msgstr "MVP form: one single-choice question."
+
+msgid "admin.new.meta.create_quiz"
+msgstr "Create quiz"
+
+msgid "admin.new.page_title"
+msgstr "Create Quiz"
+
+msgid "admin.new_review.back_to_questions"
+msgstr "Back to questions"
+
+msgid "admin.new_review.empty"
+msgstr "No question in draft yet."
+
+msgid "admin.new_review.heading"
+msgstr "Review and save"
+
+msgid "admin.new_review.page_title"
+msgstr "Create Quiz - Review"
+
+msgid "admin.new_review.questions"
+msgstr "Questions"
+
+msgid "admin.new_review.save_quiz"
+msgstr "Save quiz"
+
+msgid "admin.new_review.schema_version"
+msgstr "Schema version"
+
+msgid "admin.new_review.step"
+msgstr "Step 3/3"
+
+msgid "admin.new_step1.heading"
+msgstr "Quiz metadata"
+
+msgid "admin.new_step1.hint"
+msgstr "Define the title and optional description."
+
+msgid "admin.new_step1.page_title"
+msgstr "Create Quiz - Step 1"
+
+msgid "admin.new_step1.step"
+msgstr "Step 1/3"
+
+msgid "admin.new_step2.add_question"
+msgstr "Add question"
+
+msgid "admin.new_step2.empty"
+msgstr "No question yet. Add at least one question before saving."
+
+msgid "admin.new_step2.heading"
+msgstr "Add questions"
+
+msgid "admin.new_step2.hint"
+msgstr "Question type: single choice (qcm_single)."
+
+msgid "admin.new_step2.page_title"
+msgstr "Create Quiz - Step 2"
+
+msgid "admin.new_step2.question_text"
+msgstr "Question text"
+
+msgid "admin.new_step2.review_draft"
+msgstr "Review draft"
+
+msgid "admin.new_step2.step"
+msgstr "Step 2/3"
+
+msgid "admin.preview.exit"
+msgstr "Exit preview"
+
+msgid "admin.preview.heading"
+msgstr "Preview"
+
+msgid "admin.preview.hint"
+msgstr "Read-only playtest using your current draft."
+
+msgid "admin.preview.page_title"
+msgstr "Quiz Preview"
+
+msgid "admin.quizzes.create_first"
+msgstr "Create new quiz"
+
+msgid "admin.quizzes.empty"
+msgstr "No quiz yet. Start by creating your first one."
+
+msgid "admin.quizzes.heading"
+msgstr "My quizzes"
+
+msgid "admin.quizzes.meta.builder"
+msgstr "Quiz Builder"
+
+msgid "admin.quizzes.new_quiz"
+msgstr "New quiz"
+
+msgid "admin.quizzes.no_description"
+msgstr "No description"
+
+msgid "admin.quizzes.page_title"
+msgstr "My Quizzes"
+
+msgid "admin.quizzes.schema"
+msgstr "Schema"
+
+msgid "admin.quizzes.start_session"
+msgstr "Start session"
+
+msgid "admin.quizzes.untitled"
+msgstr "Untitled quiz"
+
+msgid "admin_nav.button.new_quiz"
+msgstr "New quiz"
+
+msgid "admin_nav.link.admin"
+msgstr "Admin"
+
+msgid "admin_nav.link.quizzes"
+msgstr "Quizzes"
+
+msgid "admin_nav.sessions_soon"
+msgstr "Sessions (soon)"
+
+msgid "auth.account.email"
+msgstr "Email"
+
+msgid "auth.account.heading"
+msgstr "Account"
+
+msgid "auth.account.hint"
+msgstr "Connected profile"
+
+msgid "auth.account.mode"
+msgstr "Mode"
+
+msgid "auth.account.name"
+msgstr "Name"
+
+msgid "auth.account.page_title"
+msgstr "Account"
+
+msgid "auth.account.subject"
+msgstr "Subject"
+
+msgid "auth.login.dev_hint"
+msgstr "Select a development user."
+
+msgid "auth.login.heading"
+msgstr "Connect"
+
+msgid "auth.login.hub_placeholder"
+msgstr "Hub auth mode placeholder."
+
+msgid "auth.login.page_title"
+msgstr "Login"
+
+msgid "auth_widget.button.logout"
+msgstr "Logout"
+
+msgid "auth_widget.link.account"
+msgstr "Account"
+
+msgid "auth_widget.link.login"
+msgstr "Connect"
+
+msgid "common.back"
+msgstr "Back"
+
+msgid "common.cancel"
+msgstr "Cancel"
+
+msgid "common.cannot_be_undone"
+msgstr "This action cannot be undone."
+
+msgid "common.choices"
+msgstr "choices"
+
+msgid "common.close"
+msgstr "Close"
+
+msgid "common.continue"
+msgstr "Continue"
+
+msgid "common.create"
+msgstr "Create"
+
+msgid "common.delete"
+msgstr "Delete"
+
+msgid "common.description"
+msgstr "Description"
+
+msgid "common.end"
+msgstr "End"
+
+msgid "common.join"
+msgstr "Join"
+
+msgid "common.leave"
+msgstr "Leave"
+
+msgid "common.live_frame"
+msgstr "Live frame"
+
+msgid "common.next"
+msgstr "Next"
+
+msgid "common.nickname"
+msgstr "Nickname"
+
+msgid "common.none"
+msgstr "none"
+
+msgid "common.ok"
+msgstr "OK"
+
+msgid "common.previous"
+msgstr "Previous"
+
+msgid "common.question"
+msgstr "Question"
+
+msgid "common.save"
+msgstr "Save"
+
+msgid "common.stage"
+msgstr "Stage"
+
+msgid "common.start"
+msgstr "Start"
+
+msgid "common.state"
+msgstr "State"
+
+msgid "common.title"
+msgstr "Title"
+
+msgid "common.unknown"
+msgstr "unknown"
+
+msgid "home.meta.product"
+msgstr "Quiz Engine"
+
+msgid "home.page.heading"
+msgstr "Welcome"
+
+msgid "home.page.lead"
+msgstr "Start a session or join with a code."
+
+msgid "home.page.title"
+msgstr "Quiz Engine"
+
+msgid "host.session.connecting"
+msgstr "Connecting live channel..."
+
+msgid "host.session.current_stage"
+msgstr "Current stage"
+
+msgid "host.session.heading"
+msgstr "Live session host"
+
+msgid "host.session.hint"
+msgstr "Share the code or QR with players, then run the quiz live."
+
+msgid "host.session.join_url"
+msgstr "Join URL"
+
+msgid "host.session.page_title"
+msgstr "Host Session"
+
+msgid "host.session.players"
+msgstr "Players"
+
+msgid "host.session.session_code"
+msgstr "Session code"
+
+msgid "host.session.state"
+msgstr "Session state"
+
+msgid "host_session.connected"
+msgstr "Connected."
+
+msgid "host_session.disconnected"
+msgstr "Disconnected."
+
+msgid "host_session.error"
+msgstr "Error: {message}"
+
+msgid "host_session.no_players"
+msgstr "No players yet."
+
+msgid "host_session.player_joined"
+msgstr "{nickname} joined."
+
+msgid "host_session.player_left"
+msgstr "A player left."
+
+msgid "host_session.renderer_unavailable"
+msgstr "Renderer unavailable."
+
+msgid "host_session.session_ready"
+msgstr "Session ready ({code})."
+
+msgid "host_session.stage"
+msgstr "Stage"
+
+msgid "host_session.stage_changed"
+msgstr "Stage changed."
+
+msgid "host_session.state_changed"
+msgstr "State changed: {state}."
+
+msgid "player.join.button"
+msgstr "Join session"
+
+msgid "player.join.heading"
+msgstr "Enter your nickname"
+
+msgid "player.join.hint"
+msgstr "You will join the lobby from your phone."
+
+msgid "player.join.meta"
+msgstr "Join live session"
+
+msgid "player.join.page_title"
+msgstr "Join Session"
+
+msgid "player.session.connecting"
+msgstr "Connecting live channel..."
+
+msgid "player.session.heading"
+msgstr "Player screen"
+
+msgid "player.session.hint"
+msgstr "Wait for the host to start and advance stages."
+
+msgid "player.session.meta"
+msgstr "Session"
+
+msgid "player.session.page_title"
+msgstr "Player Session"
+
+msgid "player_session.connected"
+msgstr "Connected."
+
+msgid "player_session.disconnected"
+msgstr "Disconnected."
+
+msgid "player_session.error"
+msgstr "Error: {message}"
+
+msgid "player_session.in_lobby"
+msgstr "In lobby."
+
+msgid "player_session.left_session"
+msgstr "You left the session."
+
+msgid "player_session.nickname_required"
+msgstr "Nickname is required."
+
+msgid "player_session.player_joined"
+msgstr "{nickname} joined."
+
+msgid "player_session.player_left"
+msgstr "A player left."
+
+msgid "player_session.renderer_unavailable"
+msgstr "Renderer unavailable."
+
+msgid "player_session.stage"
+msgstr "Stage"
+
+msgid "player_session.state_changed"
+msgstr "State changed: {state}."
+
+msgid "question_type_modal.hint"
+msgstr "One click adds the question after the selected row."
+
+msgid "question_type_modal.title"
+msgstr "Pick a question type"
+
+msgid "quiz_delete_modal.default_message"
+msgstr "This action cannot be undone."
+
+msgid "quiz_delete_modal.title"
+msgstr "Delete quiz?"
+
+msgid "quiz_editor.above_max"
+msgstr "{field} exceeds the maximum allowed."
+
+msgid "quiz_editor.advanced_json"
+msgstr "Advanced JSON"
+
+msgid "quiz_editor.below_min"
+msgstr "{field} is below the minimum allowed."
+
+msgid "quiz_editor.blocking_message"
+msgstr "Cannot save because some question rules are not respected. Please fix them first."
+
+msgid "quiz_editor.choice.add"
+msgstr "Add choice"
+
+msgid "quiz_editor.choice.at_least_one_correct"
+msgstr "At least one choice must be marked as correct."
+
+msgid "quiz_editor.choice.cannot_be_empty"
+msgstr "Choice {index} cannot be empty."
+
+msgid "quiz_editor.choice.correct_answer"
+msgstr "Correct answer"
+
+msgid "quiz_editor.choice.count"
+msgstr "Choices: {current} / {max} (min {min})."
+
+msgid "quiz_editor.choice.empty_placeholder"
+msgstr "cannot be empty"
+
+msgid "quiz_editor.choice.label"
+msgstr "Choice {index}"
+
+msgid "quiz_editor.choice.max"
+msgstr "Maximum {count} choices reached."
+
+msgid "quiz_editor.choice.min"
+msgstr "Minimum {count} choice(s)."
+
+msgid "quiz_editor.choice.points"
+msgstr "Points"
+
+msgid "quiz_editor.choice.remove"
+msgstr "Delete"
+
+msgid "quiz_editor.config_json"
+msgstr "Configuration (JSON)"
+
+msgid "quiz_editor.copy_json"
+msgstr "Copy"
+
+msgid "quiz_editor.copy_json_error"
+msgstr "Unable to copy JSON."
+
+msgid "quiz_editor.default_slide_label"
+msgstr "Slide"
+
+msgid "quiz_editor.default_title_prefix"
+msgstr "Question"
+
+msgid "quiz_editor.delete_question"
+msgstr "Delete question"
+
+msgid "quiz_editor.enum.invalid"
+msgstr "Invalid enum value selected."
+
+msgid "quiz_editor.error.empty"
+msgstr "Please fix the highlighted errors."
+
+msgid "quiz_editor.field.fallback"
+msgstr "field"
+
+msgid "quiz_editor.field.unknown"
+msgstr "Field"
+
+msgid "quiz_editor.invalid_value"
+msgstr "{field} has an invalid value."
+
+msgid "quiz_editor.json_copied"
+msgstr "Copied"
+
+msgid "quiz_editor.json_invalid"
+msgstr "Configuration must be a valid JSON object."
+
+msgid "quiz_editor.leave_without_saving"
+msgstr "Leave without saving?"
+
+msgid "quiz_editor.max_items"
+msgstr "{field} must contain at most {count} item(s)."
+
+msgid "quiz_editor.min_items"
+msgstr "{field} must contain at least {count} item(s)."
+
+msgid "quiz_editor.must_be_boolean"
+msgstr "{field} must be a boolean."
+
+msgid "quiz_editor.must_be_integer"
+msgstr "{field} must be an integer."
+
+msgid "quiz_editor.must_be_list"
+msgstr "{field} must be a list."
+
+msgid "quiz_editor.must_be_number"
+msgstr "{field} must be a number."
+
+msgid "quiz_editor.must_be_object"
+msgstr "{field} must be an object."
+
+msgid "quiz_editor.no_questions"
+msgstr "No questions in this quiz."
+
+msgid "quiz_editor.numeric.empty"
+msgstr "Numeric field cannot be empty."
+
+msgid "quiz_editor.question_json_invalid"
+msgstr "Question JSON configuration is invalid."
+
+msgid "quiz_editor.question_title"
+msgstr "Question title"
+
+msgid "quiz_editor.question_title_required"
+msgstr "Question title is required."
+
+msgid "quiz_editor.reorder_question"
+msgstr "Reorder question"
+
+msgid "quiz_editor.required"
+msgstr "{field} is required."
+
+msgid "quiz_editor.response_points.invalid"
+msgstr "Response points must be an integer within [{min}, {max}]."
+
+msgid "quiz_editor.save_error"
+msgstr "Unable to save quiz. Leave this page only after saving."
+
+msgid "quiz_editor.schema_fallback"
+msgstr "This plugin provides a schema. Auto-form is not available for this shape yet."
+
+msgid "quiz_editor.status.saved"
+msgstr "Saved"
+
+msgid "quiz_editor.status.saving"
+msgstr "Saving..."
+
+msgid "quiz_editor.status.unsaved"
+msgstr "Unsaved"
+
+msgid "quiz_editor.untitled_question"
+msgstr "Untitled question"
+
+msgid "quiz_editor.untitled_quiz"
+msgstr "Untitled quiz"
+
+msgid "quiz_preview.no_stages"
+msgstr "No stages to preview."
+
+msgid "quiz_preview.question_fallback"
+msgstr "Question {index}"
+
+msgid "quiz_preview.renderer_unavailable"
+msgstr "Renderer unavailable."
+
+msgid "quiz_preview.stage_fallback"
+msgstr "Stage"
+
+msgid "quiz_preview.stage_number"
+msgstr "Stage {index}"
+
+msgid "admin.editor.aria.toolbar"
+msgstr "Editor save toolbar"
+
+msgid "admin.preview.aria.navigation"
+msgstr "Preview navigation"
+
+msgid "admin_nav.aria.navigation"
+msgstr "Admin navigation"
+
+msgid "auth_widget.aria.authentication"
+msgstr "Authentication"
+
+msgid "auth_widget.aria.roles"
+msgstr "Roles"
+
+msgid "auth_widget.confirm.sign_out"
+msgstr "Confirm sign out?"
+
+msgid "common.optional"
+msgstr "Optional"
+
+msgid "host.session.join_qr_alt"
+msgstr "Join session QR code"
+
+msgid "player.session.nickname_placeholder"
+msgstr "Your nickname"
+
+msgid "question_type_modal.aria.list"
+msgstr "Question types"
+
+msgid "quiz_delete_confirm.with_title"
+msgstr "Delete \"{title}\" permanently? This action cannot be undone."
+
+msgid "quiz_delete_confirm.without_title"
+msgstr "Delete this quiz permanently? This action cannot be undone."
+
+msgid "quiz_editor.numeric.finite"
+msgstr "Numeric field must contain a finite number."
+
+msgid "quiz_editor.numeric.integer"
+msgstr "Integer field must contain an integer."
+
+msgid "quiz_preview.stage_meta"
+msgstr "Stage {index} • {plugin}"
+
+msgid "quiz_preview.unavailable_type"
+msgstr "Preview unavailable for '{type}'."
+
+msgid "slide_renderer.static_placeholder_only"
+msgstr "Static placeholder only."

@@ -1,17 +1,19 @@
-<div class="qe-auth-widget" aria-label="Authentication">
+<div class="qe-auth-widget" aria-label="{{ _('auth_widget.aria.authentication') }}">
   {% if current_user %}
-    <a class="qe-auth-link" href="/account">Account</a>
+    <a class="qe-auth-link" href="/account">{{ _("auth_widget.link.account") }}</a>
     {% if auth_roles %}
-      <span class="qe-auth-roles" aria-label="Roles">{{ auth_roles | join(", ") }}</span>
+      <span class="qe-auth-roles" aria-label="{{ _('auth_widget.aria.roles') }}"
+        >{{ auth_roles | join(", ") }}</span
+      >
     {% endif %}
     <form
       method="post"
       action="/logout"
-      onsubmit="return confirm('Confirm sign out?');"
+      onsubmit="return confirm('{{ _('auth_widget.confirm.sign_out') }}');"
     >
-      <button class="qe-auth-link" type="submit">Logout</button>
+      <button class="qe-auth-link" type="submit">{{ _("auth_widget.button.logout") }}</button>
     </form>
   {% else %}
-    <a class="qe-auth-link" href="/login">Connect</a>
+    <a class="qe-auth-link" href="/login">{{ _("auth_widget.link.login") }}</a>
   {% endif %}
 </div>

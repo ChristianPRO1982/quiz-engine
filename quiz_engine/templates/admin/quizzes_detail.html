@@ -1,20 +1,20 @@
 {% extends "base.html" %}
-{% block title %}Quiz Editor{% endblock %}
+{% block title %}{{ _("admin.editor.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card qe-editor" data-quiz-id="{{ quiz.id }}">
     <p class="qe-meta">
       <span>Quiz #{{ quiz.id }}</span>
-      <a href="/admin/quizzes">Back to list</a>
+      <a href="/admin/quizzes">{{ _("admin.editor.back_to_list") }}</a>
     </p>
-    <h1 class="qe-title">Quiz editor</h1>
-    <p class="qe-hint">Edit questions, reorder with drag handle, then save manually.</p>
-    <p class="qe-muted-text">Schema: {{ editor_payload.schema_version }}</p>
+    <h1 class="qe-title">{{ _("admin.editor.heading") }}</h1>
+    <p class="qe-hint">{{ _("admin.editor.hint") }}</p>
+    <p class="qe-muted-text">{{ _("admin.editor.schema") }}: {{ editor_payload.schema_version }}</p>
 
-    <section class="qe-editor-toolbar" aria-label="Editor save toolbar">
-      <span id="qe-editor-status" class="qe-pill">Saved</span>
+    <section class="qe-editor-toolbar" aria-label="{{ _('admin.editor.aria.toolbar') }}">
+      <span id="qe-editor-status" class="qe-pill">{{ _("admin.editor.status.saved") }}</span>
       <div class="qe-editor-toolbar__actions">
         <form method="post" action="/host/quizzes/{{ quiz.id }}/start">
-          <button class="qe-btn" type="submit">Start session</button>
+          <button class="qe-btn" type="submit">{{ _("admin.editor.start_session") }}</button>
         </form>
         <form
           method="post"
@@ -22,33 +22,35 @@
           data-qe-confirm-delete="quiz"
           data-quiz-title="{{ editor_payload.title }}"
         >
-          <button class="qe-btn qe-btn--danger" type="submit">Delete quiz</button>
+          <button class="qe-btn qe-btn--danger" type="submit">{{ _("admin.editor.delete_quiz") }}</button>
         </form>
-        <button id="qe-editor-preview" class="qe-btn" type="button">Preview</button>
-        <button id="qe-editor-save" class="qe-btn qe-btn--primary" type="button" disabled>Save</button>
+        <button id="qe-editor-preview" class="qe-btn" type="button">{{ _("admin.editor.preview") }}</button>
+        <button id="qe-editor-save" class="qe-btn qe-btn--primary" type="button" disabled>
+          {{ _("common.save") }}
+        </button>
       </div>
     </section>
 
     <p id="qe-editor-error" class="qe-error" role="alert" hidden></p>
 
     <section class="qe-editor-meta">
-      <label for="qe-editor-title">Quiz title</label>
+      <label for="qe-editor-title">{{ _("admin.editor.quiz_title") }}</label>
       <input id="qe-editor-title" name="title" type="text" value="{{ editor_payload.title }}" />
 
-      <label for="qe-editor-description">Description</label>
+      <label for="qe-editor-description">{{ _("common.description") }}</label>
       <textarea id="qe-editor-description" name="description" rows="3">{{ editor_payload.description or "" }}</textarea>
     </section>
 
     <section class="qe-editor-questions">
       <div class="qe-editor-questions__head">
-        <h2>Questions</h2>
+        <h2>{{ _("admin.editor.questions") }}</h2>
         <button id="qe-editor-add-question" class="qe-btn" type="button" aria-haspopup="dialog">
-          + Add question
+          + {{ _("admin.editor.add_question") }}
         </button>
       </div>
       <div id="qe-editor-question-list" class="qe-editor-list" aria-live="polite"></div>
       {% if not editor_payload.questions %}
-        <p id="qe-editor-empty-server" class="qe-hint">No questions in this quiz.</p>
+        <p id="qe-editor-empty-server" class="qe-hint">{{ _("admin.editor.empty_questions") }}</p>
       {% endif %}
     </section>
   </section>
@@ -57,31 +59,84 @@
 
   <dialog id="qe-editor-delete-modal" class="qe-modal">
     <form method="dialog" class="qe-modal__panel qe-modal__panel--confirm">
-      <h2>Delete question?</h2>
-      <p>This action cannot be undone.</p>
+      <h2>{{ _("admin.editor.delete_question_title") }}</h2>
+      <p>{{ _("common.cannot_be_undone") }}</p>
       <menu class="qe-actions">
-        <button class="qe-btn" id="qe-editor-delete-cancel" type="button">Cancel</button>
-        <button class="qe-btn qe-btn--primary" id="qe-editor-delete-confirm" type="button">Delete</button>
+        <button class="qe-btn" id="qe-editor-delete-cancel" type="button">{{ _("common.cancel") }}</button>
+        <button class="qe-btn qe-btn--primary" id="qe-editor-delete-confirm" type="button">
+          {{ _("common.delete") }}
+        </button>
       </menu>
     </form>
   </dialog>
 
   <dialog id="qe-editor-validation-modal" class="qe-modal">
     <form method="dialog" class="qe-modal__panel qe-modal__panel--confirm">
-      <h2>Unable to save</h2>
+      <h2>{{ _("admin.editor.validation.title") }}</h2>
       <p>
-        Cannot save because some question rules are not respected. Please fix them first.
+        {{ _("admin.editor.validation.message") }}
       </p>
       <ul id="qe-editor-validation-list" class="qe-validation-list"></ul>
       <menu class="qe-actions">
-        <button class="qe-btn qe-btn--primary" id="qe-editor-validation-close" type="button">OK</button>
+        <button class="qe-btn qe-btn--primary" id="qe-editor-validation-close" type="button">
+          {{ _("common.ok") }}
+        </button>
       </menu>
     </form>
   </dialog>
   {% include "partials/quiz_delete_confirm_modal.html" %}
 
   <script id="qe-editor-bootstrap" type="application/json">
-    {{ {"quiz": editor_payload, "question_types": question_types} | tojson }}
+    {{ {
+      "quiz": editor_payload,
+      "question_types": question_types,
+      "translations": {
+        "quiz_editor.default_title_prefix": _("quiz_editor.default_title_prefix"),
+        "quiz_editor.field.fallback": _("quiz_editor.field.fallback"),
+        "quiz_editor.field.unknown": _("quiz_editor.field.unknown"),
+        "quiz_editor.choice.label": _("quiz_editor.choice.label"),
+        "quiz_editor.choice.empty_placeholder": _("quiz_editor.choice.empty_placeholder"),
+        "quiz_editor.choice.remove": _("quiz_editor.choice.remove"),
+        "quiz_editor.choice.add": _("quiz_editor.choice.add"),
+        "quiz_editor.choice.min": _("quiz_editor.choice.min"),
+        "quiz_editor.choice.max": _("quiz_editor.choice.max"),
+        "quiz_editor.choice.count": _("quiz_editor.choice.count"),
+        "quiz_editor.choice.correct_answer": _("quiz_editor.choice.correct_answer"),
+        "quiz_editor.choice.points": _("quiz_editor.choice.points"),
+        "quiz_editor.numeric.empty": _("quiz_editor.numeric.empty"),
+        "quiz_editor.response_points.invalid": _("quiz_editor.response_points.invalid"),
+        "quiz_editor.status.saving": _("quiz_editor.status.saving"),
+        "quiz_editor.status.saved": _("quiz_editor.status.saved"),
+        "quiz_editor.error.empty": _("quiz_editor.error.empty"),
+        "quiz_editor.untitled_question": _("quiz_editor.untitled_question"),
+        "quiz_editor.delete_question": _("quiz_editor.delete_question"),
+        "quiz_editor.config_json": _("quiz_editor.config_json"),
+        "quiz_editor.copy_json": _("quiz_editor.copy_json"),
+        "quiz_editor.json_copied": _("quiz_editor.json_copied"),
+        "quiz_editor.json_invalid": _("quiz_editor.json_invalid"),
+        "quiz_editor.advanced_json": _("quiz_editor.advanced_json"),
+        "quiz_editor.schema_fallback": _("quiz_editor.schema_fallback"),
+        "quiz_editor.no_questions": _("quiz_editor.no_questions"),
+        "quiz_editor.required": _("quiz_editor.required"),
+        "quiz_editor.invalid_value": _("quiz_editor.invalid_value"),
+        "quiz_editor.must_be_number": _("quiz_editor.must_be_number"),
+        "quiz_editor.must_be_integer": _("quiz_editor.must_be_integer"),
+        "quiz_editor.below_min": _("quiz_editor.below_min"),
+        "quiz_editor.above_max": _("quiz_editor.above_max"),
+        "quiz_editor.must_be_boolean": _("quiz_editor.must_be_boolean"),
+        "quiz_editor.must_be_list": _("quiz_editor.must_be_list"),
+        "quiz_editor.min_items": _("quiz_editor.min_items"),
+        "quiz_editor.max_items": _("quiz_editor.max_items"),
+        "quiz_editor.choice.cannot_be_empty": _("quiz_editor.choice.cannot_be_empty"),
+        "quiz_editor.choice.at_least_one_correct": _("quiz_editor.choice.at_least_one_correct"),
+        "quiz_editor.must_be_object": _("quiz_editor.must_be_object"),
+        "quiz_editor.question_title_required": _("quiz_editor.question_title_required"),
+        "quiz_editor.question_json_invalid": _("quiz_editor.question_json_invalid"),
+        "quiz_editor.blocking_message": _("quiz_editor.blocking_message"),
+        "quiz_editor.save_error": _("quiz_editor.save_error"),
+        "quiz_editor.leave_without_saving": _("quiz_editor.leave_without_saving")
+      }
+    } | tojson }}
   </script>
   <script src="/static/js/quiz_delete_confirm.js"></script>
   <script src="/static/js/quiz_editor.js"></script>

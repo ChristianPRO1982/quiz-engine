@@ -1,29 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Create Quiz - Review{% endblock %}
+{% block title %}{{ _("admin.new_review.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
     <p class="qe-meta">
-      <span>Create quiz</span>
-      <span class="qe-pill">Step 3/3</span>
+      <span>{{ _("admin.new.meta.create_quiz") }}</span>
+      <span class="qe-pill">{{ _("admin.new_review.step") }}</span>
     </p>
-    <h1 class="qe-title">Review and save</h1>
+    <h1 class="qe-title">{{ _("admin.new_review.heading") }}</h1>
     <dl class="qe-kv-list">
       <div>
-        <dt>Title</dt>
+        <dt>{{ _("common.title") }}</dt>
         <dd>{{ draft.title or "-" }}</dd>
       </div>
       <div>
-        <dt>Description</dt>
+        <dt>{{ _("common.description") }}</dt>
         <dd>{{ draft.description or "-" }}</dd>
       </div>
       <div>
-        <dt>Schema version</dt>
+        <dt>{{ _("admin.new_review.schema_version") }}</dt>
         <dd>{{ draft.schema_version }}</dd>
       </div>
     </dl>
 
     <section class="qe-results">
-      <h2>Questions ({{ draft.questions | length }})</h2>
+      <h2>{{ _("admin.new_review.questions") }} ({{ draft.questions | length }})</h2>
       {% if draft.questions %}
         {% for question in draft.questions %}
           <article class="qe-result-row">
@@ -39,7 +39,7 @@
           </article>
         {% endfor %}
       {% else %}
-        <p class="qe-hint">No question in draft yet.</p>
+        <p class="qe-hint">{{ _("admin.new_review.empty") }}</p>
       {% endif %}
     </section>
 
@@ -48,9 +48,9 @@
     {% endif %}
 
     <div class="qe-actions">
-      <a class="qe-btn" href="/admin/quizzes/new/step-2">Back to questions</a>
+      <a class="qe-btn" href="/admin/quizzes/new/step-2">{{ _("admin.new_review.back_to_questions") }}</a>
       <form method="post" action="/admin/quizzes/new/save">
-        <button class="qe-btn qe-btn--primary" type="submit">Save quiz</button>
+        <button class="qe-btn qe-btn--primary" type="submit">{{ _("admin.new_review.save_quiz") }}</button>
       </form>
     </div>
   </section>

@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Quiz Engine{% endblock %}
+{% block title %}{{ _("home.page.title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
     <p class="qe-meta">
-      <span>Quiz Engine</span>
+      <span>{{ _("home.meta.product") }}</span>
       {% if is_dev %}
         <span class="qe-pill qe-pill--dev">{{ _("home.badge.dev") }}</span>
       {% endif %}
     </p>
-    <h1 class="qe-title">Bienvenue</h1>
-    <p class="qe-hint">Lance une session ou rejoins avec un code.</p>
+    <h1 class="qe-title">{{ _("home.page.heading") }}</h1>
+    <p class="qe-hint">{{ _("home.page.lead") }}</p>
   </section>
 {% endblock %}

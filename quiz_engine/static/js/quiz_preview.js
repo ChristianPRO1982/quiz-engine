@@ -15,6 +15,37 @@
   } catch (error) {
     bootstrap = {};
   }
+  const bootstrapTranslations =
+    bootstrap &&
+    typeof bootstrap.translations === "object" &&
+    !Array.isArray(bootstrap.translations)
+      ? bootstrap.translations
+      : {};
+
+  const t = (key, fallback, vars = {}) => {
+    const interpolate = (text) =>
+      String(text || "").replace(/\{(\w+)\}/g, (match, token) =>
+        Object.prototype.hasOwnProperty.call(vars, token)
+          ? String(vars[token])
+          : match
+      );
+    const fromBootstrap = Object.prototype.hasOwnProperty.call(
+      bootstrapTranslations,
+      key
+    )
+      ? bootstrapTranslations[key]
+      : null;
+    if (typeof fromBootstrap === "string" && fromBootstrap) {
+      return interpolate(fromBootstrap);
+    }
+    if (window.qeI18n && typeof window.qeI18n.t === "function") {
+      const translated = window.qeI18n.t(key, vars);
+      if (translated !== key) {
+        return translated;
+      }
+    }
+    return interpolate(fallback || key);
+  };
 
   const readText = (value, fallback = "") => {
     const text = String(value || "").trim();
@@ -57,7 +88,10 @@
       .map((question, index) => ({
         question_id: readText(question.question_id, `question-${index + 1}`),
         type: readText(question.type, "slide"),
-        title: readText(question.title, `Question ${index + 1}`),
+        title: readText(
+          question.title,
+          t("quiz_preview.question_fallback", "Question {index}", { index: index + 1 })
+        ),
         spec:
           question.spec && typeof question.spec === "object" && !Array.isArray(question.spec)
             ? question.spec
@@ -74,7 +108,10 @@
         : null;
     const bodyFormat = readText(content.body_format, "text").toLowerCase();
     const payload = {
-      title: readText(title, readText(content.title, "Stage")),
+      title: readText(
+        title,
+        readText(content.title, t("quiz_preview.stage_fallback", "Stage"))
+      ),
       body: readText(content.body),
       body_format: bodyFormat === "markdown" ? "markdown" : "text",
     };
@@ -98,7 +135,11 @@
               kind: "placeholder",
               payload: {
                 title: question.title,
-                body: `Preview unavailable for '${question.type}'.`,
+                body: t(
+                  "quiz_preview.unavailable_type",
+                  "Preview unavailable for '{type}'.",
+                  { type: question.type }
+                ),
               },
               is_placeholder: true,
             };
@@ -129,7 +170,7 @@
     stageEl.replaceChildren();
     const empty = document.createElement("p");
     empty.className = "qe-hint";
-    empty.textContent = "No stages to preview.";
+    empty.textContent = t("quiz_preview.no_stages", "No stages to preview.");
     stageEl.appendChild(empty);
   };
 
@@ -150,14 +191,31 @@
       viewModel.payload && typeof viewModel.payload === "object" ? viewModel.payload : {};
     if (window.qeSlideRenderer && typeof window.qeSlideRenderer.renderFrame === "function") {
       window.qeSlideRenderer.renderFrame(stageEl, { ...viewModel, payload }, {
-        fallbackTitle: readText(payload.title || stage.title, `Stage ${state.index + 1}`),
-        metaText: `Stage ${state.index + 1} • ${stage.plugin_id || "unknown"}`,
+        fallbackTitle: readText(
+          payload.title || stage.title,
+          t("quiz_preview.stage_number", "Stage {index}", { index: state.index + 1 })
+        ),
+        metaText: t(
+          "quiz_preview.stage_meta",
+          "Stage {index} • {plugin}",
+          {
+            index: state.index + 1,
+            plugin: stage.plugin_id || t("common.unknown", "unknown"),
+          }
+        ),
         showPlaceholderNote: true,
+        placeholderNoteText: t(
+          "slide_renderer.static_placeholder_only",
+          "Static placeholder only."
+        ),
       });
     } else {
       const fallback = document.createElement("p");
       fallback.className = "qe-hint";
-      fallback.textContent = readText(payload.body, "Renderer unavailable.");
+      fallback.textContent = readText(
+        payload.body,
+        t("quiz_preview.renderer_unavailable", "Renderer unavailable.")
+      );
       stageEl.appendChild(fallback);
     }
     positionEl.textContent = `${state.index + 1} / ${state.stages.length}`;

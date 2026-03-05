@@ -11,6 +11,35 @@
     bootstrap = {};
   }
 
+  const bootstrapTranslations =
+    bootstrap &&
+    typeof bootstrap.translations === "object" &&
+    !Array.isArray(bootstrap.translations)
+      ? bootstrap.translations
+      : {};
+  const interpolate = (text, vars = {}) =>
+    String(text || "").replace(/\{(\w+)\}/g, (match, key) =>
+      Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : match
+    );
+  const t = (key, fallback, vars = {}) => {
+    const globalT =
+      window.qeI18n && typeof window.qeI18n.t === "function" ? window.qeI18n.t : null;
+    const fromGlobal = globalT ? globalT(key, vars) : key;
+    const fromBootstrap = Object.prototype.hasOwnProperty.call(
+      bootstrapTranslations,
+      key
+    )
+      ? bootstrapTranslations[key]
+      : null;
+    const source =
+      typeof fromBootstrap === "string" && fromBootstrap
+        ? fromBootstrap
+        : fromGlobal !== key
+          ? fromGlobal
+          : fallback;
+    return interpolate(source || key, vars);
+  };
+
   const quizPayload = bootstrap.quiz || {};
   const typeOptionsInput = Array.isArray(bootstrap.question_types)
     ? bootstrap.question_types
@@ -153,7 +182,7 @@
   if (!typeOptions.some((option) => option.type === "slide")) {
     typeOptions.unshift({
       type: "slide",
-      label: "Slide",
+      label: t("quiz_editor.default_slide_label", "Slide"),
       description: null,
       pluginType: "info",
       stageConfigSchema: null,
@@ -182,7 +211,7 @@
     if (option && option.label) {
       return option.label;
     }
-    return "Question";
+    return t("quiz_editor.default_title_prefix", "Question");
   };
 
   const defaultQuestionSpec = (questionType) => {
@@ -201,13 +230,13 @@
   };
 
   const formatSchemaFieldLabel = (rawKey) => {
-    const source = readText(rawKey, "field");
+    const source = readText(rawKey, t("quiz_editor.field.fallback", "field"));
     const normalized = source
       .replace(/[_-]+/g, " ")
       .replace(/\s+/g, " ")
       .trim();
     if (!normalized) {
-      return "Field";
+      return t("quiz_editor.field.unknown", "Field");
     }
     return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   };
@@ -472,7 +501,9 @@
         input.value = "";
       }
       input.classList.toggle("qe-choice-input--invalid", isBlank);
-      input.placeholder = isBlank ? "cannot be empty" : "";
+      input.placeholder = isBlank
+        ? t("quiz_editor.choice.empty_placeholder", "cannot be empty")
+        : "";
     };
 
     const renderObjectProperties = ({ schemaNode, path, target, depth }) => {
@@ -594,7 +625,9 @@
               parsedIndex < 0 ||
               parsedIndex >= enumValues.length
             ) {
-              setErrorMessage("Invalid enum value selected.");
+              setErrorMessage(
+                t("quiz_editor.enum.invalid", "Invalid enum value selected.")
+              );
               return;
             }
             const selectedValue = enumValues[parsedIndex];
@@ -667,18 +700,30 @@
           input.addEventListener("change", () => {
             const raw = String(input.value || "").trim();
             if (!raw) {
-              setErrorMessage("Numeric field cannot be empty.");
+              setErrorMessage(
+                t("quiz_editor.numeric.empty", "Numeric field cannot be empty.")
+              );
               resetFromSpec();
               return;
             }
             const parsed = Number(raw);
             if (!Number.isFinite(parsed)) {
-              setErrorMessage("Numeric field must contain a finite number.");
+              setErrorMessage(
+                t(
+                  "quiz_editor.numeric.finite",
+                  "Numeric field must contain a finite number."
+                )
+              );
               resetFromSpec();
               return;
             }
             if (childType === "integer" && !Number.isInteger(parsed)) {
-              setErrorMessage("Integer field must contain an integer.");
+              setErrorMessage(
+                t(
+                  "quiz_editor.numeric.integer",
+                  "Integer field must contain an integer."
+                )
+              );
               resetFromSpec();
               return;
             }
@@ -739,7 +784,9 @@
 
             const choiceLabel = document.createElement("span");
             choiceLabel.className = "qe-schema-choice-row__label";
-            choiceLabel.textContent = `Choice ${choiceIndex + 1}`;
+            choiceLabel.textContent = t("quiz_editor.choice.label", "Choice {index}", {
+              index: choiceIndex + 1,
+            });
             choiceRow.appendChild(choiceLabel);
 
             const choiceInput = document.createElement("input");
@@ -776,7 +823,10 @@
             const correctToggleWrap = document.createElement("label");
             correctToggleWrap.className = "qe-schema-choice-option qe-schema-choice-option--toggle";
             const correctToggleText = document.createElement("span");
-            correctToggleText.textContent = "Correct answer";
+            correctToggleText.textContent = t(
+              "quiz_editor.choice.correct_answer",
+              "Correct answer"
+            );
             const correctToggleInput = document.createElement("input");
             correctToggleInput.type = "checkbox";
             const currentWeight =
@@ -838,7 +888,7 @@
               const pointsWrap = document.createElement("label");
               pointsWrap.className = "qe-schema-choice-option";
               const pointsLabel = document.createElement("span");
-              pointsLabel.textContent = "Points";
+              pointsLabel.textContent = t("quiz_editor.choice.points", "Points");
               const pointsInput = document.createElement("input");
               pointsInput.type = "number";
               pointsInput.step = "1";
@@ -854,7 +904,11 @@
                   parsedValue > responseMaxPoints
                 ) {
                   setErrorMessage(
-                    `Response points must be an integer within [${responseMinPoints}, ${responseMaxPoints}].`
+                    t(
+                      "quiz_editor.response_points.invalid",
+                      "Response points must be an integer within [{min}, {max}].",
+                      { min: responseMinPoints, max: responseMaxPoints }
+                    )
                   );
                   pointsInput.value = String(currentWeight);
                   return;
@@ -882,13 +936,17 @@
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "qe-btn qe-btn--danger qe-schema-choice-row__remove";
-            removeButton.textContent = "Delete";
+            removeButton.textContent = t("quiz_editor.choice.remove", "Delete");
             removeButton.disabled = currentChoices.length <= minItems;
             removeButton.addEventListener("click", () => {
               const nextChoices = readChoiceList(childPath);
               if (nextChoices.length <= minItems) {
                 setErrorMessage(
-                  `Minimum ${minItems} choice${minItems > 1 ? "s" : ""}.`
+                  t(
+                    "quiz_editor.choice.min",
+                    "Minimum {count} choice(s).",
+                    { count: minItems }
+                  )
                 );
                 return;
               }
@@ -913,13 +971,15 @@
           const addButton = document.createElement("button");
           addButton.type = "button";
           addButton.className = "qe-btn qe-schema-choices__add";
-          addButton.textContent = "Add choice";
+          addButton.textContent = t("quiz_editor.choice.add", "Add choice");
           addButton.disabled = currentChoices.length >= maxItems;
           addButton.addEventListener("click", () => {
             const nextChoices = readChoiceList(childPath);
             if (nextChoices.length >= maxItems) {
               setErrorMessage(
-                `Maximum ${maxItems} choices reached.`
+                t("quiz_editor.choice.max", "Maximum {count} choices reached.", {
+                  count: maxItems,
+                })
               );
               return;
             }
@@ -939,7 +999,15 @@
 
           const limitsText = document.createElement("p");
           limitsText.className = "qe-muted-text";
-          limitsText.textContent = `Choices: ${currentChoices.length} / ${Number.isFinite(maxItems) ? maxItems : "∞"} (min ${minItems}).`;
+          limitsText.textContent = t(
+            "quiz_editor.choice.count",
+            "Choices: {current} / {max} (min {min}).",
+            {
+              current: currentChoices.length,
+              max: Number.isFinite(maxItems) ? maxItems : "∞",
+              min: minItems,
+            }
+          );
           actions.appendChild(limitsText);
           field.appendChild(actions);
         } else {
@@ -1033,7 +1101,10 @@
     quizId: Number(quizPayload.quiz_id || quizPayload.id || 0),
     draft: {
       schema_version: readText(quizPayload.schema_version, "v1"),
-      title: readText(quizPayload.title, "Untitled quiz"),
+      title: readText(
+        quizPayload.title,
+        t("quiz_editor.untitled_quiz", "Untitled quiz")
+      ),
       description: readText(quizPayload.description),
       questions: normalizeQuestions(quizPayload.questions),
     },
@@ -1054,12 +1125,15 @@
 
   const buildDraftPayload = () => ({
     schema_version: readText(state.draft.schema_version, "v1"),
-    title: readText(state.draft.title, "Untitled quiz"),
+    title: readText(state.draft.title, t("quiz_editor.untitled_quiz", "Untitled quiz")),
     description: readText(state.draft.description) || null,
     questions: state.draft.questions.map((question) => ({
       question_id: question.question_id,
       type: question.type,
-      title: readText(question.title, "Untitled question"),
+      title: readText(
+        question.title,
+        t("quiz_editor.untitled_question", "Untitled question")
+      ),
       spec: normalizeQuestionSpec(question.spec, question.type),
     })),
   });
@@ -1113,7 +1187,10 @@
   if (snapshot) {
     state.draft = {
       schema_version: readText(snapshot.draft.schema_version, "v1"),
-      title: readText(snapshot.draft.title, "Untitled quiz"),
+      title: readText(
+        snapshot.draft.title,
+        t("quiz_editor.untitled_quiz", "Untitled quiz")
+      ),
       description: readText(snapshot.draft.description),
       questions: normalizeQuestions(snapshot.draft.questions),
     };
@@ -1183,10 +1260,10 @@
 
   const renderToolbar = () => {
     const statusText = state.saving
-      ? "Saving..."
+      ? t("quiz_editor.status.saving", "Saving...")
       : state.dirty
-        ? "Unsaved"
-        : "Saved";
+        ? t("quiz_editor.status.unsaved", "Unsaved")
+        : t("quiz_editor.status.saved", "Saved");
     statusEl.textContent = statusText;
     previewButton.disabled = state.saving || state.draft.questions.length === 0;
     saveButton.disabled = state.saving || !state.dirty;
@@ -1208,7 +1285,7 @@
     handle.type = "button";
     handle.className = "qe-question__handle";
     handle.draggable = true;
-    handle.ariaLabel = "Reorder question";
+    handle.ariaLabel = t("quiz_editor.reorder_question", "Reorder question");
     handle.textContent = "⋮⋮";
     handle.addEventListener("pointerdown", () => {
       beginDragUi(handle);
@@ -1302,12 +1379,15 @@
 
     const titleLabel = document.createElement("label");
     titleLabel.className = "qe-question__field";
-    titleLabel.textContent = "Question title";
+    titleLabel.textContent = t("quiz_editor.question_title", "Question title");
     const titleField = document.createElement("input");
     titleField.type = "text";
     titleField.value = question.title;
     titleField.addEventListener("input", () => {
-      question.title = readText(titleField.value, "Untitled question");
+      question.title = readText(
+        titleField.value,
+        t("quiz_editor.untitled_question", "Untitled question")
+      );
       titleButton.textContent = `${index + 1}. ${question.title}`;
       setDirty(true);
     });
@@ -1316,7 +1396,7 @@
     const deleteButton = document.createElement("button");
     deleteButton.className = "qe-btn qe-btn--danger";
     deleteButton.type = "button";
-    deleteButton.textContent = "Delete question";
+    deleteButton.textContent = t("quiz_editor.delete_question", "Delete question");
     deleteButton.addEventListener("click", () => {
       state.pendingDeleteQuestionId = question.question_id;
       dialogShow(deleteModal);
@@ -1335,7 +1415,7 @@
 
     const specLabel = document.createElement("label");
     specLabel.className = "qe-question__field";
-    specLabel.textContent = "Configuration (JSON)";
+    specLabel.textContent = t("quiz_editor.config_json", "Configuration (JSON)");
     const specField = document.createElement("textarea");
     specField.rows = 8;
     specField.spellcheck = false;
@@ -1343,16 +1423,16 @@
     const specCopyButton = document.createElement("button");
     specCopyButton.type = "button";
     specCopyButton.className = "qe-json-copy-btn";
-    specCopyButton.textContent = "Copy";
+    specCopyButton.textContent = t("quiz_editor.copy_json", "Copy");
     specCopyButton.addEventListener("click", async () => {
       try {
         await copyTextToClipboard(specField.value);
-        specCopyButton.textContent = "Copied";
+        specCopyButton.textContent = t("quiz_editor.json_copied", "Copied");
         window.setTimeout(() => {
-          specCopyButton.textContent = "Copy";
+          specCopyButton.textContent = t("quiz_editor.copy_json", "Copy");
         }, 1200);
       } catch (error) {
-        setError("Unable to copy JSON.");
+        setError(t("quiz_editor.copy_json_error", "Unable to copy JSON."));
       }
     });
     const specWrap = document.createElement("div");
@@ -1381,7 +1461,12 @@
         }
         applySpecUpdate(parsed, { rerender: shouldRerenderAfterJsonChange });
       } catch (error) {
-        setError("Configuration must be a valid JSON object.");
+        setError(
+          t(
+            "quiz_editor.json_invalid",
+            "Configuration must be a valid JSON object."
+          )
+        );
         specField.value = JSON.stringify(question.spec, null, 2);
       }
     });
@@ -1409,7 +1494,7 @@
         const advanced = document.createElement("details");
         advanced.className = "qe-schema-json-details";
         const advancedSummary = document.createElement("summary");
-        advancedSummary.textContent = "Advanced JSON";
+        advancedSummary.textContent = t("quiz_editor.advanced_json", "Advanced JSON");
         advanced.appendChild(advancedSummary);
         advanced.appendChild(specLabel);
         panel.appendChild(advanced);
@@ -1418,7 +1503,10 @@
         const schemaFallback = document.createElement("p");
         schemaFallback.className = "qe-muted-text";
         schemaFallback.textContent =
-          "This plugin provides a schema. Auto-form is not available for this shape yet.";
+          t(
+            "quiz_editor.schema_fallback",
+            "This plugin provides a schema. Auto-form is not available for this shape yet."
+          );
         panel.appendChild(schemaFallback);
       }
     } else {
@@ -1443,7 +1531,7 @@
     if (state.draft.questions.length === 0) {
       const empty = document.createElement("p");
       empty.className = "qe-hint";
-      empty.textContent = "No questions in this quiz.";
+      empty.textContent = t("quiz_editor.no_questions", "No questions in this quiz.");
       listEl.appendChild(empty);
       return;
     }
@@ -1548,7 +1636,9 @@
       };
 
       if (required && isMissing()) {
-        errors.push(`${fieldLabel} is required.`);
+        errors.push(
+          t("quiz_editor.required", "{field} is required.", { field: fieldLabel })
+        );
         return;
       }
       if (isMissing()) {
@@ -1558,7 +1648,11 @@
       if (nodeType === "enum") {
         const enumValues = Array.isArray(node.enum) ? node.enum : [];
         if (!enumValues.some((candidate) => candidate === value)) {
-          errors.push(`${fieldLabel} has an invalid value.`);
+          errors.push(
+            t("quiz_editor.invalid_value", "{field} has an invalid value.", {
+              field: fieldLabel,
+            })
+          );
         }
         return;
       }
@@ -1569,43 +1663,75 @@
 
       if (nodeType === "integer" || nodeType === "number") {
         if (typeof value !== "number" || !Number.isFinite(value)) {
-          errors.push(`${fieldLabel} must be a number.`);
+          errors.push(
+            t("quiz_editor.must_be_number", "{field} must be a number.", {
+              field: fieldLabel,
+            })
+          );
           return;
         }
         if (nodeType === "integer" && !Number.isInteger(value)) {
-          errors.push(`${fieldLabel} must be an integer.`);
+          errors.push(
+            t("quiz_editor.must_be_integer", "{field} must be an integer.", {
+              field: fieldLabel,
+            })
+          );
           return;
         }
         if (typeof node.minimum === "number" && value < node.minimum) {
-          errors.push(`${fieldLabel} is below the minimum allowed.`);
+          errors.push(
+            t("quiz_editor.below_min", "{field} is below the minimum allowed.", {
+              field: fieldLabel,
+            })
+          );
           return;
         }
         if (typeof node.maximum === "number" && value > node.maximum) {
-          errors.push(`${fieldLabel} exceeds the maximum allowed.`);
+          errors.push(
+            t("quiz_editor.above_max", "{field} exceeds the maximum allowed.", {
+              field: fieldLabel,
+            })
+          );
         }
         return;
       }
 
       if (nodeType === "boolean") {
         if (typeof value !== "boolean") {
-          errors.push(`${fieldLabel} must be a boolean.`);
+          errors.push(
+            t("quiz_editor.must_be_boolean", "{field} must be a boolean.", {
+              field: fieldLabel,
+            })
+          );
         }
         return;
       }
 
       if (nodeType === "array") {
         if (!Array.isArray(value)) {
-          errors.push(`${fieldLabel} must be a list.`);
+          errors.push(
+            t("quiz_editor.must_be_list", "{field} must be a list.", {
+              field: fieldLabel,
+            })
+          );
           return;
         }
         if (typeof node.minItems === "number" && value.length < node.minItems) {
           errors.push(
-            `${fieldLabel} must contain at least ${Math.trunc(node.minItems)} item(s).`
+            t(
+              "quiz_editor.min_items",
+              "{field} must contain at least {count} item(s).",
+              { field: fieldLabel, count: Math.trunc(node.minItems) }
+            )
           );
         }
         if (typeof node.maxItems === "number" && value.length > node.maxItems) {
           errors.push(
-            `${fieldLabel} must contain at most ${Math.trunc(node.maxItems)} item(s).`
+            t(
+              "quiz_editor.max_items",
+              "{field} must contain at most {count} item(s).",
+              { field: fieldLabel, count: Math.trunc(node.maxItems) }
+            )
           );
         }
         if (fieldKey === "choices") {
@@ -1616,7 +1742,11 @@
                 ? choice.label
                 : "";
             if (!readText(label)) {
-              errors.push(`Choice ${index + 1} cannot be empty.`);
+              errors.push(
+                t("quiz_editor.choice.cannot_be_empty", "Choice {index} cannot be empty.", {
+                  index: index + 1,
+                })
+              );
             }
           });
           const hasCorrectChoice = value.some((choice) => {
@@ -1633,7 +1763,12 @@
             return choice.is_correct === true;
           });
           if (!hasCorrectChoice) {
-            errors.push("At least one choice must be marked as correct.");
+            errors.push(
+              t(
+                "quiz_editor.choice.at_least_one_correct",
+                "At least one choice must be marked as correct."
+              )
+            );
           }
         }
 
@@ -1653,7 +1788,11 @@
 
       if (nodeType === "object") {
         if (!isPlainObject(value)) {
-          errors.push(`${fieldLabel} must be an object.`);
+          errors.push(
+            t("quiz_editor.must_be_object", "{field} must be an object.", {
+              field: fieldLabel,
+            })
+          );
           return;
         }
         const properties = readSchemaProperties(node);
@@ -1691,10 +1830,17 @@
     state.draft.questions.forEach((question, index) => {
       const questionIssues = [];
       if (!readText(question.title)) {
-        questionIssues.push("Question title is required.");
+        questionIssues.push(
+          t("quiz_editor.question_title_required", "Question title is required.")
+        );
       }
       if (!isPlainObject(question.spec)) {
-        questionIssues.push("Question JSON configuration is invalid.");
+        questionIssues.push(
+          t(
+            "quiz_editor.question_json_invalid",
+            "Question JSON configuration is invalid."
+          )
+        );
       }
       const option = getQuestionTypeOption(question.type);
       if (
@@ -1760,7 +1906,10 @@
     if (blockingIssues.length > 0) {
       revealQuestion(blockingIssues[0].question_id);
       setError(
-        "Cannot save because some question rules are not respected. Please fix them first."
+        t(
+          "quiz_editor.blocking_message",
+          "Cannot save because some question rules are not respected. Please fix them first."
+        )
       );
       showBlockingValidationModal(blockingIssues);
       return;
@@ -1788,7 +1937,7 @@
       const saved = await response.json();
       state.draft = {
         schema_version: readText(saved.schema_version, "v1"),
-        title: readText(saved.title, "Untitled quiz"),
+        title: readText(saved.title, t("quiz_editor.untitled_quiz", "Untitled quiz")),
         description: readText(saved.description),
         questions: normalizeQuestions(saved.questions),
       };
@@ -1805,7 +1954,12 @@
       setDirty(false);
       renderQuestions();
     } catch (error) {
-      setError("Unable to save quiz. Leave this page only after saving.");
+      setError(
+        t(
+          "quiz_editor.save_error",
+          "Unable to save quiz. Leave this page only after saving."
+        )
+      );
       setDirty(true);
     } finally {
       state.saving = false;
@@ -1870,7 +2024,7 @@
     if (state.allowEditorNavigation || !state.dirty) {
       return;
     }
-    const warning = "Leave without saving?";
+    const warning = t("quiz_editor.leave_without_saving", "Leave without saving?");
     event.preventDefault();
     event.returnValue = warning;
     return warning;

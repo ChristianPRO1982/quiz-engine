@@ -1,25 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Create Quiz - Step 2{% endblock %}
+{% block title %}{{ _("admin.new_step2.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
     <p class="qe-meta">
-      <span>Create quiz</span>
-      <span class="qe-pill">Step 2/3</span>
+      <span>{{ _("admin.new.meta.create_quiz") }}</span>
+      <span class="qe-pill">{{ _("admin.new_step2.step") }}</span>
     </p>
-    <h1 class="qe-title">Add questions</h1>
-    <p class="qe-hint">Question type: single choice (qcm_single).</p>
+    <h1 class="qe-title">{{ _("admin.new_step2.heading") }}</h1>
+    <p class="qe-hint">{{ _("admin.new_step2.hint") }}</p>
 
     {% if draft.questions %}
       <ol class="qe-list">
         {% for question in draft.questions %}
           <li>
             <strong>{{ question.text }}</strong>
-            <span class="qe-muted-text">({{ question.choices | length }} choices)</span>
+            <span class="qe-muted-text"
+              >({{ question.choices | length }} {{ _("common.choices") }})</span
+            >
           </li>
         {% endfor %}
       </ol>
     {% else %}
-      <p class="qe-hint">No question yet. Add at least one question before saving.</p>
+      <p class="qe-hint">{{ _("admin.new_step2.empty") }}</p>
     {% endif %}
 
     {% if error %}
@@ -28,32 +30,32 @@
 
     <form method="post" action="/admin/quizzes/new/step-2" class="qe-form-grid">
       <label>
-        <span>Question text</span>
+        <span>{{ _("admin.new_step2.question_text") }}</span>
         <input type="text" name="question" required />
       </label>
       <label>
-        <span>Choice 1</span>
+        <span>{{ _("admin.new.choice_1") }}</span>
         <input type="text" name="choice1" required />
       </label>
       <label>
-        <span>Choice 2</span>
+        <span>{{ _("admin.new.choice_2") }}</span>
         <input type="text" name="choice2" required />
       </label>
       <label>
-        <span>Choice 3</span>
+        <span>{{ _("admin.new.choice_3") }}</span>
         <input type="text" name="choice3" />
       </label>
       <label>
-        <span>Choice 4</span>
+        <span>{{ _("admin.new.choice_4") }}</span>
         <input type="text" name="choice4" />
       </label>
       <div class="qe-actions">
-        <button class="qe-btn" type="submit" name="action" value="back">Back</button>
+        <button class="qe-btn" type="submit" name="action" value="back">{{ _("common.back") }}</button>
         <button class="qe-btn" type="submit" name="action" value="review">
-          Review draft
+          {{ _("admin.new_step2.review_draft") }}
         </button>
         <button class="qe-btn qe-btn--primary" type="submit" name="action" value="add">
-          Add question
+          {{ _("admin.new_step2.add_question") }}
         </button>
       </div>
     </form>

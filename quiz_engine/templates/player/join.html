@@ -1,19 +1,19 @@
 {% extends "base.html" %}
-{% block title %}Join Session{% endblock %}
+{% block title %}{{ _("player.join.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
     <p class="qe-meta">
-      <span>Join live session</span>
+      <span>{{ _("player.join.meta") }}</span>
       <strong>{{ session_code }}</strong>
     </p>
-    <h1 class="qe-title">Enter your nickname</h1>
-    <p class="qe-hint">You will join the lobby from your phone.</p>
+    <h1 class="qe-title">{{ _("player.join.heading") }}</h1>
+    <p class="qe-hint">{{ _("player.join.hint") }}</p>
 
     <form method="get" action="/player/s/{{ session_code }}" class="qe-form-grid">
-      <label for="nickname">Nickname</label>
+      <label for="nickname">{{ _("common.nickname") }}</label>
       <input id="nickname" name="nickname" type="text" maxlength="32" required />
       <div class="qe-actions qe-actions--start">
-        <button class="qe-btn qe-btn--primary" type="submit">Join session</button>
+        <button class="qe-btn qe-btn--primary" type="submit">{{ _("player.join.button") }}</button>
       </div>
     </form>
   </section>

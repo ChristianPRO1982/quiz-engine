@@ -1,23 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Host Session{% endblock %}
+{% block title %}{{ _("host.session.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card">
     <p class="qe-meta">
-      <span>Session code</span>
+      <span>{{ _("host.session.session_code") }}</span>
       <strong id="qe-host-session-code">{{ session_code }}</strong>
     </p>
-    <h1 class="qe-title">Live session host</h1>
-    <p class="qe-hint">Share the code or QR with players, then run the quiz live.</p>
+    <h1 class="qe-title">{{ _("host.session.heading") }}</h1>
+    <p class="qe-hint">{{ _("host.session.hint") }}</p>
 
     <div class="qe-admin-grid">
       <article class="qe-card qe-card--compact">
-        <p class="qe-muted-text">Join URL</p>
+        <p class="qe-muted-text">{{ _("host.session.join_url") }}</p>
         <p class="qe-hint" id="qe-host-join-url">{{ join_url }}</p>
-        <img src="{{ qr_data_url }}" alt="Join session QR code" class="qe-preview-image" />
+        <img
+          src="{{ qr_data_url }}"
+          alt="{{ _('host.session.join_qr_alt') }}"
+          class="qe-preview-image"
+        />
       </article>
 
       <article class="qe-card qe-card--compact">
-        <p class="qe-muted-text">Players</p>
+        <p class="qe-muted-text">{{ _("host.session.players") }}</p>
         <ul id="qe-host-players" class="qe-list">
           {% for player in players %}
             <li data-player-id="{{ player.player_id }}">{{ player.nickname }}</li>
@@ -28,20 +32,20 @@
 
     <section class="qe-card qe-card--compact">
       <p class="qe-meta">
-        <span>Session state</span>
+        <span>{{ _("host.session.state") }}</span>
         <strong id="qe-host-state">{{ session_state }}</strong>
       </p>
-      <p class="qe-muted-text">Current stage: <span id="qe-host-stage">none</span></p>
+      <p class="qe-muted-text">{{ _("host.session.current_stage") }}: <span id="qe-host-stage">{{ _("common.none") }}</span></p>
       <div class="qe-actions qe-actions--start">
-        <button class="qe-btn qe-btn--primary" id="qe-host-start" type="button">Start</button>
-        <button class="qe-btn" id="qe-host-next" type="button">Next</button>
-        <button class="qe-btn" id="qe-host-end" type="button">End</button>
+        <button class="qe-btn qe-btn--primary" id="qe-host-start" type="button">{{ _("common.start") }}</button>
+        <button class="qe-btn" id="qe-host-next" type="button">{{ _("common.next") }}</button>
+        <button class="qe-btn" id="qe-host-end" type="button">{{ _("common.end") }}</button>
       </div>
-      <p id="qe-host-status" class="qe-hint">Connecting live channel...</p>
+      <p id="qe-host-status" class="qe-hint">{{ _("host.session.connecting") }}</p>
     </section>
 
     <section class="qe-card qe-card--compact">
-      <p class="qe-meta"><span>Live frame</span></p>
+      <p class="qe-meta"><span>{{ _("common.live_frame") }}</span></p>
       <div id="qe-host-frame" class="qe-preview-stage"></div>
     </section>
   </section>
@@ -50,7 +54,20 @@
     {{ {
       "session_code": session_code,
       "session_state": session_state,
-      "join_url": join_url
+      "join_url": join_url,
+      "translations": {
+        "host_session.no_players": _("host_session.no_players"),
+        "host_session.renderer_unavailable": _("host_session.renderer_unavailable"),
+        "host_session.stage": _("host_session.stage"),
+        "host_session.session_ready": _("host_session.session_ready"),
+        "host_session.player_joined": _("host_session.player_joined"),
+        "host_session.player_left": _("host_session.player_left"),
+        "host_session.state_changed": _("host_session.state_changed"),
+        "host_session.stage_changed": _("host_session.stage_changed"),
+        "host_session.error": _("host_session.error"),
+        "host_session.connected": _("host_session.connected"),
+        "host_session.disconnected": _("host_session.disconnected")
+      }
     } | tojson }}
   </script>
   <script src="/static/js/slide_renderer.js"></script>

@@ -1,4 +1,14 @@
 (function () {
+  const t = (key, fallback) => {
+    if (window.qeI18n && typeof window.qeI18n.t === "function") {
+      const translated = window.qeI18n.t(key);
+      if (translated !== key) {
+        return translated;
+      }
+    }
+    return fallback;
+  };
+
   const readText = (value, fallback = "") => {
     const text = String(value || "").trim();
     return text || fallback;
@@ -224,7 +234,10 @@
     if (options.showPlaceholderNote && frame.is_placeholder) {
       const note = document.createElement("p");
       note.className = "qe-muted-text";
-      note.textContent = "Static placeholder only.";
+      note.textContent = readText(
+        options.placeholderNoteText,
+        t("slide_renderer.static_placeholder_only", "Static placeholder only.")
+      );
       card.appendChild(note);
     }
 

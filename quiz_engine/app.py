@@ -13,7 +13,7 @@ from starlette.templating import Jinja2Templates
 from auth.deps import get_current_user
 from auth.settings import AuthSettings
 from quiz_engine.db.session import get_session
-from quiz_engine.i18n import get_translator, select_locale
+from quiz_engine.i18n import get_catalog, get_translator, select_locale
 from quiz_engine.middleware.session import SessionCookieMiddleware
 from quiz_engine.plugins.registry import build_default_registry
 from quiz_engine.routers.admin import router as admin_router
@@ -36,6 +36,16 @@ def _template_auth_context(request: Request) -> dict[str, Any]:
     return {"auth_roles": sorted(roles)}
 
 
+def _template_i18n_context(request: Request) -> dict[str, Any]:
+    locale = select_locale(request.headers.get("accept-language"))
+    translator = get_translator(locale)
+    return {
+        "locale": locale,
+        "_": translator.gettext,
+        "translations": get_catalog(locale),
+    }
+
+
 def create_app() -> FastAPI:
     settings = AuthSettings.from_env()
     app = FastAPI()
@@ -49,7 +59,7 @@ def create_app() -> FastAPI:
     static_dir = Path(__file__).resolve().parent / "static"
     templates = Jinja2Templates(
         directory=str(templates_dir),
-        context_processors=[_template_auth_context],
+        context_processors=[_template_auth_context, _template_i18n_context],
     )
     app.state.templates = templates
     app.state.plugin_registry = build_default_registry()
@@ -58,16 +68,12 @@ def create_app() -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def home(request: Request) -> HTMLResponse:
-        locale = select_locale(request.headers.get("accept-language"))
-        translator = get_translator(locale)
         return templates.TemplateResponse(
             request,
             "home.html",
             {
                 "is_dev": settings.mode == "dev",
                 "current_user": get_current_user(request),
-                "locale": locale,
-                "_": translator.gettext,
             },
         )
 

@@ -1,29 +1,46 @@
 {% extends "base.html" %}
-{% block title %}Quiz Preview{% endblock %}
+{% block title %}{{ _("admin.preview.page_title") }}{% endblock %}
 {% block content %}
   <section class="qe-card qe-preview" data-quiz-id="{{ quiz.id }}">
     <p class="qe-meta">
       <span>Quiz #{{ quiz.id }}</span>
-      <a href="/admin/quizzes/{{ quiz.id }}">Exit preview</a>
+      <a href="/admin/quizzes/{{ quiz.id }}">{{ _("admin.preview.exit") }}</a>
     </p>
-    <h1 class="qe-title">Preview</h1>
-    <p class="qe-hint">Read-only playtest using your current draft.</p>
+    <h1 class="qe-title">{{ _("admin.preview.heading") }}</h1>
+    <p class="qe-hint">{{ _("admin.preview.hint") }}</p>
 
-    <section class="qe-preview-toolbar" aria-label="Preview navigation">
-      <button id="qe-preview-prev" class="qe-btn" type="button">Previous</button>
+    <section class="qe-preview-toolbar" aria-label="{{ _('admin.preview.aria.navigation') }}">
+      <button id="qe-preview-prev" class="qe-btn" type="button">{{ _("common.previous") }}</button>
       <span id="qe-preview-position" class="qe-pill">0 / 0</span>
-      <button id="qe-preview-next" class="qe-btn qe-btn--primary" type="button">Next</button>
+      <button id="qe-preview-next" class="qe-btn qe-btn--primary" type="button">
+        {{ _("common.next") }}
+      </button>
     </section>
 
     <section id="qe-preview-stage" class="qe-preview-stage" aria-live="polite"></section>
 
     <section class="qe-actions qe-actions--start">
-      <a class="qe-btn" href="/admin/quizzes/{{ quiz.id }}">Exit preview</a>
+      <a class="qe-btn" href="/admin/quizzes/{{ quiz.id }}">{{ _("admin.preview.exit") }}</a>
     </section>
   </section>
 
   <script id="qe-preview-bootstrap" type="application/json">
-    {{ {"quiz_id": quiz.id, "preview": preview_payload, "editor_payload": editor_payload} | tojson }}
+    {{ {
+      "quiz_id": quiz.id,
+      "preview": preview_payload,
+      "editor_payload": editor_payload,
+      "translations": {
+        "quiz_preview.no_stages": _("quiz_preview.no_stages"),
+        "quiz_preview.question_fallback": _("quiz_preview.question_fallback"),
+        "quiz_preview.stage_fallback": _("quiz_preview.stage_fallback"),
+        "quiz_preview.unavailable_type": _("quiz_preview.unavailable_type"),
+        "quiz_preview.stage_number": _("quiz_preview.stage_number"),
+        "quiz_preview.stage_meta": _("quiz_preview.stage_meta"),
+        "quiz_preview.renderer_unavailable": _("quiz_preview.renderer_unavailable"),
+        "common.unknown": _("common.unknown"),
+        "slide_renderer.static_placeholder_only": _("slide_renderer.static_placeholder_only")
+      }
+    } | tojson }}
   </script>
   <script src="/static/js/slide_renderer.js"></script>
   <script src="/static/js/quiz_preview.js"></script>

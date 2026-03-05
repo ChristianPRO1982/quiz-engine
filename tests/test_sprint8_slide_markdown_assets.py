@@ -26,9 +26,9 @@ def test_editor_js_exposes_mcq_choices_authoring_controls() -> None:
 
     assert 'childType === "array" && key === "choices"' in source
     assert "Add choice" in source
-    assert 'removeButton.textContent = "Delete"' in source
+    assert "quiz_editor.choice.remove" in source
     assert "Correct answer" in source
-    assert 'pointsLabel.textContent = "Points"' in source
+    assert "quiz_editor.choice.points" in source
     assert 'key === "points"' in source
     assert "responseMinPoints" in source
     assert "responseMaxPoints" in source
