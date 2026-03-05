@@ -212,6 +212,11 @@ def _normalize_choices(
             if "is_correct" in raw_choice:
                 raise ValueError("mcq multianswer choices must not declare is_correct.")
             weight = _require_int(raw_choice.get("weight"), "mcq choice weight")
+            if weight < -config.max_points or weight > config.max_points:
+                raise ValueError(
+                    "mcq choice weight must be within "
+                    f"[-{config.max_points}, {config.max_points}]."
+                )
             choice["weight"] = weight
         else:
             if "weight" in raw_choice:

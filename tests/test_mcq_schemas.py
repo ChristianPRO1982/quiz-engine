@@ -267,6 +267,18 @@ def test_validate_mcq_plugin_spec_rejects_mode_specific_choice_fields() -> None:
         validate_mcq_plugin_spec(spec, config=config)
 
 
+def test_validate_mcq_plugin_spec_rejects_out_of_range_multianswer_weight() -> None:
+    config = load_mcq_config()
+    spec = _base_oneclick_spec()
+    spec["mode"] = "multianswer"
+    spec["choices"] = [
+        {"id": "a", "label": "A", "weight": config.max_points + 1},
+        {"id": "b", "label": "B", "weight": 0},
+    ]
+    with pytest.raises(ValueError, match="weight must be within"):
+        validate_mcq_plugin_spec(spec, config=config)
+
+
 def test_extract_helpers_and_build_payload_cover_remaining_branches() -> None:
     config = load_mcq_config()
     oneclick = validate_mcq_plugin_spec(_base_oneclick_spec(), config=config)

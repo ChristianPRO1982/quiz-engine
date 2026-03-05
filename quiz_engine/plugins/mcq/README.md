@@ -107,6 +107,7 @@ Each MCQ question MUST follow:
 * For `multianswer`:
 
   * `weight` MUST be present.
+  * `weight` MUST be within `[-max_points, max_points]` (negative and `0` allowed).
   * `is_correct` MUST NOT be used.
   * Correctness is derived from `weight > 0`.
 * For all other modes:

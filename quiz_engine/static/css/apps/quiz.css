@@ -685,18 +685,12 @@ a:hover {
 .qe-schema-choice-row {
   display: grid;
   gap: var(--qe-space-2);
-  grid-template-columns: 1fr;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
   padding: 0.55rem;
   border: 1px solid var(--qe-border);
   border-radius: var(--qe-radius-field);
   background: var(--qe-surface-2);
-}
-
-@media (min-width: 760px) {
-  .qe-schema-choice-row {
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-  }
 }
 
 .qe-schema-choice-row__label {
@@ -710,32 +704,26 @@ a:hover {
 
 .qe-schema-choice-row__options {
   grid-column: 1 / -1;
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: var(--qe-space-2);
-}
-
-@media (min-width: 760px) {
-  .qe-schema-choice-row__options {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: end;
-  }
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .qe-schema-choice-option {
-  display: grid;
-  gap: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   color: var(--qe-muted);
 }
 
 .qe-schema-choice-option--toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.25rem 0;
+  padding: 0;
 }
 
 .qe-schema-choice-option input[type="number"] {
-  width: 100%;
+  width: 6.5rem;
 }
 
 .qe-schema-choice-row__input.qe-choice-input--invalid {

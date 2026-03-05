@@ -129,7 +129,11 @@ class MCQPlugin(IPlugin):
                                 "id": {"type": "string"},
                                 "label": {"type": "string"},
                                 "is_correct": {"type": "boolean"},
-                                "weight": {"type": "integer"},
+                                "weight": {
+                                    "type": "integer",
+                                    "minimum": -self._config.max_points,
+                                    "maximum": self._config.max_points,
+                                },
                             },
                         },
                     },

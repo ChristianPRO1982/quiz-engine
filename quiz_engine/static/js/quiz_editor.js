@@ -347,12 +347,23 @@
     const pointsSchema = isPlainObject(rootProperties.points)
       ? rootProperties.points
       : null;
+    const responseMaxPoints = (() => {
+      const maximum =
+        pointsSchema && typeof pointsSchema.maximum === "number"
+          ? pointsSchema.maximum
+          : null;
+      if (typeof maximum === "number" && Number.isFinite(maximum) && maximum > 0) {
+        return Math.trunc(maximum);
+      }
+      return 100000;
+    })();
+    const responseMinPoints = -responseMaxPoints;
     const defaultQuestionPoints = (() => {
       const schemaDefault = pointsSchema ? readSchemaDefaultValue(pointsSchema) : null;
       if (typeof schemaDefault === "number" && Number.isFinite(schemaDefault)) {
-        return Math.max(1, Math.trunc(schemaDefault));
+        return Math.max(responseMinPoints, Math.min(responseMaxPoints, Math.trunc(schemaDefault)));
       }
-      return 1;
+      return 0;
     })();
 
     const normalizeChoicesByMode = (rawChoices, nextMode) => {
@@ -765,14 +776,13 @@
             const correctToggleWrap = document.createElement("label");
             correctToggleWrap.className = "qe-schema-choice-option qe-schema-choice-option--toggle";
             const correctToggleText = document.createElement("span");
-            correctToggleText.textContent = "Bonne réponse";
+            correctToggleText.textContent = "Correct answer";
             const correctToggleInput = document.createElement("input");
             correctToggleInput.type = "checkbox";
             const currentWeight =
               typeof choice.weight === "number" && Number.isFinite(choice.weight)
                 ? Math.trunc(choice.weight)
                 : defaultQuestionPoints;
-            const currentPoints = Math.max(1, Math.abs(currentWeight || defaultQuestionPoints));
             correctToggleInput.checked = isMultianswerMode
               ? currentWeight > 0
               : choice.is_correct === true;
@@ -782,15 +792,30 @@
                 return;
               }
               if (isMultianswerMode) {
-                const baseWeight =
-                  typeof nextChoices[choiceIndex].weight === "number" &&
-                  Number.isFinite(nextChoices[choiceIndex].weight)
-                    ? Math.trunc(nextChoices[choiceIndex].weight)
-                    : defaultQuestionPoints;
-                const points = Math.max(1, Math.abs(baseWeight || defaultQuestionPoints));
+                const baseWeight = Number.isFinite(nextChoices[choiceIndex].weight)
+                  ? Math.trunc(nextChoices[choiceIndex].weight)
+                  : defaultQuestionPoints;
+                const normalizedWeight = Math.max(
+                  responseMinPoints,
+                  Math.min(responseMaxPoints, baseWeight)
+                );
+                let nextWeight = normalizedWeight;
+                if (correctToggleInput.checked) {
+                  if (normalizedWeight <= 0) {
+                    nextWeight = normalizedWeight === 0 ? defaultQuestionPoints : -normalizedWeight;
+                    if (nextWeight <= 0) {
+                      nextWeight = 1;
+                    }
+                  }
+                } else if (normalizedWeight > 0) {
+                  nextWeight = -normalizedWeight;
+                }
                 nextChoices[choiceIndex] = {
                   ...nextChoices[choiceIndex],
-                  weight: correctToggleInput.checked ? points : -points,
+                  weight: Math.max(
+                    responseMinPoints,
+                    Math.min(responseMaxPoints, Math.trunc(nextWeight))
+                  ),
                 };
               } else {
                 nextChoices[choiceIndex] = {
@@ -817,14 +842,21 @@
               const pointsInput = document.createElement("input");
               pointsInput.type = "number";
               pointsInput.step = "1";
-              pointsInput.min = "1";
-              pointsInput.value = String(currentPoints);
+              pointsInput.min = String(responseMinPoints);
+              pointsInput.max = String(responseMaxPoints);
+              pointsInput.value = String(currentWeight);
               pointsInput.addEventListener("change", () => {
                 const rawValue = String(pointsInput.value || "").trim();
                 const parsedValue = Number(rawValue);
-                if (!Number.isInteger(parsedValue) || parsedValue < 1) {
-                  setErrorMessage("Points de réponse doit être un entier >= 1.");
-                  pointsInput.value = String(currentPoints);
+                if (
+                  !Number.isInteger(parsedValue) ||
+                  parsedValue < responseMinPoints ||
+                  parsedValue > responseMaxPoints
+                ) {
+                  setErrorMessage(
+                    `Response points must be an integer within [${responseMinPoints}, ${responseMaxPoints}].`
+                  );
+                  pointsInput.value = String(currentWeight);
                   return;
                 }
                 const nextChoices = readChoiceList(childPath);
@@ -833,7 +865,7 @@
                 }
                 nextChoices[choiceIndex] = {
                   ...nextChoices[choiceIndex],
-                  weight: correctToggleInput.checked ? parsedValue : -parsedValue,
+                  weight: Math.trunc(parsedValue),
                 };
                 const nextSpec = writeSpecValueAtPath(
                   question.spec,
