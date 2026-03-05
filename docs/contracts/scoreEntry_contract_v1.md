@@ -196,11 +196,11 @@ But must remain integer-only.
 
 # 🎯 Definition of Done
 
-Ce fichier devient :
+This file becomes:
 
-- La seule référence scoring
-- Référencé par runtime_schema
-- Utilisé par StageOutcome
-- Aligné avec "engine dumb"
-- Sans float
-- Sans ScoreDelta concurrent
+- The single source of truth for scoring
+- Referenced by `runtime_schema`
+- Used by `StageOutcome`
+- Aligned with the "engine dumb" principle
+- Float-free
+- Without concurrent `ScoreDelta`

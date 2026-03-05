@@ -1694,7 +1694,7 @@
         questionIssues.push("Question title is required.");
       }
       if (!isPlainObject(question.spec)) {
-        questionIssues.push("La configuration JSON de la question est invalide.");
+        questionIssues.push("Question JSON configuration is invalid.");
       }
       const option = getQuestionTypeOption(question.type);
       if (
