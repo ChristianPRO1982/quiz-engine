@@ -472,7 +472,7 @@
         input.value = "";
       }
       input.classList.toggle("qe-choice-input--invalid", isBlank);
-      input.placeholder = isBlank ? "ne peut pas être vide" : "";
+      input.placeholder = isBlank ? "cannot be empty" : "";
     };
 
     const renderObjectProperties = ({ schemaNode, path, target, depth }) => {
@@ -532,7 +532,7 @@
 
           const groupTitle = document.createElement("h4");
           groupTitle.className = "qe-schema-group__title";
-          groupTitle.textContent = isRequired ? `${childLabel} *` : childLabel;
+          groupTitle.textContent = childLabel;
           group.appendChild(groupTitle);
 
           if (childDescription) {
@@ -558,7 +558,7 @@
           currentValue !== undefined ? currentValue : schemaDefault;
         let field = document.createElement("label");
         field.className = "qe-question__field";
-        field.textContent = isRequired ? `${childLabel} *` : childLabel;
+        field.textContent = childLabel;
 
         if (childType === "enum") {
           const enumValues = Array.isArray(childSchema.enum)
@@ -694,7 +694,7 @@
           field.classList.add("qe-question__field--toggle");
           field.textContent = "";
           const labelText = document.createElement("span");
-          labelText.textContent = isRequired ? `${childLabel} *` : childLabel;
+          labelText.textContent = childLabel;
 
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
@@ -716,7 +716,7 @@
 
           const title = document.createElement("div");
           title.className = "qe-schema-choices__header";
-          title.textContent = isRequired ? `${childLabel} *` : childLabel;
+          title.textContent = childLabel;
           field.appendChild(title);
 
           const currentChoices = readChoiceList(childPath);
@@ -739,7 +739,7 @@
 
             const choiceLabel = document.createElement("span");
             choiceLabel.className = "qe-schema-choice-row__label";
-            choiceLabel.textContent = `Réponse ${choiceIndex + 1}`;
+            choiceLabel.textContent = `Choice ${choiceIndex + 1}`;
             choiceRow.appendChild(choiceLabel);
 
             const choiceInput = document.createElement("input");
@@ -882,13 +882,13 @@
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "qe-btn qe-btn--danger qe-schema-choice-row__remove";
-            removeButton.textContent = "Supprimer";
+            removeButton.textContent = "Delete";
             removeButton.disabled = currentChoices.length <= minItems;
             removeButton.addEventListener("click", () => {
               const nextChoices = readChoiceList(childPath);
               if (nextChoices.length <= minItems) {
                 setErrorMessage(
-                  `Minimum ${minItems} réponse${minItems > 1 ? "s" : ""}.`
+                  `Minimum ${minItems} choice${minItems > 1 ? "s" : ""}.`
                 );
                 return;
               }
@@ -913,13 +913,13 @@
           const addButton = document.createElement("button");
           addButton.type = "button";
           addButton.className = "qe-btn qe-schema-choices__add";
-          addButton.textContent = "Ajouter une réponse";
+          addButton.textContent = "Add choice";
           addButton.disabled = currentChoices.length >= maxItems;
           addButton.addEventListener("click", () => {
             const nextChoices = readChoiceList(childPath);
             if (nextChoices.length >= maxItems) {
               setErrorMessage(
-                `Maximum ${maxItems} réponses atteint.`
+                `Maximum ${maxItems} choices reached.`
               );
               return;
             }
@@ -939,7 +939,7 @@
 
           const limitsText = document.createElement("p");
           limitsText.className = "qe-muted-text";
-          limitsText.textContent = `Réponses: ${currentChoices.length} / ${Number.isFinite(maxItems) ? maxItems : "∞"} (min ${minItems}).`;
+          limitsText.textContent = `Choices: ${currentChoices.length} / ${Number.isFinite(maxItems) ? maxItems : "∞"} (min ${minItems}).`;
           actions.appendChild(limitsText);
           field.appendChild(actions);
         } else {
@@ -1548,7 +1548,7 @@
       };
 
       if (required && isMissing()) {
-        errors.push(`${fieldLabel} est requis.`);
+        errors.push(`${fieldLabel} is required.`);
         return;
       }
       if (isMissing()) {
@@ -1558,7 +1558,7 @@
       if (nodeType === "enum") {
         const enumValues = Array.isArray(node.enum) ? node.enum : [];
         if (!enumValues.some((candidate) => candidate === value)) {
-          errors.push(`${fieldLabel} a une valeur invalide.`);
+          errors.push(`${fieldLabel} has an invalid value.`);
         }
         return;
       }
@@ -1569,55 +1569,72 @@
 
       if (nodeType === "integer" || nodeType === "number") {
         if (typeof value !== "number" || !Number.isFinite(value)) {
-          errors.push(`${fieldLabel} doit être un nombre.`);
+          errors.push(`${fieldLabel} must be a number.`);
           return;
         }
         if (nodeType === "integer" && !Number.isInteger(value)) {
-          errors.push(`${fieldLabel} doit être un entier.`);
+          errors.push(`${fieldLabel} must be an integer.`);
           return;
         }
         if (typeof node.minimum === "number" && value < node.minimum) {
-          errors.push(`${fieldLabel} est inférieur au minimum autorisé.`);
+          errors.push(`${fieldLabel} is below the minimum allowed.`);
           return;
         }
         if (typeof node.maximum === "number" && value > node.maximum) {
-          errors.push(`${fieldLabel} dépasse le maximum autorisé.`);
+          errors.push(`${fieldLabel} exceeds the maximum allowed.`);
         }
         return;
       }
 
       if (nodeType === "boolean") {
         if (typeof value !== "boolean") {
-          errors.push(`${fieldLabel} doit être vrai/faux.`);
+          errors.push(`${fieldLabel} must be a boolean.`);
         }
         return;
       }
 
       if (nodeType === "array") {
         if (!Array.isArray(value)) {
-          errors.push(`${fieldLabel} doit être une liste.`);
+          errors.push(`${fieldLabel} must be a list.`);
           return;
         }
         if (typeof node.minItems === "number" && value.length < node.minItems) {
           errors.push(
-            `${fieldLabel} doit contenir au moins ${Math.trunc(node.minItems)} élément(s).`
+            `${fieldLabel} must contain at least ${Math.trunc(node.minItems)} item(s).`
           );
         }
         if (typeof node.maxItems === "number" && value.length > node.maxItems) {
           errors.push(
-            `${fieldLabel} doit contenir au plus ${Math.trunc(node.maxItems)} élément(s).`
+            `${fieldLabel} must contain at most ${Math.trunc(node.maxItems)} item(s).`
           );
         }
         if (fieldKey === "choices") {
+          const currentMode = readText(readSpecValueAtPath(spec, ["mode"]));
           value.forEach((choice, index) => {
             const label =
               isPlainObject(choice) && typeof choice.label === "string"
                 ? choice.label
                 : "";
             if (!readText(label)) {
-              errors.push(`Réponse ${index + 1} ne peut pas être vide.`);
+              errors.push(`Choice ${index + 1} cannot be empty.`);
             }
           });
+          const hasCorrectChoice = value.some((choice) => {
+            if (!isPlainObject(choice)) {
+              return false;
+            }
+            if (currentMode === "multianswer") {
+              const weight =
+                typeof choice.weight === "number" && Number.isFinite(choice.weight)
+                  ? Math.trunc(choice.weight)
+                  : 0;
+              return weight > 0;
+            }
+            return choice.is_correct === true;
+          });
+          if (!hasCorrectChoice) {
+            errors.push("At least one choice must be marked as correct.");
+          }
         }
 
         const itemSchema = isPlainObject(node.items) ? node.items : null;
@@ -1636,7 +1653,7 @@
 
       if (nodeType === "object") {
         if (!isPlainObject(value)) {
-          errors.push(`${fieldLabel} doit être un objet.`);
+          errors.push(`${fieldLabel} must be an object.`);
           return;
         }
         const properties = readSchemaProperties(node);
@@ -1674,7 +1691,7 @@
     state.draft.questions.forEach((question, index) => {
       const questionIssues = [];
       if (!readText(question.title)) {
-        questionIssues.push("Le titre de la question est requis.");
+        questionIssues.push("Question title is required.");
       }
       if (!isPlainObject(question.spec)) {
         questionIssues.push("La configuration JSON de la question est invalide.");
@@ -1743,7 +1760,7 @@
     if (blockingIssues.length > 0) {
       revealQuestion(blockingIssues[0].question_id);
       setError(
-        "il est impossible de sauvegarder car il y a des règles qui n'ont pas été respectées dans la création de certaines questions. Il faut les résoudre d'abord."
+        "Cannot save because some question rules are not respected. Please fix them first."
       );
       showBlockingValidationModal(blockingIssues);
       return;

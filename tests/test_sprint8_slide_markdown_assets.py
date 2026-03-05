@@ -25,8 +25,8 @@ def test_editor_js_exposes_mcq_choices_authoring_controls() -> None:
     source = Path("quiz_engine/static/js/quiz_editor.js").read_text(encoding="utf-8")
 
     assert 'childType === "array" && key === "choices"' in source
-    assert "Ajouter une réponse" in source
-    assert "Supprimer" in source
+    assert "Add choice" in source
+    assert 'removeButton.textContent = "Delete"' in source
     assert "Correct answer" in source
     assert 'pointsLabel.textContent = "Points"' in source
     assert 'key === "points"' in source
@@ -34,11 +34,12 @@ def test_editor_js_exposes_mcq_choices_authoring_controls() -> None:
     assert "responseMaxPoints" in source
     assert "pointsInput.min = String(responseMinPoints)" in source
     assert "pointsInput.max = String(responseMaxPoints)" in source
+    assert "At least one choice must be marked as correct." in source
     assert (
         'readText(readSpecValueAtPath(question.spec, ["mode"])) === "multianswer"'
         in source
     )
-    assert "ne peut pas être vide" in source
+    assert "cannot be empty" in source
     assert "qe-choice-input--invalid" in source
 
 
@@ -50,10 +51,7 @@ def test_editor_js_blocks_save_on_question_validation_errors() -> None:
     assert "showBlockingValidationModal" in source
     assert "qe-editor-validation-modal" in source
     assert "qe-editor-validation-list" in source
-    assert (
-        "il est impossible de sauvegarder car il y a des règles "
-        "qui n'ont pas été respectées" in source
-    )
+    assert "Cannot save because some question rules are not respected." in source
 
 
 def test_slide_renderer_blocks_raw_html_injection_patterns() -> None:
