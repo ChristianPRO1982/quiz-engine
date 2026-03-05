@@ -319,6 +319,80 @@
       return rootInlineRow;
     };
 
+    const readChoiceList = (path) => {
+      const current = readSpecValueAtPath(question.spec, path);
+      if (!Array.isArray(current)) {
+        return [];
+      }
+      return current
+        .filter((choice) => isPlainObject(choice))
+        .map((choice) => ({ ...choice }));
+    };
+
+    const buildNewChoiceItem = ({ choices, itemSchema }) => {
+      const nextChoice = {};
+      const itemProperties = readSchemaProperties(itemSchema);
+      if (itemProperties) {
+        Object.entries(itemProperties).forEach(([propertyKey, propertySchemaRaw]) => {
+          const propertySchema = isPlainObject(propertySchemaRaw)
+            ? propertySchemaRaw
+            : null;
+          if (!propertySchema) {
+            return;
+          }
+          const defaultValue = readSchemaDefaultValue(propertySchema);
+          if (defaultValue !== undefined) {
+            nextChoice[propertyKey] = defaultValue;
+            return;
+          }
+          const propertyType = readSchemaType(propertySchema);
+          if (propertyType === "boolean") {
+            nextChoice[propertyKey] = false;
+            return;
+          }
+          if (propertyType === "integer" || propertyType === "number") {
+            nextChoice[propertyKey] = 0;
+          }
+        });
+      }
+
+      const nextIndex = choices.length + 1;
+      if (!readText(nextChoice.id)) {
+        nextChoice.id = `choice_${nextIndex}`;
+      }
+      if (!("label" in nextChoice)) {
+        nextChoice.label = "";
+      }
+
+      const mode = readText(readSpecValueAtPath(question.spec, ["mode"]));
+      const hasWeightShape =
+        mode === "multianswer" ||
+        choices.some((choice) => "weight" in choice && !("is_correct" in choice));
+      if (hasWeightShape) {
+        delete nextChoice.is_correct;
+        if (!("weight" in nextChoice)) {
+          nextChoice.weight = 0;
+        }
+      } else {
+        delete nextChoice.weight;
+        if (!("is_correct" in nextChoice)) {
+          nextChoice.is_correct = false;
+        }
+      }
+
+      return nextChoice;
+    };
+
+    const syncChoiceInputState = (input) => {
+      const normalized = readText(input.value);
+      const isBlank = !normalized;
+      if (isBlank && input.value) {
+        input.value = "";
+      }
+      input.classList.toggle("qe-choice-input--invalid", isBlank);
+      input.placeholder = isBlank ? "ne peut pas être vide" : "";
+    };
+
     const renderObjectProperties = ({ schemaNode, path, target, depth }) => {
       if (depth > maxSchemaDepth) {
         return;
@@ -393,7 +467,7 @@
         const schemaDefault = readSchemaDefaultValue(childSchema);
         const fallbackValue =
           currentValue !== undefined ? currentValue : schemaDefault;
-        const field = document.createElement("label");
+        let field = document.createElement("label");
         field.className = "qe-question__field";
         field.textContent = isRequired ? `${childLabel} *` : childLabel;
 
@@ -541,6 +615,125 @@
           });
           field.appendChild(labelText);
           field.appendChild(checkbox);
+        } else if (childType === "array" && key === "choices") {
+          field = document.createElement("section");
+          field.className = "qe-question__field qe-schema-choices";
+
+          const title = document.createElement("div");
+          title.className = "qe-schema-choices__header";
+          title.textContent = isRequired ? `${childLabel} *` : childLabel;
+          field.appendChild(title);
+
+          const currentChoices = readChoiceList(childPath);
+          const minItems =
+            typeof childSchema.minItems === "number" &&
+            Number.isInteger(childSchema.minItems)
+              ? Math.max(0, childSchema.minItems)
+              : 0;
+          const maxItems =
+            typeof childSchema.maxItems === "number" &&
+            Number.isInteger(childSchema.maxItems)
+              ? Math.max(minItems, childSchema.maxItems)
+              : Number.POSITIVE_INFINITY;
+          const choicesWrap = document.createElement("div");
+          choicesWrap.className = "qe-schema-choices__list";
+
+          currentChoices.forEach((choice, choiceIndex) => {
+            const choiceRow = document.createElement("div");
+            choiceRow.className = "qe-schema-choice-row";
+
+            const choiceLabel = document.createElement("span");
+            choiceLabel.className = "qe-schema-choice-row__label";
+            choiceLabel.textContent = `Réponse ${choiceIndex + 1}`;
+            choiceRow.appendChild(choiceLabel);
+
+            const choiceInput = document.createElement("input");
+            choiceInput.type = "text";
+            choiceInput.className = "qe-schema-choice-row__input";
+            choiceInput.value =
+              typeof choice.label === "string" ? choice.label : "";
+            syncChoiceInputState(choiceInput);
+            choiceInput.addEventListener("input", () => {
+              syncChoiceInputState(choiceInput);
+              const nextChoices = readChoiceList(childPath);
+              if (choiceIndex < 0 || choiceIndex >= nextChoices.length) {
+                return;
+              }
+              nextChoices[choiceIndex] = {
+                ...nextChoices[choiceIndex],
+                label: String(choiceInput.value || ""),
+              };
+              const nextSpec = writeSpecValueAtPath(
+                question.spec,
+                childPath,
+                nextChoices
+              );
+              applySpecUpdate(nextSpec);
+            });
+            choiceRow.appendChild(choiceInput);
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.className = "qe-btn qe-btn--danger qe-schema-choice-row__remove";
+            removeButton.textContent = "Supprimer";
+            removeButton.disabled = currentChoices.length <= minItems;
+            removeButton.addEventListener("click", () => {
+              const nextChoices = readChoiceList(childPath);
+              if (nextChoices.length <= minItems) {
+                setErrorMessage(
+                  `Minimum ${minItems} réponse${minItems > 1 ? "s" : ""}.`
+                );
+                return;
+              }
+              nextChoices.splice(choiceIndex, 1);
+              const nextSpec = writeSpecValueAtPath(
+                question.spec,
+                childPath,
+                nextChoices
+              );
+              applySpecUpdate(nextSpec, { rerender: true });
+            });
+            choiceRow.appendChild(removeButton);
+
+            choicesWrap.appendChild(choiceRow);
+          });
+
+          field.appendChild(choicesWrap);
+
+          const actions = document.createElement("div");
+          actions.className = "qe-schema-choices__actions";
+          const addButton = document.createElement("button");
+          addButton.type = "button";
+          addButton.className = "qe-btn qe-schema-choices__add";
+          addButton.textContent = "Ajouter une réponse";
+          addButton.disabled = currentChoices.length >= maxItems;
+          addButton.addEventListener("click", () => {
+            const nextChoices = readChoiceList(childPath);
+            if (nextChoices.length >= maxItems) {
+              setErrorMessage(
+                `Maximum ${maxItems} réponses atteint.`
+              );
+              return;
+            }
+            const itemSchema = isPlainObject(childSchema.items)
+              ? childSchema.items
+              : {};
+            nextChoices.push(
+              buildNewChoiceItem({
+                choices: nextChoices,
+                itemSchema,
+              })
+            );
+            const nextSpec = writeSpecValueAtPath(question.spec, childPath, nextChoices);
+            applySpecUpdate(nextSpec, { rerender: true });
+          });
+          actions.appendChild(addButton);
+
+          const limitsText = document.createElement("p");
+          limitsText.className = "qe-muted-text";
+          limitsText.textContent = `Réponses: ${currentChoices.length} / ${Number.isFinite(maxItems) ? maxItems : "∞"} (min ${minItems}).`;
+          actions.appendChild(limitsText);
+          field.appendChild(actions);
         } else {
           return;
         }

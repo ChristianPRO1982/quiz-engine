@@ -669,6 +669,59 @@ a:hover {
   font-weight: 600;
 }
 
+.qe-schema-choices {
+  gap: var(--qe-space-2);
+}
+
+.qe-schema-choices__header {
+  color: var(--qe-muted);
+}
+
+.qe-schema-choices__list {
+  display: grid;
+  gap: var(--qe-space-2);
+}
+
+.qe-schema-choice-row {
+  display: grid;
+  gap: var(--qe-space-2);
+  grid-template-columns: 1fr;
+  padding: 0.55rem;
+  border: 1px solid var(--qe-border);
+  border-radius: var(--qe-radius-field);
+  background: var(--qe-surface-2);
+}
+
+@media (min-width: 760px) {
+  .qe-schema-choice-row {
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+  }
+}
+
+.qe-schema-choice-row__label {
+  color: var(--qe-muted);
+  font-size: 0.86rem;
+}
+
+.qe-schema-choice-row__input.qe-choice-input--invalid {
+  border-color: var(--qe-danger);
+  color: var(--qe-danger);
+}
+
+.qe-schema-choice-row__input.qe-choice-input--invalid::placeholder {
+  color: var(--qe-danger);
+}
+
+.qe-schema-choices__actions {
+  display: grid;
+  gap: var(--qe-space-1);
+}
+
+.qe-schema-choices__actions .qe-muted-text {
+  margin: 0;
+}
+
 .qe-schema-json-details {
   border: 1px solid var(--qe-border);
   border-radius: var(--qe-radius-field);
