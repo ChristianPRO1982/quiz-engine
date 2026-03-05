@@ -33,6 +33,11 @@
   const deleteModal = document.getElementById("qe-editor-delete-modal");
   const deleteCancelButton = document.getElementById("qe-editor-delete-cancel");
   const deleteConfirmButton = document.getElementById("qe-editor-delete-confirm");
+  const validationModal = document.getElementById("qe-editor-validation-modal");
+  const validationCloseButton = document.getElementById(
+    "qe-editor-validation-close"
+  );
+  const validationList = document.getElementById("qe-editor-validation-list");
 
   if (
     !titleInput ||
@@ -46,13 +51,19 @@
     !typeListEl ||
     !deleteModal ||
     !deleteCancelButton ||
-    !deleteConfirmButton
+    !deleteConfirmButton ||
+    !validationModal ||
+    !validationCloseButton ||
+    !validationList
   ) {
     return;
   }
 
   const dialogShow = (dialog) => {
     if (typeof dialog.showModal === "function") {
+      if (dialog.open) {
+        return;
+      }
       dialog.showModal();
       return;
     }
@@ -61,6 +72,9 @@
 
   const dialogClose = (dialog) => {
     if (typeof dialog.close === "function") {
+      if (!dialog.open) {
+        return;
+      }
       dialog.close();
       return;
     }
@@ -1319,10 +1333,229 @@
     });
   };
 
+  const validateSpecAgainstSchema = (spec, schemaNode) => {
+    const errors = [];
+
+    const walk = ({ node, value, path, required }) => {
+      if (!isPlainObject(node)) {
+        return;
+      }
+      const nodeType = readSchemaType(node);
+      const fieldKey = path.length ? path[path.length - 1] : "spec";
+      const fieldLabel = readText(node.title, formatSchemaFieldLabel(fieldKey));
+      const isMissing = () => {
+        if (value === undefined || value === null) {
+          return true;
+        }
+        if (nodeType === "string") {
+          return !readText(value);
+        }
+        return false;
+      };
+
+      if (required && isMissing()) {
+        errors.push(`${fieldLabel} est requis.`);
+        return;
+      }
+      if (isMissing()) {
+        return;
+      }
+
+      if (nodeType === "enum") {
+        const enumValues = Array.isArray(node.enum) ? node.enum : [];
+        if (!enumValues.some((candidate) => candidate === value)) {
+          errors.push(`${fieldLabel} a une valeur invalide.`);
+        }
+        return;
+      }
+
+      if (nodeType === "string") {
+        return;
+      }
+
+      if (nodeType === "integer" || nodeType === "number") {
+        if (typeof value !== "number" || !Number.isFinite(value)) {
+          errors.push(`${fieldLabel} doit être un nombre.`);
+          return;
+        }
+        if (nodeType === "integer" && !Number.isInteger(value)) {
+          errors.push(`${fieldLabel} doit être un entier.`);
+          return;
+        }
+        if (typeof node.minimum === "number" && value < node.minimum) {
+          errors.push(`${fieldLabel} est inférieur au minimum autorisé.`);
+          return;
+        }
+        if (typeof node.maximum === "number" && value > node.maximum) {
+          errors.push(`${fieldLabel} dépasse le maximum autorisé.`);
+        }
+        return;
+      }
+
+      if (nodeType === "boolean") {
+        if (typeof value !== "boolean") {
+          errors.push(`${fieldLabel} doit être vrai/faux.`);
+        }
+        return;
+      }
+
+      if (nodeType === "array") {
+        if (!Array.isArray(value)) {
+          errors.push(`${fieldLabel} doit être une liste.`);
+          return;
+        }
+        if (typeof node.minItems === "number" && value.length < node.minItems) {
+          errors.push(
+            `${fieldLabel} doit contenir au moins ${Math.trunc(node.minItems)} élément(s).`
+          );
+        }
+        if (typeof node.maxItems === "number" && value.length > node.maxItems) {
+          errors.push(
+            `${fieldLabel} doit contenir au plus ${Math.trunc(node.maxItems)} élément(s).`
+          );
+        }
+        if (fieldKey === "choices") {
+          value.forEach((choice, index) => {
+            const label =
+              isPlainObject(choice) && typeof choice.label === "string"
+                ? choice.label
+                : "";
+            if (!readText(label)) {
+              errors.push(`Réponse ${index + 1} ne peut pas être vide.`);
+            }
+          });
+        }
+
+        const itemSchema = isPlainObject(node.items) ? node.items : null;
+        if (itemSchema) {
+          value.forEach((itemValue, itemIndex) => {
+            walk({
+              node: itemSchema,
+              value: itemValue,
+              path: [...path, String(itemIndex)],
+              required: false,
+            });
+          });
+        }
+        return;
+      }
+
+      if (nodeType === "object") {
+        if (!isPlainObject(value)) {
+          errors.push(`${fieldLabel} doit être un objet.`);
+          return;
+        }
+        const properties = readSchemaProperties(node);
+        if (!properties) {
+          return;
+        }
+        const requiredFields = new Set(
+          Array.isArray(node.required)
+            ? node.required.filter((item) => typeof item === "string")
+            : []
+        );
+        Object.entries(properties).forEach(([propertyKey, rawPropertySchema]) => {
+          const propertySchema = isPlainObject(rawPropertySchema)
+            ? rawPropertySchema
+            : null;
+          if (!propertySchema) {
+            return;
+          }
+          walk({
+            node: propertySchema,
+            value: value[propertyKey],
+            path: [...path, propertyKey],
+            required: requiredFields.has(propertyKey),
+          });
+        });
+      }
+    };
+
+    walk({ node: schemaNode, value: spec, path: [], required: true });
+    return errors;
+  };
+
+  const collectBlockingQuestionIssues = () => {
+    const issues = [];
+    state.draft.questions.forEach((question, index) => {
+      const questionIssues = [];
+      if (!readText(question.title)) {
+        questionIssues.push("Le titre de la question est requis.");
+      }
+      if (!isPlainObject(question.spec)) {
+        questionIssues.push("La configuration JSON de la question est invalide.");
+      }
+      const option = getQuestionTypeOption(question.type);
+      if (
+        option &&
+        isPlainObject(option.stageConfigSchema) &&
+        isPlainObject(question.spec)
+      ) {
+        questionIssues.push(
+          ...validateSpecAgainstSchema(question.spec, option.stageConfigSchema)
+        );
+      }
+
+      if (questionIssues.length) {
+        issues.push({
+          question_id: question.question_id,
+          question_index: index,
+          question_title: readText(
+            question.title,
+            `${getDefaultTitlePrefix(question.type)} ${index + 1}`
+          ),
+          issues: Array.from(new Set(questionIssues)),
+        });
+      }
+    });
+    return issues;
+  };
+
+  const revealQuestion = (questionId) => {
+    state.activeQuestionId = questionId;
+    renderQuestions();
+    window.requestAnimationFrame(() => {
+      const escapedId =
+        typeof CSS !== "undefined" && typeof CSS.escape === "function"
+          ? CSS.escape(questionId)
+          : questionId.replace(/"/g, '\\"');
+      const card = listEl.querySelector(`[data-question-id="${escapedId}"]`);
+      if (!card || typeof card.scrollIntoView !== "function") {
+        return;
+      }
+      card.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const showBlockingValidationModal = (blockingIssues) => {
+    validationList.replaceChildren();
+    blockingIssues.forEach((entry) => {
+      const item = document.createElement("li");
+      const issueSummary = entry.issues.join(" ");
+      item.textContent = `Q${entry.question_index + 1} - ${
+        entry.question_title
+      }: ${issueSummary}`;
+      validationList.appendChild(item);
+    });
+    dialogShow(validationModal);
+  };
+
   const saveDraft = async () => {
     if (state.saving || !state.dirty || state.quizId <= 0) {
       return;
     }
+
+    const blockingIssues = collectBlockingQuestionIssues();
+    if (blockingIssues.length > 0) {
+      revealQuestion(blockingIssues[0].question_id);
+      setError(
+        "il est impossible de sauvegarder car il y a des règles qui n'ont pas été respectées dans la création de certaines questions. Il faut les résoudre d'abord."
+      );
+      showBlockingValidationModal(blockingIssues);
+      return;
+    }
+
+    dialogClose(validationModal);
 
     state.saving = true;
     renderToolbar();
@@ -1399,6 +1632,10 @@
     }
     state.pendingDeleteQuestionId = null;
     dialogClose(deleteModal);
+  });
+
+  validationCloseButton.addEventListener("click", () => {
+    dialogClose(validationModal);
   });
 
   saveButton.addEventListener("click", () => {

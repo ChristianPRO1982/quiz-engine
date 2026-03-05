@@ -162,6 +162,7 @@ def test_editor_template_contains_required_controls(
     assert "qe-editor-add-question" in page.text
     assert "qe-question-type-modal" in page.text
     assert "qe-editor-delete-modal" in page.text
+    assert "qe-editor-validation-modal" in page.text
     assert f"{created.headers['location']}/delete" in page.text
 
 

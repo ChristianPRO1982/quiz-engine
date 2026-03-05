@@ -65,6 +65,19 @@
       </menu>
     </form>
   </dialog>
+
+  <dialog id="qe-editor-validation-modal" class="qe-modal">
+    <form method="dialog" class="qe-modal__panel qe-modal__panel--confirm">
+      <h2>Sauvegarde impossible</h2>
+      <p>
+        il est impossible de sauvegarder car il y a des règles qui n'ont pas été respectées dans la création de certaines questions. Il faut les résoudre d'abord.
+      </p>
+      <ul id="qe-editor-validation-list" class="qe-validation-list"></ul>
+      <menu class="qe-actions">
+        <button class="qe-btn qe-btn--primary" id="qe-editor-validation-close" type="button">OK</button>
+      </menu>
+    </form>
+  </dialog>
   {% include "partials/quiz_delete_confirm_modal.html" %}
 
   <script id="qe-editor-bootstrap" type="application/json">

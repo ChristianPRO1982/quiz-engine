@@ -31,6 +31,21 @@ def test_editor_js_exposes_mcq_choices_authoring_controls() -> None:
     assert "qe-choice-input--invalid" in source
 
 
+def test_editor_js_blocks_save_on_question_validation_errors() -> None:
+    source = Path("quiz_engine/static/js/quiz_editor.js").read_text(encoding="utf-8")
+
+    assert "collectBlockingQuestionIssues" in source
+    assert "revealQuestion" in source
+    assert "showBlockingValidationModal" in source
+    assert "qe-editor-validation-modal" in source
+    assert "qe-editor-validation-list" in source
+    assert (
+        "il est impossible de sauvegarder car il y a des règles "
+        "qui n'ont pas été respectées"
+        in source
+    )
+
+
 def test_slide_renderer_blocks_raw_html_injection_patterns() -> None:
     source = Path("quiz_engine/static/js/slide_renderer.js").read_text(encoding="utf-8")
 

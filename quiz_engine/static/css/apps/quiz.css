@@ -812,6 +812,14 @@ a:hover {
   width: min(420px, calc(100vw - 2rem));
 }
 
+.qe-validation-list {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: var(--qe-space-1);
+  color: var(--qe-fg);
+}
+
 .qe-modal__head {
   display: flex;
   align-items: center;
