@@ -583,7 +583,7 @@ def _build_default_choices(*, count: int, mode: str) -> list[dict[str, Any]]:
         if mode == "multianswer":
             choice["weight"] = 1 if index == 0 else 0
         else:
-            choice["is_correct"] = index == 0
+            choice["is_correct"] = False
         choices.append(choice)
     return choices
 

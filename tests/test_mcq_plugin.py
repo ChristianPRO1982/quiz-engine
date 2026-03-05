@@ -149,6 +149,16 @@ def test_mcq_plugin_creates_runtime_and_emits_view_model() -> None:
     assert frame.sent_at == now
 
 
+def test_mcq_default_stage_config_has_no_preselected_correct_choice() -> None:
+    plugin = MCQPlugin()
+    manifest = plugin.get_manifest()
+
+    choices = manifest.default_stage_config["choices"]
+    assert isinstance(choices, list)
+    assert choices
+    assert all(choice.get("is_correct") is False for choice in choices)
+
+
 def test_mcq_runtime_uses_stage_metadata_title_when_spec_title_missing() -> None:
     plugin = MCQPlugin()
     spec = _oneclick_spec()
