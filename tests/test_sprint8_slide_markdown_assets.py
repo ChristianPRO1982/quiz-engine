@@ -41,8 +41,7 @@ def test_editor_js_blocks_save_on_question_validation_errors() -> None:
     assert "qe-editor-validation-list" in source
     assert (
         "il est impossible de sauvegarder car il y a des règles "
-        "qui n'ont pas été respectées"
-        in source
+        "qui n'ont pas été respectées" in source
     )
 
 
