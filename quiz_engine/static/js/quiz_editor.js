@@ -343,6 +343,63 @@
         .map((choice) => ({ ...choice }));
     };
 
+    const rootProperties = readSchemaProperties(schema) || {};
+    const pointsSchema = isPlainObject(rootProperties.points)
+      ? rootProperties.points
+      : null;
+    const defaultQuestionPoints = (() => {
+      const schemaDefault = pointsSchema ? readSchemaDefaultValue(pointsSchema) : null;
+      if (typeof schemaDefault === "number" && Number.isFinite(schemaDefault)) {
+        return Math.max(1, Math.trunc(schemaDefault));
+      }
+      return 1;
+    })();
+
+    const normalizeChoicesByMode = (rawChoices, nextMode) => {
+      const list = Array.isArray(rawChoices)
+        ? rawChoices.filter((choice) => isPlainObject(choice)).map((choice) => ({ ...choice }))
+        : [];
+
+      if (nextMode === "multianswer") {
+        return list.map((choice) => {
+          const nextChoice = { ...choice };
+          const existingWeight =
+            typeof nextChoice.weight === "number" && Number.isFinite(nextChoice.weight)
+              ? Math.trunc(nextChoice.weight)
+              : null;
+          if (existingWeight === null) {
+            const isCorrect = nextChoice.is_correct === true;
+            nextChoice.weight = isCorrect
+              ? defaultQuestionPoints
+              : -defaultQuestionPoints;
+          } else if (existingWeight === 0) {
+            nextChoice.weight = defaultQuestionPoints;
+          }
+          delete nextChoice.is_correct;
+          return nextChoice;
+        });
+      }
+
+      const normalized = list.map((choice) => {
+        const nextChoice = { ...choice };
+        if (typeof nextChoice.is_correct !== "boolean") {
+          const weight =
+            typeof nextChoice.weight === "number" && Number.isFinite(nextChoice.weight)
+              ? Math.trunc(nextChoice.weight)
+              : 0;
+          nextChoice.is_correct = weight > 0;
+        }
+        delete nextChoice.weight;
+        return nextChoice;
+      });
+      if (!normalized.some((choice) => choice.is_correct)) {
+        if (normalized.length > 0) {
+          normalized[0].is_correct = true;
+        }
+      }
+      return normalized;
+    };
+
     const buildNewChoiceItem = ({ choices, itemSchema }) => {
       const nextChoice = {};
       const itemProperties = readSchemaProperties(itemSchema);
@@ -385,7 +442,7 @@
       if (hasWeightShape) {
         delete nextChoice.is_correct;
         if (!("weight" in nextChoice)) {
-          nextChoice.weight = 0;
+          nextChoice.weight = defaultQuestionPoints;
         }
       } else {
         delete nextChoice.weight;
@@ -425,6 +482,13 @@
 
       Object.entries(properties).forEach(([key, rawChildSchema]) => {
         if (path.length === 0 && hiddenRootKeys.has(key)) {
+          return;
+        }
+        if (
+          path.length === 0 &&
+          key === "points" &&
+          readText(readSpecValueAtPath(question.spec, ["mode"])) === "multianswer"
+        ) {
           return;
         }
         const childSchema = isPlainObject(rawChildSchema) ? rawChildSchema : null;
@@ -522,12 +586,18 @@
               setErrorMessage("Invalid enum value selected.");
               return;
             }
-            const nextSpec = writeSpecValueAtPath(
-              question.spec,
-              childPath,
-              enumValues[parsedIndex]
-            );
-            applySpecUpdate(nextSpec);
+            const selectedValue = enumValues[parsedIndex];
+            let nextSpec = writeSpecValueAtPath(question.spec, childPath, selectedValue);
+            let rerender = false;
+            if (path.length === 0 && key === "mode" && typeof selectedValue === "string") {
+              const nextChoices = normalizeChoicesByMode(
+                readSpecValueAtPath(nextSpec, ["choices"]),
+                selectedValue
+              );
+              nextSpec = writeSpecValueAtPath(nextSpec, ["choices"], nextChoices);
+              rerender = true;
+            }
+            applySpecUpdate(nextSpec, { rerender });
           });
           field.appendChild(select);
         } else if (childType === "string") {
@@ -686,6 +756,97 @@
             });
             choiceRow.appendChild(choiceInput);
 
+            const optionsRow = document.createElement("div");
+            optionsRow.className = "qe-schema-choice-row__options";
+
+            const isMultianswerMode =
+              readText(readSpecValueAtPath(question.spec, ["mode"])) === "multianswer";
+
+            const correctToggleWrap = document.createElement("label");
+            correctToggleWrap.className = "qe-schema-choice-option qe-schema-choice-option--toggle";
+            const correctToggleText = document.createElement("span");
+            correctToggleText.textContent = "Bonne réponse";
+            const correctToggleInput = document.createElement("input");
+            correctToggleInput.type = "checkbox";
+            const currentWeight =
+              typeof choice.weight === "number" && Number.isFinite(choice.weight)
+                ? Math.trunc(choice.weight)
+                : defaultQuestionPoints;
+            const currentPoints = Math.max(1, Math.abs(currentWeight || defaultQuestionPoints));
+            correctToggleInput.checked = isMultianswerMode
+              ? currentWeight > 0
+              : choice.is_correct === true;
+            correctToggleInput.addEventListener("change", () => {
+              const nextChoices = readChoiceList(childPath);
+              if (choiceIndex < 0 || choiceIndex >= nextChoices.length) {
+                return;
+              }
+              if (isMultianswerMode) {
+                const baseWeight =
+                  typeof nextChoices[choiceIndex].weight === "number" &&
+                  Number.isFinite(nextChoices[choiceIndex].weight)
+                    ? Math.trunc(nextChoices[choiceIndex].weight)
+                    : defaultQuestionPoints;
+                const points = Math.max(1, Math.abs(baseWeight || defaultQuestionPoints));
+                nextChoices[choiceIndex] = {
+                  ...nextChoices[choiceIndex],
+                  weight: correctToggleInput.checked ? points : -points,
+                };
+              } else {
+                nextChoices[choiceIndex] = {
+                  ...nextChoices[choiceIndex],
+                  is_correct: Boolean(correctToggleInput.checked),
+                };
+              }
+              const nextSpec = writeSpecValueAtPath(
+                question.spec,
+                childPath,
+                nextChoices
+              );
+              applySpecUpdate(nextSpec);
+            });
+            correctToggleWrap.appendChild(correctToggleText);
+            correctToggleWrap.appendChild(correctToggleInput);
+            optionsRow.appendChild(correctToggleWrap);
+
+            if (isMultianswerMode) {
+              const pointsWrap = document.createElement("label");
+              pointsWrap.className = "qe-schema-choice-option";
+              const pointsLabel = document.createElement("span");
+              pointsLabel.textContent = "Points";
+              const pointsInput = document.createElement("input");
+              pointsInput.type = "number";
+              pointsInput.step = "1";
+              pointsInput.min = "1";
+              pointsInput.value = String(currentPoints);
+              pointsInput.addEventListener("change", () => {
+                const rawValue = String(pointsInput.value || "").trim();
+                const parsedValue = Number(rawValue);
+                if (!Number.isInteger(parsedValue) || parsedValue < 1) {
+                  setErrorMessage("Points de réponse doit être un entier >= 1.");
+                  pointsInput.value = String(currentPoints);
+                  return;
+                }
+                const nextChoices = readChoiceList(childPath);
+                if (choiceIndex < 0 || choiceIndex >= nextChoices.length) {
+                  return;
+                }
+                nextChoices[choiceIndex] = {
+                  ...nextChoices[choiceIndex],
+                  weight: correctToggleInput.checked ? parsedValue : -parsedValue,
+                };
+                const nextSpec = writeSpecValueAtPath(
+                  question.spec,
+                  childPath,
+                  nextChoices
+                );
+                applySpecUpdate(nextSpec);
+              });
+              pointsWrap.appendChild(pointsLabel);
+              pointsWrap.appendChild(pointsInput);
+              optionsRow.appendChild(pointsWrap);
+            }
+
             const removeButton = document.createElement("button");
             removeButton.type = "button";
             removeButton.className = "qe-btn qe-btn--danger qe-schema-choice-row__remove";
@@ -708,6 +869,7 @@
               applySpecUpdate(nextSpec, { rerender: true });
             });
             choiceRow.appendChild(removeButton);
+            choiceRow.appendChild(optionsRow);
 
             choicesWrap.appendChild(choiceRow);
           });

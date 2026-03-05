@@ -27,6 +27,13 @@ def test_editor_js_exposes_mcq_choices_authoring_controls() -> None:
     assert 'childType === "array" && key === "choices"' in source
     assert "Ajouter une réponse" in source
     assert "Supprimer" in source
+    assert "Bonne réponse" in source
+    assert 'pointsLabel.textContent = "Points"' in source
+    assert 'key === "points"' in source
+    assert (
+        'readText(readSpecValueAtPath(question.spec, ["mode"])) === "multianswer"'
+        in source
+    )
     assert "ne peut pas être vide" in source
     assert "qe-choice-input--invalid" in source
 

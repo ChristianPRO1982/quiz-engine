@@ -704,6 +704,40 @@ a:hover {
   font-size: 0.86rem;
 }
 
+.qe-schema-choice-row__remove {
+  justify-self: end;
+}
+
+.qe-schema-choice-row__options {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--qe-space-2);
+}
+
+@media (min-width: 760px) {
+  .qe-schema-choice-row__options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+}
+
+.qe-schema-choice-option {
+  display: grid;
+  gap: 0.3rem;
+  color: var(--qe-muted);
+}
+
+.qe-schema-choice-option--toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+}
+
+.qe-schema-choice-option input[type="number"] {
+  width: 100%;
+}
+
 .qe-schema-choice-row__input.qe-choice-input--invalid {
   border-color: var(--qe-danger);
   color: var(--qe-danger);
